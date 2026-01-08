@@ -6,199 +6,186 @@ import {
   ScrollView,
   TouchableOpacity,
   setModalVisible,
+  FlatList,
+  RefreshControl,
 } from 'react-native';
-import React from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useVendorContext } from '../Utilities/VendorContext';
+import axios from 'axios';
+import { API_BASE_URL, API_ENDPOINTS } from '../ApiService/apiConstants';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+import WalletCard from './WalletCard';
 
-const Wallet = ({navigation}) => {
-  return (
-    <View>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <TouchableOpacity
-          onPress={() => {
-            navigation.navigate('Payment');
-            // Add confirm logic here if needed
-          }}>
-          <Image
-            style={{margin: 10}}
-            source={require('../assets/images/group.png')} // Update path if needed
-          />
-        </TouchableOpacity>
+// "Are you sure you want to buy coins?" 
+const Wallet = ({ navigation }) => {
+  const { vendorDataContext } = useVendorContext();
+  const vendorId = vendorDataContext?._id;
+  const [loading, setLoading] = useState(false);
+  const [trasactionData, setTrasactionData] = useState([]);
+
+
+  const fetchTransactionHistory = useCallback(async () => {
+    // ✅ safe check
+    if (!vendorId) {
+      setTrasactionData([]);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}${API_ENDPOINTS.FETCH_WALLET_TRANSACTIONS}${vendorId}`,
+      );
+
+      console.log('Wallet history response', response.data);
+
+      // ✅ safe fallback
+      const list = Array.isArray(response?.data?.data) ? response.data.data : [];
+      setTrasactionData(list);
+    } catch (error) {
+      console.error('Failed to Transaction history:', error);
+      setTrasactionData([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [vendorId]);
+
+  useEffect(() => {
+    fetchTransactionHistory();
+  }, [fetchTransactionHistory]);
+
+  const onRefresh = useCallback(async () => {
+    await fetchTransactionHistory();
+  }, [fetchTransactionHistory]);
+
+  console.log('Wallet history response', trasactionData);
+
+  const HistoryItem = React.memo(({ item }) => {
+    // ✅ title fallback: title -> transactionType -> default
+    const title =
+      item?.title ||
+      (item?.transactionType
+        ? String(item.transactionType)
+          .replace(/_/g, ' ')
+          .replace(/\b\w/g, c => c.toUpperCase())
+        : 'Transaction');
+
+    // ✅ amount fallback: amount -> coins -> coinAmount -> 0
+    const amount = Number(item?.amount ?? item?.coins ?? item?.coinAmount ?? 0);
+
+    // ✅ type fallback: type -> action -> derive from amount sign if needed
+    const rawType = String(item?.type ?? item?.action ?? '').toLowerCase();
+    const isAdded =
+      rawType === 'added' || rawType === 'add' || rawType === 'credit' || amount > 0;
+
+    const sign = isAdded ? '+' : '-';
+    const amountColor = isAdded ? '#008E00' : '#df2020';
+
+    // ✅ date fallback: createdAt -> date -> transactionDate
+    const rawDate = item?.createdAt || item?.date || item?.transactionDate;
+    const dateText = rawDate
+      ? new Date(rawDate).toLocaleDateString('en-GB')
+      : '--/--/----';
+
+    return (
+      <View style={styles.mainleadone}>
+        <View style={styles.leadone}></View>
+
+        <View style={styles.location}>
+          {/* <Image
+            style={styles.locationicon}
+            source={require('../assets/icons/circleyellow.png')}
+            resizeMode="contain"
+          /> */}
+          <FontAwesome5 name="coins" color="#F6C10E" size={17} />
+          <Text
+            style={{
+              fontSize: 13,
+              color: '#000000',
+              fontFamily: 'Poppins-SemiBold',
+              marginRight: 120,
+            }}>
+            {title}
+          </Text>
+
+          <Text
+            style={{
+              fontSize: 12,
+              color: amountColor, // ✅ use computed color
+              fontFamily: 'Poppins-SemiBold',
+              marginRight: 50,
+            }}>
+            {sign} {Math.abs(amount)} coins
+          </Text>
+        </View>
 
         <Text
           style={{
-            fontFamily: 'Poppins-SemiBold',
-            fontSize: 16,
+            marginLeft: 30,
             color: '#000000',
-            margin: 10,
+            fontFamily: 'Poppins-Medium',
+            fontSize: 12,
           }}>
-          Transactions
+          {dateText}
         </Text>
-        <View style={styles.mainleadone}>
-          <View style={styles.leadone}></View>
+      </View>
+    );
+  });
 
-          <View style={styles.location}>
-            <Image
-              style={styles.locationicon}
-              source={require('../assets/icons/circleyellow.png')} // Update path if needed
-              resizeMode="contain"
-            />
-            <Text
-              style={{
-                fontSize: 12,
-                color: '#000000',
-                fontFamily: 'Poppins-SemiBold',
-                marginRight: 120,
-              }}>
-              Recharged Wallet
-            </Text>
-            <Text
-              style={{
-                fontSize: 12,
-                color: '#008E00',
-                fontFamily: 'Poppins-SemiBold',
-                marginRight: 50,
-              }}>
-              +100 coins
-            </Text>
-          </View>
-
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      {/* <TouchableOpacity
+        onPress={() => {
+          navigation.navigate('Payment');
+        }}>
+        <Image
+          style={{ margin: 10, }}
+          source={require('../assets/images/group.png')}
+        />
+      </TouchableOpacity> */}
+      <WalletCard
+        coins={200}
+        onBuyCoins={() => navigation.navigate("Payment")}
+      />
+      <Text
+        style={{
+          fontFamily: 'Poppins-SemiBold',
+          fontSize: 16,
+          color: '#000000',
+          margin: 10,
+        }}>
+        Transactions
+      </Text>
+      {Array.isArray(trasactionData) && trasactionData.length > 0 ? (
+        <FlatList
+          data={trasactionData}
+          keyExtractor={(it, idx) => String(it?._id || idx)}
+          renderItem={({ item }) => <HistoryItem item={item} />}
+          refreshControl={<RefreshControl refreshing={loading} onRefresh={onRefresh} />}
+        />
+      ) : (
+        <View style={{ marginTop: 200 }}>
           <Text
             style={{
-              marginLeft: 30,
-              color: '#000000',
-              fontFamily: 'Poppins-SemiBold',
-              fontSize: 12,
+              color: '#b1b1b1',
+              fontSize: 14,
+              fontFamily: 'Poppins-Medium',
+              textAlign: 'center',
             }}>
-            05/02/2025
+            No Transaction History
           </Text>
         </View>
-        <View style={styles.mainleadone}>
-          <View style={styles.leadone}></View>
+      )}
 
-          <View style={styles.location}>
-            <Image
-              style={styles.locationicon}
-              source={require('../assets/icons/circleyellow.png')} // Update path if needed
-              resizeMode="contain"
-            />
-            <Text
-              style={{
-                fontSize: 12,
-                color: '#000000',
-                fontFamily: 'Poppins-SemiBold',
-                marginRight: 120,
-              }}>
-              Recharged Wallet
-            </Text>
-            <Text
-              style={{
-                fontSize: 12,
-                color: 'red',
-                fontFamily: 'Poppins-SemiBold',
-                marginRight: 50,
-              }}>
-              -10 coins
-            </Text>
-          </View>
-
-          <Text
-            style={{
-              marginLeft: 30,
-              color: '#000000',
-              fontFamily: 'Poppins-SemiBold',
-              fontSize: 12,
-            }}>
-            05/02/2025
-          </Text>
-        </View>
-        <View style={styles.mainleadone}>
-          <View style={styles.leadone}></View>
-
-          <View style={styles.location}>
-            <Image
-              style={styles.locationicon}
-              source={require('../assets/icons/circleyellow.png')} // Update path if needed
-              resizeMode="contain"
-            />
-            <Text
-              style={{
-                fontSize: 12,
-                color: '#000000',
-                fontFamily: 'Poppins-SemiBold',
-                marginRight: 120,
-              }}>
-              Recharged Wallet
-            </Text>
-            <Text
-              style={{
-                fontSize: 12,
-                color: '#008E00',
-                fontFamily: 'Poppins-SemiBold',
-                marginRight: 50,
-              }}>
-              +100 coins
-            </Text>
-          </View>
-
-          <Text
-            style={{
-              marginLeft: 30,
-              color: '#000000',
-              fontFamily: 'Poppins-SemiBold',
-              fontSize: 12,
-            }}>
-            05/02/2025
-          </Text>
-        </View>
-        <View style={styles.mainleadone}>
-          <View style={styles.leadone}></View>
-
-          <View style={styles.location}>
-            <Image
-              style={styles.locationicon}
-              source={require('../assets/icons/circleyellow.png')} // Update path if needed
-              resizeMode="contain"
-            />
-            <Text
-              style={{
-                fontSize: 12,
-                color: '#000000',
-                fontFamily: 'Poppins-SemiBold',
-                marginRight: 120,
-              }}>
-              Recharged Wallet
-            </Text>
-            <Text
-              style={{
-                fontSize: 12,
-                color: '#008E00',
-                fontFamily: 'Poppins-SemiBold',
-                marginRight: 50,
-              }}>
-              +100 coins
-            </Text>
-          </View>
-
-          <Text
-            style={{
-              marginLeft: 30,
-              color: '#000000',
-              fontFamily: 'Poppins-SemiBold',
-              fontSize: 12,
-            }}>
-            05/02/2025
-          </Text>
-        </View>
-      </ScrollView>
-      <View style={styles.downborder} />
-    </View>
+    </SafeAreaView>
   );
 };
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: '#F6F6F6',
-    paddingTop: 50,
+    // paddingTop: 50,
   },
   discoverleads: {
     margin: 10,
@@ -324,9 +311,9 @@ const styles = StyleSheet.create({
     paddingRight: 15,
     paddingLeft: 15,
     paddingBottom: 20,
-    top: 20,
+    // top: 20,
     borderRadius: 5,
-    margin: 10,
+    margin: 5,
   },
   mainleadtwo: {
     backgroundColor: 'white',

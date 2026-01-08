@@ -27,13 +27,18 @@ const Performance = () => {
 
   const serviceType = vendorDataContext.vendor?.serviceType;
   console.log('serviceType', serviceType);
+  console.log('performanceData', performanceData);
+
   // deep cleaning
   const METRICS_ENDPOINT =
-    serviceType === 'house-painter'
+    serviceType === 'house-painter' || serviceType === 'House Painting'
       ? API_ENDPOINTS.HOUSE_PAINTING_PERFORMANCE_METRICS
       : API_ENDPOINTS.DEEP_CLEANING_PERFORMANCE_METRICS;
 
-  const renamedServiceType = serviceType === 'house-painter' ? "house_painting" : "deep_cleaning"
+  const renamedServiceType =
+    serviceType === 'house-painter' || serviceType === 'House Painting'
+      ? 'house_painting'
+      : 'deep_cleaning';
 
   useEffect(() => {
     const fetchPerformanceData = async () => {
@@ -42,7 +47,10 @@ const Performance = () => {
         const response = await axios.get(
           `${API_BASE_URL}${METRICS_ENDPOINT}${vendorId}/${vendorLat}/${vendorLong}/${activeTab}`,
         );
-        console.log("performance API Url:", `${API_BASE_URL}${METRICS_ENDPOINT}${vendorId}/${vendorLat}/${vendorLong}/${activeTab}`)
+        console.log(
+          'performance API Url:',
+          `${API_BASE_URL}${METRICS_ENDPOINT}${vendorId}/${vendorLat}/${vendorLong}/${activeTab}`,
+        );
         setPerformanceData(response.data);
       } catch (error) {
         console.error('Failed to fetch performance data:', error);
@@ -76,7 +84,126 @@ const Performance = () => {
   // console.log('performanceData', performanceData);
   console.log('kpiData', kpiData);
 
+  const getKpiColor = (value, ranges, options = { positive: true }) => {
+    if (!ranges) return '#6c757d';
 
+    const a = ranges.a ?? 0;
+    const b = ranges.b ?? 0;
+    const c = ranges.c ?? 0;
+    const d = ranges.d ?? 0;
+
+    // your range logic
+    const red = '#df2020';
+    const orange = '#ff8c00';
+    const yellow = '#fcce00ff';
+    const green = '#198754';
+
+    // higher is better (response, hiring, gsv, rating)
+    if (options.positive) {
+      if (value >= a && value < b) return red;
+      if (value >= b && value < c) return orange;
+      if (value >= c && value < d) return yellow;
+      if (value >= d) return green;
+    } else {
+      // lower is better (cancellation, strikes)
+      if (value >= a && value < b) return green;
+      if (value >= b && value < c) return yellow;
+      if (value >= c && value < d) return orange;
+      if (value >= d) return red;
+    }
+
+    return '#6c757d';
+  };
+
+  const getPositiveKpiColor = (value, ranges) => {
+    if (!ranges) return '#6c757d'; // default grey
+
+    const a = ranges.a ?? 0;
+    const b = ranges.b ?? 0;
+    const c = ranges.c ?? 0;
+    const d = ranges.d ?? 0;
+
+    if (value >= a && value < b) return '#df2020'; // Red
+    if (value >= b && value < c) return '#ff8c00'; // Orange
+    if (value >= c && value < d) return '#fcce00ff'; // Yellow
+    if (value >= d) return '#198754'; // Green
+
+    return '#6c757d'; // fallback
+  };
+
+  const getNegativeKpiColor = (value, ranges) => {
+    if (!ranges) return '#6c757d';
+
+    const a = ranges.a ?? 0;
+    const b = ranges.b ?? 0;
+    const c = ranges.c ?? 0;
+    const d = ranges.d ?? 0;
+
+    if (value >= a && value < b) return '#198754'; // best = Green
+    if (value >= b && value < c) return '#fcce00ff'; // Yellow
+    if (value >= c && value < d) return '#ff8c00'; // Orange
+    if (value >= d) return '#df2020'; // worst = Red
+
+    return '#6c757d';
+  };
+
+  const responseValue =
+    serviceType === 'house-painter' || serviceType === 'House Painting'
+      ? performanceData?.surveyRate || 0
+      : performanceData?.responseRate || 0;
+
+  const responseColor = getKpiColor(
+    responseValue,
+    serviceType === 'house-painter' || serviceType === 'House Painting'
+      ? kpiData?.surveyPercentage
+      : kpiData?.responsePercentage,
+    { positive: true },
+  );
+
+  const secondValue =
+    serviceType === 'house-painter' || serviceType === 'House Painting'
+      ? performanceData?.hiringRate || 0
+      : performanceData?.cancellationRate || 0;
+
+  const secondColor = getKpiColor(
+    secondValue,
+    serviceType === 'house-painter' || serviceType === 'House Painting'
+      ? kpiData?.hiringPercentage
+      : kpiData?.cancellationPercentage,
+    { positive: serviceType === 'house-painter' || serviceType === 'House Painting' }, // hiring = positive, cancel = negative
+  );
+
+  // GSV (higher is better)
+  const gsvValue = performanceData?.averageGsv || 0;
+  const gsvColor = getKpiColor(gsvValue, kpiData?.avgGSV, { positive: true });
+
+  // Rating (higher is better)
+  const ratingValue = performanceData?.averageRating || 0;
+  const ratingColor = getKpiColor(ratingValue, kpiData?.rating, {
+    positive: true,
+  });
+
+  // Strikes (lower is better)
+  const strikesValue = performanceData?.strikes || 0;
+  const strikesColor = getKpiColor(strikesValue, kpiData?.strikes, {
+    positive: false,
+  });
+
+  // Total Leads – if you have ranges in KPI, use them, else pick a fixed color
+  const leadsValue = performanceData?.totalLeads || 0;
+  const leadsColor = kpiData?.totalLeads
+    ? getKpiColor(leadsValue, kpiData.totalLeads, { positive: true })
+    : '#0F6A97';
+
+  const cancellationColor = getNegativeKpiColor(
+    performanceData?.cancellationRate || 0,
+    kpiData?.cancellationPercentage,
+  );
+
+  const hiringColor = getPositiveKpiColor(
+    performanceData?.hiringRate || 0,
+    kpiData?.hiringPercentage,
+  );
 
   return (
     <View style={styles.container}>
@@ -122,70 +249,64 @@ const Performance = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Response and Cancellation */}
+        {/* Response */}
         <View style={styles.statusRow}>
           <View style={styles.cardBox}>
             <AnimatedCircularProgress
               size={70}
               width={10}
-              fill={
-                serviceType === 'house-painter'
-                  ? performanceData
-                    ? performanceData.surveyRate
-                    : 0
-                  : performanceData
-                    ? performanceData.responseRate
-                    : 0
-              }
+              fill={responseValue}
               arcSweepAngle={180}
               rotation={-90}
-              tintColor="green"
-              backgroundColor="#c8e6c9"
+              tintColor={responseColor}
+              backgroundColor="#e2e2e2ff"
             >
               {() => (
-                <Text style={styles.percentText}>
-                  {serviceType === 'house-painter'
-                    ? performanceData
-                      ? `${performanceData.surveyRate}%`
-                      : '0%'
-                    : performanceData
-                      ? `${performanceData.responseRate}%`
-                      : '0%'}
+                <Text style={[styles.percentText, { color: responseColor }]}>
+                  {serviceType === 'house-painter' || serviceType === 'House Painting'
+                    ? `${performanceData?.surveyRate ?? 0}%`
+                    : `${performanceData?.responseRate ?? 0}%`}
                 </Text>
               )}
             </AnimatedCircularProgress>
-            <View style={[styles.cardFooter, { backgroundColor: '#a5d6a7' }]}>
+            <View
+              style={[styles.cardFooter, { backgroundColor: responseColor }]}
+            >
               <Text style={styles.cardFooterText}>
-                {serviceType === 'house-painter'
-                  ? `Survey (${performanceData ? performanceData.surveyLeads : 0
-                  })`
-                  : `Response (${performanceData ? performanceData.respondedLeads : 0
-                  })`}
+                {serviceType === 'house-painter' || serviceType === 'House Painting'
+                  ? `Survey (${performanceData?.surveyLeads ?? 0})`
+                  : `Response (${performanceData?.respondedLeads ?? 0})`}
               </Text>
             </View>
           </View>
-
+          {/* cancel for dp and hiring for hp */}
           <View style={styles.cardBox}>
             <AnimatedCircularProgress
               size={70}
               width={10}
-              fill={
-                serviceType === 'house-painter'
-                  ? performanceData
-                    ? performanceData.hiringRate
-                    : 0
-                  : performanceData
-                    ? performanceData.cancellationRate
-                    : 0
-              }
+              fill={secondValue}
               arcSweepAngle={180}
               rotation={-90}
-              tintColor="orange"
-              backgroundColor="#ffe0b2"
+              tintColor={
+                serviceType === 'house-painter' || serviceType === 'House Painting'
+                  ? hiringColor
+                  : cancellationColor
+              }
+              backgroundColor="#e2e2e2ff"
             >
               {() => (
-                <Text style={[styles.percentText, { color: 'orange' }]}>
-                  {serviceType === 'house-painter'
+                <Text
+                  style={[
+                    styles.percentText,
+                    {
+                      color:
+                        serviceType === 'house-painter' || serviceType === 'House Painting'
+                          ? hiringColor
+                          : cancellationColor,
+                    },
+                  ]}
+                >
+                  {serviceType === 'house-painter' || serviceType === 'House Painting'
                     ? performanceData
                       ? `${performanceData.hiringRate}%`
                       : '0%'
@@ -195,11 +316,11 @@ const Performance = () => {
                 </Text>
               )}
             </AnimatedCircularProgress>
-            <View style={[styles.cardFooter, { backgroundColor: '#ffe082' }]}>
-              <Text style={[styles.cardFooterText, { color: '#ff9800' }]}>
-                {serviceType === 'house-painter'
-                  ? `Hiring (${performanceData ? performanceData.hiredLeads : 0})`
-                  : `Cancellation (${performanceData ? performanceData.cancelledLeads : 0})`}
+            <View style={[styles.cardFooter, { backgroundColor: secondColor }]}>
+              <Text style={styles.cardFooterText}>
+                {serviceType === 'house-painter' || serviceType === 'House Painting'
+                  ? `Hiring (${performanceData?.hiredLeads ?? 0})`
+                  : `Cancellation (${performanceData?.cancelledLeads ?? 0})`}
               </Text>
             </View>
           </View>
@@ -220,12 +341,13 @@ const Performance = () => {
               fill={70}
               arcSweepAngle={180}
               rotation={-90}
-              tintColor="#0F6A97"
-              backgroundColor="#a8d0e6"
+              tintColor={gsvColor}
+              // tintColor="#0F6A97"
+              backgroundColor="#e2e2e2ff"
               lineCap="line"
             >
               {() => (
-                <Text style={styles.gsvValue}>
+                <Text style={[styles.gsvValue, { color: gsvColor }]}>
                   {' '}
                   ₹{' '}
                   {performanceData
@@ -235,7 +357,7 @@ const Performance = () => {
               )}
             </AnimatedCircularProgress>
           </View>
-          <View style={styles.averageBox}>
+          <View style={[styles.averageBox, { backgroundColor: gsvColor }]}>
             <Text style={styles.averageText}>Average GSV</Text>
           </View>
         </View>
@@ -244,23 +366,27 @@ const Performance = () => {
           <View
             style={[
               styles.badge,
-              { backgroundColor: '#ffc107', marginTop: 30 },
+              { backgroundColor: ratingColor, marginTop: 30 },
             ]}
           >
-            <Text style={styles.badgeText}>Rating :  {performanceData ? performanceData.averageRating : 0}</Text>
+            <Text style={styles.badgeText}>
+              Rating : {performanceData ? performanceData.averageRating : 0}
+            </Text>
           </View>
           <View
             style={[
               styles.badge,
-              { backgroundColor: '#2e7d32', marginTop: 30 },
+              { backgroundColor: strikesColor, marginTop: 30 },
             ]}
           >
-            <Text style={styles.badgeText}>Strikes : {performanceData ? performanceData.strikes : 0}</Text>
+            <Text style={styles.badgeText}>
+              Strikes : {performanceData ? performanceData.strikes : 0}
+            </Text>
           </View>
         </View>
 
         {/* Total Leads */}
-        <View style={styles.totalLeadsBox}>
+        <View style={[styles.totalLeadsBox, { backgroundColor: leadsColor }]}>
           <Text style={styles.totalLeadsText}>
             Total Leads : {performanceData ? performanceData.totalLeads : 0}
           </Text>
@@ -357,10 +483,8 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   percentText: {
-    position: 'absolute',
     fontSize: 10,
-    fontWeight: 'bold',
-    color: 'green',
+    fontFamily: 'Poppins-Bold',
   },
   cardFooter: {
     width: '100%',
@@ -372,7 +496,7 @@ const styles = StyleSheet.create({
   cardFooterText: {
     fontFamily: 'Poppins-SemiBold',
     fontSize: 12,
-    color: 'green',
+    color: 'white',
   },
   meterWrapper: {
     alignItems: 'center',
@@ -381,13 +505,13 @@ const styles = StyleSheet.create({
   },
   gsvValue: {
     fontSize: 18,
-    color: '#0F6A97',
-    position: 'absolute',
+    // color: '#0F6A97',
+    // position: 'absolute',
     fontFamily: 'Poppins-Bold',
-    top: 35,
+    // top: 35,
   },
   averageBox: {
-    backgroundColor: '#9FC3D5',
+    // backgroundColor: '#9FC3D5',
     padding: 10,
     borderRadius: 5,
     alignItems: 'center',
@@ -396,8 +520,8 @@ const styles = StyleSheet.create({
     marginTop: -60,
   },
   averageText: {
-    color: '#0F6A97',
-    fontFamily: 'Poppins-Bold',
+    color: 'white',
+    fontFamily: 'Poppins-SemiBold',
   },
   ratingRow: {
     flexDirection: 'row',
@@ -414,6 +538,7 @@ const styles = StyleSheet.create({
   badgeText: {
     color: '#fff',
     fontFamily: 'Poppins-SemiBold',
+    // fontSize: 12,
   },
   totalLeadsBox: {
     backgroundColor: '#0F6A97',

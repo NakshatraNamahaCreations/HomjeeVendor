@@ -78,4 +78,7 @@ export const API_ENDPOINTS = {
   HOUSE_PAINTING_PERFORMANCE_METRICS:
     '/bookings/house-painting-vendor-performance-metrics/',
   KPI_PARAMETERS: '/kpi-parameters/',
+
+  // WALLET
+  FETCH_WALLET_TRANSACTIONS: "/wallet/get-wallet-transaction/vendor/"
 };
