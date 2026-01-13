@@ -3,11 +3,10 @@ import {
   Text,
   Image,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
-  setModalVisible,
   FlatList,
   RefreshControl,
+  Modal,
 } from 'react-native';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useVendorContext } from '../Utilities/VendorContext';
@@ -15,18 +14,25 @@ import axios from 'axios';
 import { API_BASE_URL, API_ENDPOINTS } from '../ApiService/apiConstants';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+import Fontisto from 'react-native-vector-icons/Fontisto';
 import WalletCard from './WalletCard';
+import { usePerformance } from '../Utilities/PerformanceContext';
 
-// "Are you sure you want to buy coins?" 
-const Wallet = ({ navigation }) => {
+// his profile status as Low coins as soon as coins are 
+// below 100 and then no leads to be notified to him 
+// till he recharge his wallet
+
+const Wallet = () => {
   const { vendorDataContext } = useVendorContext();
   const vendorId = vendorDataContext?._id;
   const [loading, setLoading] = useState(false);
   const [trasactionData, setTrasactionData] = useState([]);
+  const [openPrompt, setOpenPrompt] = useState(false);
+  const { buyCoinsEnabled, isPerformanceLow, coins } = usePerformance();
 
+  console.log("vendorId", vendorId);
 
   const fetchTransactionHistory = useCallback(async () => {
-    // ✅ safe check
     if (!vendorId) {
       setTrasactionData([]);
       return;
@@ -37,11 +43,10 @@ const Wallet = ({ navigation }) => {
       const response = await axios.get(
         `${API_BASE_URL}${API_ENDPOINTS.FETCH_WALLET_TRANSACTIONS}${vendorId}`,
       );
-
-      console.log('Wallet history response', response.data);
-
-      // ✅ safe fallback
-      const list = Array.isArray(response?.data?.data) ? response.data.data : [];
+      // console.log('Wallet history response', response.data); 
+      const list = Array.isArray(response?.data?.data)
+        ? response.data.data
+        : [];
       setTrasactionData(list);
     } catch (error) {
       console.error('Failed to Transaction history:', error);
@@ -59,7 +64,10 @@ const Wallet = ({ navigation }) => {
     await fetchTransactionHistory();
   }, [fetchTransactionHistory]);
 
-  console.log('Wallet history response', trasactionData);
+
+
+  console.log("buyCoinsEnabled", buyCoinsEnabled);
+  console.log("isPerformanceLow", isPerformanceLow);
 
   const HistoryItem = React.memo(({ item }) => {
     // ✅ title fallback: title -> transactionType -> default
@@ -71,13 +79,13 @@ const Wallet = ({ navigation }) => {
           .replace(/\b\w/g, c => c.toUpperCase())
         : 'Transaction');
 
-    // ✅ amount fallback: amount -> coins -> coinAmount -> 0
-    const amount = Number(item?.amount ?? item?.coins ?? item?.coinAmount ?? 0);
-
     // ✅ type fallback: type -> action -> derive from amount sign if needed
     const rawType = String(item?.type ?? item?.action ?? '').toLowerCase();
     const isAdded =
-      rawType === 'added' || rawType === 'add' || rawType === 'credit' || amount > 0;
+      rawType === 'added' ||
+      rawType === 'add' ||
+      rawType === 'credit' ||
+      item?.amount > 0;
 
     const sign = isAdded ? '+' : '-';
     const amountColor = isAdded ? '#008E00' : '#df2020';
@@ -91,44 +99,42 @@ const Wallet = ({ navigation }) => {
     return (
       <View style={styles.mainleadone}>
         <View style={styles.leadone}></View>
-
-        <View style={styles.location}>
-          {/* <Image
-            style={styles.locationicon}
-            source={require('../assets/icons/circleyellow.png')}
-            resizeMode="contain"
-          /> */}
-          <FontAwesome5 name="coins" color="#F6C10E" size={17} />
-          <Text
-            style={{
-              fontSize: 13,
-              color: '#000000',
-              fontFamily: 'Poppins-SemiBold',
-              marginRight: 120,
-            }}>
-            {title}
-          </Text>
-
-          <Text
-            style={{
-              fontSize: 12,
-              color: amountColor, // ✅ use computed color
-              fontFamily: 'Poppins-SemiBold',
-              marginRight: 50,
-            }}>
-            {sign} {Math.abs(amount)} coins
-          </Text>
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <View style={{ flex: 0.1 }}>
+            <FontAwesome5 name="coins" color="#F6C10E" size={17} />
+          </View>
+          <View style={{ flex: 0.7 }}>
+            <Text
+              style={{
+                fontSize: 13,
+                color: '#000000',
+                fontFamily: 'Poppins-SemiBold',
+              }}
+            >
+              {title}
+            </Text>
+            <Text
+              style={{
+                color: '#000000',
+                fontFamily: 'Poppins-Medium',
+                fontSize: 12,
+              }}
+            >
+              {dateText}
+            </Text>
+          </View>
+          <View style={{ flex: 0.2 }}>
+            <Text
+              style={{
+                fontSize: 12,
+                color: amountColor,
+                fontFamily: 'Poppins-SemiBold',
+              }}
+            >
+              {sign} {Math.abs(item?.amount)} coins
+            </Text>
+          </View>
         </View>
-
-        <Text
-          style={{
-            marginLeft: 30,
-            color: '#000000',
-            fontFamily: 'Poppins-Medium',
-            fontSize: 12,
-          }}>
-          {dateText}
-        </Text>
       </View>
     );
   });
@@ -144,17 +150,17 @@ const Wallet = ({ navigation }) => {
           source={require('../assets/images/group.png')}
         />
       </TouchableOpacity> */}
-      <WalletCard
-        coins={200}
-        onBuyCoins={() => navigation.navigate("Payment")}
-      />
+      <WalletCard coins={coins}
+        onBuyCoins={() => setOpenPrompt(true)}
+        buyCoinsEnabled={buyCoinsEnabled} />
       <Text
         style={{
           fontFamily: 'Poppins-SemiBold',
           fontSize: 16,
           color: '#000000',
           margin: 10,
-        }}>
+        }}
+      >
         Transactions
       </Text>
       {Array.isArray(trasactionData) && trasactionData.length > 0 ? (
@@ -162,7 +168,9 @@ const Wallet = ({ navigation }) => {
           data={trasactionData}
           keyExtractor={(it, idx) => String(it?._id || idx)}
           renderItem={({ item }) => <HistoryItem item={item} />}
-          refreshControl={<RefreshControl refreshing={loading} onRefresh={onRefresh} />}
+          refreshControl={
+            <RefreshControl refreshing={loading} onRefresh={onRefresh} />
+          }
         />
       ) : (
         <View style={{ marginTop: 200 }}>
@@ -172,12 +180,59 @@ const Wallet = ({ navigation }) => {
               fontSize: 14,
               fontFamily: 'Poppins-Medium',
               textAlign: 'center',
-            }}>
+            }}
+          >
             No Transaction History
           </Text>
         </View>
       )}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={openPrompt}
+        onRequestClose={() => setOpenPrompt(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View
+              style={{ flexDirection: 'row', justifyContent: 'space-between' }}
+            >
+              <Text style={{ fontFamily: 'Poppins-Bold', fontSize: 16 }}>
+                Buy Coins
+              </Text>
+              <Fontisto
+                name="close"
+                color="#000000ff"
+                size={17}
+                onPress={() => setOpenPrompt(false)}
+              />
+            </View>
+            <Text
+              style={{
+                fontFamily: 'Poppins-SemiBold',
+                fontSize: 14,
+                marginTop: 10,
+                marginBottom: 10,
+              }}
+            >
+              Are you sure you want to buy coins?
+            </Text>
 
+            <TouchableOpacity
+              style={styles.confirmButton}
+            // onPress={handleRequestOtp}
+            >
+              <Text style={styles.confirmButtonText}>Yes</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={() => setOpenPrompt(false)}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -363,8 +418,51 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: 20,
     top: 35,
-
     // Span the full width
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    width: '85%',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 20,
+  },
+  checkIcon: {
+    width: 50,
+    height: 50,
+    marginBottom: 10,
+  },
+  confirmButton: {
+    backgroundColor: '#ED1F24',
+    borderRadius: 6,
+    width: '100%',
+    paddingVertical: 12,
+    marginBottom: 10,
+  },
+  confirmButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontFamily: 'Poppins-Bold',
+    textAlign: 'center',
+  },
+  cancelButton: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#D5D7DA',
+    borderRadius: 6,
+    width: '100%',
+    paddingVertical: 12,
+  },
+  cancelButtonText: {
+    color: '#000',
+    fontSize: 16,
+    fontFamily: 'Poppins-SemiBold',
+    textAlign: 'center',
   },
 });
 

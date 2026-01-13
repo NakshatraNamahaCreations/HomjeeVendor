@@ -147,7 +147,6 @@ function MyStack() {
           component={Wallet}
           options={{
             headerShown: true,
-            headerTitle: 'BS.Shivappa',
             headerTitleStyle: {
               fontFamily: 'Poppins-SemiBold',
               fontSize: 17,

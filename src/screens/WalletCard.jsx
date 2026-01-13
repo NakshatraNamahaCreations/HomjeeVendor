@@ -1,19 +1,18 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 
-export default function WalletCard({ coins = 1000, onBuyCoins = () => {} }) {
+export default function WalletCard({
+  coins = 1000,
+  onBuyCoins = () => {},
+  buyCoinsEnabled,
+}) {
   const coinText = Number(coins || 0).toLocaleString('en-IN');
 
   return (
     <View style={styles.card}>
-      {/* subtle highlight shape */}
       <View style={styles.highlight} />
-
       <View style={styles.row}>
-        {/* Coin icon circle */}
         <View style={styles.coinCircle}>
-          {/* If you have a coin icon asset, use it here */}
-          {/* <Image source={require("../assets/icons/coin.png")} style={styles.coinImg} /> */}
           <Text style={styles.coinSymbol}>₹</Text>
         </View>
 
@@ -23,11 +22,14 @@ export default function WalletCard({ coins = 1000, onBuyCoins = () => {} }) {
         </View>
       </View>
 
-      {/* Bottom white button */}
       <TouchableOpacity
         activeOpacity={0.85}
-        onPress={onBuyCoins}
-        style={styles.buyBtn}
+        onPress={buyCoinsEnabled ? onBuyCoins : undefined}
+        disabled={!buyCoinsEnabled}
+        style={[
+          styles.buyBtn,
+          !buyCoinsEnabled && { opacity: 0.5 }, // greyed look
+        ]}
       >
         <Text style={styles.buyBtnText}>Buy Coins</Text>
       </TouchableOpacity>
@@ -83,8 +85,8 @@ const styles = StyleSheet.create({
 
   coinSymbol: {
     color: '#F6C10E',
-    fontSize: 20,
-    fontFamily: 'Poppins-SemiBold',
+    fontSize: 25,
+    // fontFamily: 'Poppins-SemiBold',
   },
 
   // If you use an image instead:
@@ -99,9 +101,9 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    color: '#1A1A1A',
-    fontSize: 15,
-    fontFamily: 'Poppins-SemiBold',
+    color: '#7e6102ff', //958203
+    fontSize: 13,
+    fontFamily: 'Poppins-Medium',
   },
 
   coins: {

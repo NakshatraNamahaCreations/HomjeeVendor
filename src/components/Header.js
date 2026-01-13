@@ -1,9 +1,17 @@
-import {useNavigation} from '@react-navigation/native';
-import {View, Text, StyleSheet, Image, TouchableOpacity} from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import React from 'react';
+import { useVendorContext } from '../Utilities/VendorContext';
 
 const Header = () => {
   const navigation = useNavigation();
+  const { vendorDataContext } = useVendorContext();
+  const amount = Number(
+    (vendorDataContext &&
+      vendorDataContext.wallet &&
+      vendorDataContext?.wallet?.coins) ||
+    0,
+  );
 
   return (
     <View>
@@ -16,18 +24,18 @@ const Header = () => {
         <TouchableOpacity onPress={() => navigation.navigate('Wallet')}>
           <View style={styles.notificationWrappertwo}>
             <Image
-              style={{marginLeft: -25}}
+              style={{ marginLeft: -25 }}
               source={require('../assets/icons/wallet.png')}
               resizeMode="contain"
             />
             <View style={styles.badgetwo}>
-              <Text style={styles.badgeTexttwo}>100</Text>
+              <Text style={styles.badgeTexttwo}>{amount}</Text>
             </View>
           </View>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => navigation.navigate('Notification')}>
           <Image
-            style={{width: 35, height: 22, top: 3}}
+            style={{ width: 35, height: 22, top: 3 }}
             source={require('../assets/icons/bell.png')}
             resizeMode="contain"
           />

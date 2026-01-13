@@ -1,4 +1,4 @@
-export const API_BASE_URL = 'http://192.168.1.87:9000/api'; // development
+export const API_BASE_URL = 'http://192.168.1.72:9000/api'; // development
 // export const API_BASE_URL = 'https://homjee-backend.onrender.com/api'; // production
 
 export const API_ENDPOINTS = {
@@ -82,3 +82,14 @@ export const API_ENDPOINTS = {
   // WALLET
   FETCH_WALLET_TRANSACTIONS: "/wallet/get-wallet-transaction/vendor/"
 };
+
+
+
+
+// status stage - house painting
+// pending
+// Confirmed
+// Survey Ongoing
+//  survey completed
+//  pending hiring
+// project ongoing

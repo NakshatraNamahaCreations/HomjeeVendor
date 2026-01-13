@@ -9,6 +9,7 @@ import { ThemeProvider } from './src/Utilities/ThemeContext';
 import { MeasurementProvider } from './src/Utilities/MeasurementContext';
 import { EstimateProvider } from './src/Utilities/EstimateContext';
 import { RoomNameProvider } from './src/Utilities/RoomContext';
+import { PerformanceProvider } from './src/Utilities/PerformanceContext';
 
 function App() {
   const [isConnected, setIsConnected] = useState(true);
@@ -29,7 +30,9 @@ function App() {
             <LeadProvider>
               <MeasurementProvider>
                 <RoomNameProvider>
-                  {isConnected ? <MyStack /> : <NoInternet />}
+                  <PerformanceProvider>
+                    {isConnected ? <MyStack /> : <NoInternet />}
+                  </PerformanceProvider>
                 </RoomNameProvider>
               </MeasurementProvider>
             </LeadProvider>
