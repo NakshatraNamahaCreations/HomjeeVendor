@@ -1,4 +1,4 @@
-export const API_BASE_URL = 'http://192.168.1.72:9000/api'; // development
+export const API_BASE_URL = 'http://192.168.1.81:9000/api'; // development
 // export const API_BASE_URL = 'https://homjee-backend.onrender.com/api'; // production
 
 export const API_ENDPOINTS = {
@@ -80,7 +80,9 @@ export const API_ENDPOINTS = {
   KPI_PARAMETERS: '/kpi-parameters/',
 
   // WALLET
-  FETCH_WALLET_TRANSACTIONS: "/wallet/get-wallet-transaction/vendor/"
+  FETCH_WALLET_TRANSACTIONS: "/wallet/get-wallet-transaction/vendor/",
+  SEND_PAYMENT_LINK: "/wallet/send-recharge-link/",
+  PAYMENT_LINK_STATUS: "/wallet/get-link-status/payment-link/",
 };
 
 

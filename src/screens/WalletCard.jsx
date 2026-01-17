@@ -1,10 +1,13 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import Feather from 'react-native-vector-icons/Feather';
 
+// *if vendor.wallet.isLinkActive = false && coin less && perf good - show buy coin btn
 export default function WalletCard({
   coins = 1000,
   onBuyCoins = () => {},
   buyCoinsEnabled,
+  isPerformanceLow,
 }) {
   const coinText = Number(coins || 0).toLocaleString('en-IN');
 
@@ -13,11 +16,31 @@ export default function WalletCard({
       <View style={styles.highlight} />
       <View style={styles.row}>
         <View style={styles.coinCircle}>
-          <Text style={styles.coinSymbol}>₹</Text>
+          {/* <Text style={styles.coinSymbol}>₹</Text> */}
         </View>
 
         <View style={styles.textArea}>
-          <Text style={styles.title}>Your Coin Balance</Text>
+          <View
+            style={{ flexDirection: 'row', justifyContent: 'space-between' }}
+          >
+            <Text style={styles.title}>Your Coin Balance</Text>
+            <Text style={[styles.title, { color: '#d3d3d3' }]}>
+              Perfomance:{' '}
+              <Text
+                style={[
+                  styles.title,
+                  { color: isPerformanceLow ? '#800000' : '#325c0b' },
+                ]}
+              >
+                {isPerformanceLow ? (
+                  <Feather name="arrow-down" size={15} />
+                ) : (
+                  <Feather name="arrow-up" size={15} />
+                )}{' '}
+                {isPerformanceLow ? 'Low' : 'Good'}
+              </Text>
+            </Text>
+          </View>
           <Text style={styles.coins}>{coinText}</Text>
         </View>
       </View>
@@ -39,7 +62,8 @@ export default function WalletCard({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#F6C10E', // yellow base
+    // backgroundColor: '#F6C10E', // yellow base
+    backgroundColor: '#0f6a97',
     borderRadius: 18,
     padding: 14,
     margin: 10,
@@ -76,11 +100,11 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: '#3B3B3B',
+    backgroundColor: '#F6C10E',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 3,
-    borderColor: 'rgba(255,255,255,0.35)',
+    borderColor: '#ffffff59',
   },
 
   coinSymbol: {
@@ -101,14 +125,14 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    color: '#7e6102ff', //958203
+    color: '#d3d3d3', //958203
     fontSize: 13,
     fontFamily: 'Poppins-Medium',
   },
 
   coins: {
     marginTop: 4,
-    color: '#111',
+    color: '#f1f1f1',
     fontSize: 28,
     fontFamily: 'Poppins-SemiBold',
   },

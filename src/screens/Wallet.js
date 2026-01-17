@@ -7,6 +7,7 @@ import {
   FlatList,
   RefreshControl,
   Modal,
+  ToastAndroid,
 } from 'react-native';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useVendorContext } from '../Utilities/VendorContext';
@@ -17,20 +18,62 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import Fontisto from 'react-native-vector-icons/Fontisto';
 import WalletCard from './WalletCard';
 import { usePerformance } from '../Utilities/PerformanceContext';
+import { getRequest } from '../ApiService/apiHelper';
 
-// his profile status as Low coins as soon as coins are 
-// below 100 and then no leads to be notified to him 
+// his profile status as Low coins as soon as coins are
+// below 100 and then no leads to be notified to him
 // till he recharge his wallet
 
 const Wallet = () => {
-  const { vendorDataContext } = useVendorContext();
+  const { vendorDataContext, setVendorDataContext } = useVendorContext();
   const vendorId = vendorDataContext?._id;
   const [loading, setLoading] = useState(false);
   const [trasactionData, setTrasactionData] = useState([]);
   const [openPrompt, setOpenPrompt] = useState(false);
   const { buyCoinsEnabled, isPerformanceLow, coins } = usePerformance();
+  const [linkStatus, setLinkStatus] = useState({
+    canGenerateLink: true,
+  });
+  const [isSendingLink, setIsSendingLink] = useState(false);
+  console.log('vendorId', vendorDataContext);
 
-  console.log("vendorId", vendorId);
+  const updateVendor = useCallback(async () => {
+    if (!vendorId) return;
+    try {
+      const response = await getRequest(
+        `${API_ENDPOINTS.GET_VENDOR_PROFILE}${vendorId}`,
+      );
+
+      if (response?.vendor) {
+        console.log('response.vendor', response.vendor);
+        setVendorDataContext(response.vendor);
+      }
+    } catch (error) {
+      console.error('Error in returing vendor', error);
+    }
+  }, [vendorId]);
+
+  const fetchBuyStatus = useCallback(async () => {
+    if (!vendorId) return;
+    try {
+      const res = await axios.get(
+        `${API_BASE_URL}${API_ENDPOINTS.PAYMENT_LINK_STATUS}${vendorId}`,
+      );
+
+      setLinkStatus({
+        canGenerateLink: Boolean(res?.data?.canGenerateLink),
+        wallet: res?.data?.wallet || {},
+      });
+    } catch (err) {
+      console.error('status api error', err);
+
+      // fallback: allow buying instead of crashing
+      setLinkStatus({
+        canGenerateLink: true,
+        wallet: {},
+      });
+    }
+  }, [vendorId]);
 
   const fetchTransactionHistory = useCallback(async () => {
     if (!vendorId) {
@@ -43,7 +86,7 @@ const Wallet = () => {
       const response = await axios.get(
         `${API_BASE_URL}${API_ENDPOINTS.FETCH_WALLET_TRANSACTIONS}${vendorId}`,
       );
-      // console.log('Wallet history response', response.data); 
+      // console.log('Wallet history response', response.data);
       const list = Array.isArray(response?.data?.data)
         ? response.data.data
         : [];
@@ -58,16 +101,63 @@ const Wallet = () => {
 
   useEffect(() => {
     fetchTransactionHistory();
-  }, [fetchTransactionHistory]);
+    fetchBuyStatus();
+    updateVendor();
+  }, [fetchTransactionHistory, fetchBuyStatus]);
 
   const onRefresh = useCallback(async () => {
     await fetchTransactionHistory();
-  }, [fetchTransactionHistory]);
+    await fetchBuyStatus();
+    await updateVendor();
+  }, [fetchTransactionHistory, fetchBuyStatus, updateVendor]);
 
+  console.log('buyCoinsEnabled', buyCoinsEnabled);
+  console.log('isPerformanceLow', isPerformanceLow);
+  console.log('linkStatus', linkStatus);
 
+  const finalBuyCoinsEnabled =
+    buyCoinsEnabled && linkStatus?.canGenerateLink && !isSendingLink;
 
-  console.log("buyCoinsEnabled", buyCoinsEnabled);
-  console.log("isPerformanceLow", isPerformanceLow);
+  const sendPaymentLink = async () => {
+    setOpenPrompt(false);
+    setIsSendingLink(true);
+    try {
+      const url = `${API_BASE_URL}${API_ENDPOINTS.SEND_PAYMENT_LINK}${vendorId}/payment-link`;
+
+      const res = await axios.put(url);
+
+      console.log('sendLink response:', res?.data);
+
+      if (res?.data?.status === 'success') {
+        ToastAndroid.showWithGravity(
+          'Payment link generated & sent to WhatsApp',
+          ToastAndroid.LONG,
+          ToastAndroid.CENTER,
+        );
+
+        // 🔴 refresh backend truth
+        await fetchBuyStatus();
+      } else {
+        setIsSendingLink(false); // unlock if failed
+        ToastAndroid.showWithGravity(
+          res?.data?.message || 'Failed to send payment link',
+          ToastAndroid.LONG,
+          ToastAndroid.CENTER,
+        );
+      }
+    } catch (error) {
+      console.error(
+        'sendPaymentLink error:',
+        error?.response?.data || error?.message,
+      );
+      setIsSendingLink(false);
+      ToastAndroid.showWithGravity(
+        error?.response?.data?.message || 'Fail to send a link',
+        ToastAndroid.LONG,
+        ToastAndroid.CENTER,
+      );
+    }
+  };
 
   const HistoryItem = React.memo(({ item }) => {
     // ✅ title fallback: title -> transactionType -> default
@@ -99,7 +189,7 @@ const Wallet = () => {
     return (
       <View style={styles.mainleadone}>
         <View style={styles.leadone}></View>
-        <View style={{ flexDirection: "row", alignItems: "center" }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <View style={{ flex: 0.1 }}>
             <FontAwesome5 name="coins" color="#F6C10E" size={17} />
           </View>
@@ -131,7 +221,7 @@ const Wallet = () => {
                 fontFamily: 'Poppins-SemiBold',
               }}
             >
-              {sign} {Math.abs(item?.amount)} coins
+              {sign} {Math.abs(item?.coin)} coins{' '}
             </Text>
           </View>
         </View>
@@ -150,9 +240,13 @@ const Wallet = () => {
           source={require('../assets/images/group.png')}
         />
       </TouchableOpacity> */}
-      <WalletCard coins={coins}
+      <WalletCard
+        coins={coins}
         onBuyCoins={() => setOpenPrompt(true)}
-        buyCoinsEnabled={buyCoinsEnabled} />
+        buyCoinsEnabled={finalBuyCoinsEnabled}
+        // buyCoinsEnabled={buyCoinsEnabled}
+        isPerformanceLow={isPerformanceLow}
+      />
       <Text
         style={{
           fontFamily: 'Poppins-SemiBold',
@@ -220,7 +314,7 @@ const Wallet = () => {
 
             <TouchableOpacity
               style={styles.confirmButton}
-            // onPress={handleRequestOtp}
+              onPress={sendPaymentLink}
             >
               <Text style={styles.confirmButtonText}>Yes</Text>
             </TouchableOpacity>
@@ -467,3 +561,36 @@ const styles = StyleSheet.create({
 });
 
 export default Wallet;
+
+// wallet case
+// Case 1: Coins < 100 AND Performance = Low
+// Buy Coins:  Disabled
+// Respond Lead:  Disabled
+// New Leads: Not Visible
+
+// Case 2: Coins < 100 AND Performance = Good
+// Buy Coins:  Enabled
+// Respond Lead: Enabled
+// New Leads:  Visible
+// buyCoinsEnabled true
+// isPerformanceLow false
+
+// Case 3: Coins > 100 AND Performance = Low
+// Buy Coins:  Disabled
+// Respond Lead:  Enabled
+// New Leads:  Visible
+// buyCoinsEnabled false
+// isPerformanceLow true
+
+// Case 4: Coins > 100 AND Performance = Good
+// Buy Coins:  Disabled
+// Respond Lead: Enabled
+// New Leads: Visible
+// isPerformanceLow false
+// buyCoinsEnabled false
+
+// vendor id : 689472b895ba472e19ad7284
+
+// pending in coins
+// reshcduel - refund, cancel - refund,
+// disable leads based on rule
