@@ -1759,7 +1759,7 @@ const JobOngoing = () => {
                         </View>
                         <View style={styles.rowBetween}>
                           <Text style={styles.amountLabel}>
-                            Amount Yet to be Paid (edit)
+                            Amount Yet to be Paid
                           </Text>
                           <Text style={styles.amountDue}>
                             {currency(currentVisibleTotal - paid)}
@@ -1796,14 +1796,14 @@ const JobOngoing = () => {
                         </View>
                         <View style={styles.dottedLine2} />
                         <View style={styles.rowBetween}>
-                          <Text style={styles.amountLabel}>Amount Paid - (default)</Text>
+                          <Text style={styles.amountLabel}>Amount Paid</Text>
                           <Text style={styles.amountPaid}>
                             {currency(paid)}
                           </Text>
                         </View>
                         <View style={styles.rowBetween}>
                           <Text style={styles.amountLabel}>
-                            Amount Yet to be Paid -- (default)
+                            Amount Yet to be Paid
                           </Text>
                           <Text style={styles.amountDue}>
                             {

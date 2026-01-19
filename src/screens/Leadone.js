@@ -23,9 +23,11 @@ import { useThemeColor } from '../Utilities/ThemeContext';
 import { useLeadContext } from '../Utilities/LeadContext';
 import IsEnabled3HoursBeforeSlot from '../Utilities/IsEnabled3HoursBeforeSlot';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { usePerformance } from '../Utilities/PerformanceContext';
 
 const Leadone = () => {
   const deviceHeight = useWindowDimensions().height;
+  const { buyCoinsEnabled, isPerformanceLow } = usePerformance();
   // console.log('deviceHeight', deviceHeight);
   const { setLeadDataContext } = useLeadContext();
   const { deviceTheme } = useThemeColor();
@@ -35,10 +37,12 @@ const Leadone = () => {
   const lat = vendorDataContext?.address?.latitude || null;
   const long = vendorDataContext?.address?.longitude || null;
 
-  console.log('vendorDataContext', vendorDataContext);
+  // console.log('vendorDataContext', vendorDataContext);
+  console.log(' buyCoinsEnabled', buyCoinsEnabled, 'isPerformanceLow', isPerformanceLow);
+
 
   const vendorType = vendorDataContext.vendor?.serviceType;
-  console.log('vendorType', vendorType);
+  // console.log('vendorType', vendorType);
 
   const VENDOR_SERVICE_TYPE =
     vendorType === 'house-painter' || vendorType === 'House Painting'
@@ -61,7 +65,8 @@ const Leadone = () => {
           `${VENDOR_SERVICE_TYPE}${lat}/${long}`,
           signal ? { signal } : undefined,
         );
-        setNearByBookigs(response.bookings);
+        const decideToShowRes = isPerformanceLow ? [] : response.bookings
+        setNearByBookigs(decideToShowRes);
       } catch (err) {
         if (err.name !== 'AbortError') {
           setError(err);

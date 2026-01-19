@@ -136,7 +136,7 @@ const Leaddetails = () => {
         screen: 'New',
       });
     } catch (error) {
-      console.log('Error while update status:', error);
+      // console.log('Error while update status:', error);
       ToastAndroid.showWithGravity(
         error?.message || 'Failed to confirm Job',
         ToastAndroid.LONG,
@@ -146,6 +146,11 @@ const Leaddetails = () => {
       setLoading(false);
     }
   };
+
+  const overallCoinDeduction = (leadDataContext?.service ?? [])
+    .reduce((sum, s) => sum + (Number(s?.coinDeduction) || 0), 0);
+
+  console.log("overallCoinDeduction", overallCoinDeduction);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -298,7 +303,7 @@ const Leaddetails = () => {
                     marginLeft: 5,
                   }}
                 >
-                  50
+                  {overallCoinDeduction}
                 </Text>
                 <Text style={{ color: 'white' }}>)</Text>
               </View>
