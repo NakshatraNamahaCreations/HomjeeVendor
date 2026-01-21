@@ -10,7 +10,7 @@ import {
   StatusBar,
   useWindowDimensions,
 } from 'react-native';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Header from '../components/Header';
 import { useVendorContext } from '../Utilities/VendorContext';
 import { getRequest } from '../ApiService/apiHelper';
@@ -27,22 +27,23 @@ import { usePerformance } from '../Utilities/PerformanceContext';
 
 const Leadone = () => {
   const deviceHeight = useWindowDimensions().height;
-  const { buyCoinsEnabled, isPerformanceLow } = usePerformance();
+  const { isPerfReady, isPerformanceLow } = usePerformance();
   // console.log('deviceHeight', deviceHeight);
   const { setLeadDataContext } = useLeadContext();
   const { deviceTheme } = useThemeColor();
   const navigation = useNavigation();
-  const { vendorDataContext } = useVendorContext();
+  const { vendorDataContext, setVendorDataContext } = useVendorContext();
   const vendorId = vendorDataContext?._id;
   const lat = vendorDataContext?.address?.latitude || null;
   const long = vendorDataContext?.address?.longitude || null;
 
   // console.log('vendorDataContext', vendorDataContext);
-  console.log(' buyCoinsEnabled', buyCoinsEnabled, 'isPerformanceLow', isPerformanceLow);
+  console.log('isPerformanceLow', isPerformanceLow);
 
 
   const vendorType = vendorDataContext.vendor?.serviceType;
-  // console.log('vendorType', vendorType);
+  const coins = vendorDataContext?.wallet?.coins
+  console.log('coin', coins);
 
   const VENDOR_SERVICE_TYPE =
     vendorType === 'house-painter' || vendorType === 'House Painting'
@@ -56,40 +57,97 @@ const Leadone = () => {
 
   // console.log('nearByBookings', nearByBookings);
 
+  const isLeadVisible = useMemo(() => {
+    if (isPerformanceLow == null) return false; // unknown yet
+    // hide only in Case 1
+    return !(coins < 100 && isPerformanceLow === true);
+  }, [coins, isPerformanceLow]);
+
   const fetchNearbyBookings = useCallback(
-    async signal => {
+    async (signal) => {
       setError(null);
       if (!refreshing) setLoading(true);
+
       try {
+        //Don’t fetch until performance is ready
+        if (!isPerfReady) {
+          setNearByBookigs([]);
+          return;
+        }
+        // // If performance is low 
+        // if (isPerformanceLow) {
+        //   setNearByBookigs([]);
+        //   return;
+        // }
+        // Apply business rule for leads visibility
+        const shouldHideLeads = coins < 100 && isPerformanceLow === true;
+        if (shouldHideLeads) {
+          setNearByBookigs([]);
+          return;
+        }
+
         const response = await getRequest(
           `${VENDOR_SERVICE_TYPE}${lat}/${long}`,
-          signal ? { signal } : undefined,
+          signal ? { signal } : undefined
         );
-        const decideToShowRes = isPerformanceLow ? [] : response.bookings
-        setNearByBookigs(decideToShowRes);
+        const bookings = Array.isArray(response?.bookings) ? response.bookings : [];
+        setNearByBookigs(bookings);
       } catch (err) {
-        if (err.name !== 'AbortError') {
-          setError(err);
-          // console.error('Error fetching bookings:', err);
-        }
+        if (err.name !== "AbortError") setError(err);
       } finally {
         if (!refreshing) setLoading(false);
       }
     },
-    [lat, long, refreshing],
+    [lat, long, refreshing, isPerfReady, isPerformanceLow, coins] // ✅ add
   );
 
+  const updateVendor = useCallback(async () => {
+    if (!vendorId) return;
+    try {
+      const response = await getRequest(
+        `${API_ENDPOINTS.GET_VENDOR_PROFILE}${vendorId}`,
+      );
+
+      if (response?.vendor) {
+        // console.log('response.vendor', response.vendor);
+        setVendorDataContext(response.vendor);
+      }
+    } catch (error) {
+      console.error('Error in returing vendor', error);
+    }
+  }, [vendorId]);
+
   useEffect(() => {
+    if (!isPerfReady || !isLeadVisible) return;
     const controller = new AbortController();
     fetchNearbyBookings(controller.signal).finally(() => setLoading(false));
     return () => controller.abort();
-  }, [vendorId, lat, long, fetchNearbyBookings]);
+  }, [vendorId, lat, long, isPerfReady, fetchNearbyBookings, isLeadVisible]);
+
+  useEffect(() => {
+    if (!isPerfReady) {
+      setNearByBookigs([]);
+      return;
+    }
+
+    const shouldHideLeads = coins < 100 && isPerformanceLow === true;
+    if (shouldHideLeads || !isLeadVisible) {
+      setNearByBookigs([]);
+    }
+  }, [isPerfReady, isPerformanceLow, isLeadVisible, coins]);
+
+  const { refresh: refreshPerformance } = usePerformance();
 
   const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await fetchNearbyBookings();
-    setRefreshing(false);
-  }, [fetchNearbyBookings]);
+    try {
+      setRefreshing(true);
+      await updateVendor();
+      await refreshPerformance(); // ✅ important
+      await fetchNearbyBookings();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [updateVendor, refreshPerformance, fetchNearbyBookings]);
 
   const routeNavigation = lead => {
     setLeadDataContext(lead);

@@ -72,9 +72,11 @@ export default function QuoteSummary() {
       const dt = (q?.discount?.type || 'PERCENT').toUpperCase();
       setDiscountType(dt);
       setDiscountPercent(Number(q?.discount?.value || 0));
-      setDiscountFlat(String(q?.discount?.amount || 0));
+      const flat = Number(q?.discount?.amount || 0);
+      setDiscountFlat(flat > 0 ? String(flat) : '');
+      // setDiscountFlat(String(q?.discount?.amount || 0));
       setComments(q?.comments || '');
-    } catch {}
+    } catch { }
   }, [quoteId]);
 
   useEffect(() => {
@@ -143,7 +145,7 @@ export default function QuoteSummary() {
   // committed discount (what the UI & payload use)
   const [discountType, setDiscountType] = useState(DISCOUNT_TYPES.PERCENT);
   const [discountPercent, setDiscountPercent] = useState(0); // 0–20
-  const [discountFlat, setDiscountFlat] = useState('0'); // string for input
+  const [discountFlat, setDiscountFlat] = useState(''); // string for input
 
   // modal state (draft until Apply)
   const [discountModal, setDiscountModal] = useState(false);
@@ -154,7 +156,9 @@ export default function QuoteSummary() {
   const openDiscountModal = () => {
     setDraftType(discountType);
     setDraftPercent(discountPercent);
-    setDraftFlat(discountFlat);
+    // setDraftFlat(discountFlat);
+    const flatNum = Number(discountFlat || 0);
+    setDraftFlat(flatNum > 0 ? String(flatNum) : '');
     setDiscountModal(true);
   };
 
@@ -162,9 +166,12 @@ export default function QuoteSummary() {
     setDiscountType(draftType);
     if (draftType === DISCOUNT_TYPES.PERCENT) {
       setDiscountPercent(toNum(draftPercent));
-      setDiscountFlat('0'); // reset flat
+      setDiscountFlat('');
+      // setDiscountFlat('0'); // reset flat
     } else {
       setDiscountFlat(String(round2(toNum(draftFlat))));
+      const v = round2(toNum(draftFlat));
+      setDiscountFlat(v > 0 ? String(v) : '');
       setDiscountPercent(0); // reset percent
     }
     setDiscountModal(false);
@@ -218,8 +225,8 @@ export default function QuoteSummary() {
   // );
   const additionalServices = Number(
     totalsFromServer?.additionalServices ??
-      totalsFromLines.additionalServices ??
-      0,
+    totalsFromLines.additionalServices ??
+    0,
   );
 
   const subtotal = useMemo(() => {
@@ -384,9 +391,8 @@ export default function QuoteSummary() {
           >
             <Text style={{ fontFamily: 'Poppins-SemiBold', marginLeft: 15 }}>
               {discountType === DISCOUNT_TYPES.PERCENT
-                ? `Discount (Percentage${
-                    discountPercent ? ` – ${discountPercent}%` : ''
-                  })`
+                ? `Discount (Percentage${discountPercent ? ` – ${discountPercent}%` : ''
+                })`
                 : 'Discount (Flat amount)'}
             </Text>
 
@@ -436,19 +442,20 @@ export default function QuoteSummary() {
                 onPress={() => {
                   setDraftType(DISCOUNT_TYPES.PERCENT);
                   setDraftPercent(draftPercent ?? 0);
-                  setDraftFlat('0');
+                  // setDraftFlat('0');
+                  setDraftFlat('');
                 }}
                 style={[
                   styles.togglePill,
                   draftType === DISCOUNT_TYPES.PERCENT &&
-                    styles.togglePillActive,
+                  styles.togglePillActive,
                 ]}
               >
                 <Text
                   style={[
                     styles.togglePillText,
                     draftType === DISCOUNT_TYPES.PERCENT &&
-                      styles.togglePillTextActive,
+                    styles.togglePillTextActive,
                   ]}
                 >
                   Percentage
@@ -469,7 +476,7 @@ export default function QuoteSummary() {
                   style={[
                     styles.togglePillText,
                     draftType === DISCOUNT_TYPES.FLAT &&
-                      styles.togglePillTextActive,
+                    styles.togglePillTextActive,
                   ]}
                 >
                   Flat amount
@@ -506,7 +513,7 @@ export default function QuoteSummary() {
                 <Text style={styles.inputLabel}>Amount (₹)</Text>
                 <TextInput
                   keyboardType="numeric"
-                  placeholder="0"
+                  placeholder="Enter amount"
                   value={draftFlat}
                   onChangeText={t => setDraftFlat(t.replace(/[^\d.]/g, ''))}
                   style={styles.amountInput}

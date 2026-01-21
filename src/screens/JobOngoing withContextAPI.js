@@ -50,7 +50,7 @@ const JobOngoing = () => {
   const { deviceTheme } = useThemeColor();
   const navigation = useNavigation();
   const { leadDataContext, setLeadDataContext } = useLeadContext();
-  const leadId = leadDataContext?._id;
+  const leadId = leadDataContext._id;
   const { vendorDataContext } = useVendorContext();
   const vendorId = vendorDataContext?._id;
   const [estimateData, setEstimateData] = useEstimateContext();
@@ -78,7 +78,7 @@ const JobOngoing = () => {
   const [packageList, setPackageList] = useState([]);
 
   const [markerPosition, setMarkerPosition] = useState(null);
-  console.log('leadDataContext Id', leadDataContext?._id);
+  console.log('leadDataContext Id', leadDataContext._id);
   // console.log('leadDataContext', leadDataContext);
   // console.log('vendorDataContext', vendorDataContext);
   // console.log('quotes', quotes);
@@ -114,19 +114,10 @@ const JobOngoing = () => {
 
   const allowedStatusesForUpdate = ['Hired', 'Completed'];
 
-  console.log('bookingDetails>>>', leadDataContext?.bookingDetails);
-
-  const handleGoBack = () => {
-    // if (leadDataContext) {
-    //   setLeadDataContext(null);
-    // }
-    navigation.navigate('BottomTab', {
-      screen: 'Ongoing',
-    });
-  }
+  console.log('bookingDetails>>>', leadDataContext.bookingDetails);
 
   const uniqueSubCategories = [
-    ...new Set(leadDataContext?.service?.map(unq => unq.subCategory)),
+    ...new Set(leadDataContext.service?.map(unq => unq.subCategory)),
   ];
   const queryString = uniqueSubCategories
     .map(sub => `subCategory=${encodeURIComponent(sub)}`)
@@ -138,7 +129,7 @@ const JobOngoing = () => {
     : [];
   projectDates.sort(); // ISO YYYY-MM-DD sorts lexicographically ok
 
-  const bookingId = leadDataContext?._id;
+  const bookingId = leadDataContext._id;
 
   const startDate = projectDates[0]
     ? moment(projectDates[0]).format('DD MMM YYYY')
@@ -292,27 +283,27 @@ const JobOngoing = () => {
 
   const backgroundColorStatus = () => {
     if (
-      leadDataContext?.bookingDetails?.status === 'Survey Ongoing' ||
-      leadDataContext?.bookingDetails?.status === 'Project Ongoing' ||
-      leadDataContext?.bookingDetails?.status === 'Job Ongoing'
+      leadDataContext.bookingDetails?.status === 'Survey Ongoing' ||
+      leadDataContext.bookingDetails?.status === 'Project Ongoing' ||
+      leadDataContext.bookingDetails?.status === 'Job Ongoing'
     ) {
       return '#FF7F00';
-    } else if (leadDataContext?.bookingDetails?.status === 'Survey Completed') {
+    } else if (leadDataContext.bookingDetails?.status === 'Survey Completed') {
       return 'green';
     } else if (
-      leadDataContext?.bookingDetails?.status === 'Customer Cancelled' ||
-      leadDataContext?.bookingDetails?.status === 'Waiting for final payment'
+      leadDataContext.bookingDetails?.status === 'Customer Cancelled' ||
+      leadDataContext.bookingDetails?.status === 'Waiting for final payment'
     ) {
       return '#ff0000';
     } else if (
-      leadDataContext?.bookingDetails?.status === 'Customer Unreachable'
+      leadDataContext.bookingDetails?.status === 'Customer Unreachable'
     ) {
       return '#ff0000';
-    } else if (leadDataContext?.bookingDetails?.status === 'Pending Hiring') {
+    } else if (leadDataContext.bookingDetails?.status === 'Pending Hiring') {
       return '#fabb05ff';
     } else if (
-      leadDataContext?.bookingDetails?.status === 'Hired' ||
-      leadDataContext?.bookingDetails?.status === 'Project Completed'
+      leadDataContext.bookingDetails?.status === 'Hired' ||
+      leadDataContext.bookingDetails?.status === 'Project Completed'
     ) {
       return '#008e00ff';
     }
@@ -343,14 +334,14 @@ const JobOngoing = () => {
   const bd = leadDataContext?.bookingDetails ?? {};
   const priceChanges = bd.priceChanges || [];
   const latestChange = priceChanges[priceChanges.length - 1] || null;
-  // const latestChange = leadDataContext?.bookingDetails?.priceChanges?.slice(-1)[0];
+  // const latestChange = leadDataContext.bookingDetails?.priceChanges?.slice(-1)[0];
   const hasPendingPriceEdit =
     !!latestChange &&
     latestChange.status === 'pending' &&
-    leadDataContext?.bookingDetails?.hasPriceUpdated;
+    leadDataContext.bookingDetails?.hasPriceUpdated;
 
   const paymentLinkActive =
-    leadDataContext?.bookingDetails?.paymentLink?.isActive === true;
+    leadDataContext.bookingDetails?.paymentLink?.isActive === true;
   const isDeepCleaning =
     vendorDataContext?.vendor?.serviceType === 'deep-cleaning';
   const isHousePainter =
@@ -364,8 +355,8 @@ const JobOngoing = () => {
   // "End Survey" — unaffected
   const showEndSurvey =
     isHousePainter &&
-    leadDataContext?.bookingDetails?.status !== 'Survey Completed' &&
-    !leadDataContext?.bookingDetails?.startProject;
+    leadDataContext.bookingDetails?.status !== 'Survey Completed' &&
+    !leadDataContext.bookingDetails?.startProject;
 
   const approvedChanges = priceChanges.filter(c => c.status === 'approved');
   const hasApprovedChange = approvedChanges.length > 0;
@@ -497,7 +488,7 @@ const JobOngoing = () => {
 
   let disableAllTheHell = false;
 
-  const serviceType = leadDataContext?.serviceType?.toLowerCase().trim();
+  const serviceType = leadDataContext.serviceType?.toLowerCase().trim();
   console.log('serviceType', serviceType);
   if (
     (serviceType === 'deep_cleaning' &&
@@ -584,14 +575,14 @@ const JobOngoing = () => {
   useEffect(() => {
     if (
       leadDataContext &&
-      leadDataContext?.address &&
-      leadDataContext?.address.location &&
-      Array.isArray(leadDataContext?.address.location.coordinates) &&
-      leadDataContext?.address.location.coordinates.length === 2
+      leadDataContext.address &&
+      leadDataContext.address.location &&
+      Array.isArray(leadDataContext.address.location.coordinates) &&
+      leadDataContext.address.location.coordinates.length === 2
     ) {
       // GeoJSON format: [longitude, latitude]
       const [longitude, latitude] =
-        leadDataContext?.address.location.coordinates;
+        leadDataContext.address.location.coordinates;
 
       setRegion({
         latitude,
@@ -707,7 +698,7 @@ const JobOngoing = () => {
     // }
     try {
       const formData = {
-        bookingId: leadDataContext?._id,
+        bookingId: leadDataContext._id,
         status: status,
         vendorId: vendorDataContext._id,
         // reasonForCancelled: cancelReason,
@@ -988,8 +979,8 @@ const JobOngoing = () => {
   }, [leadId, vendorId]);
 
   const handleNavigateToMap = () => {
-    const lat = leadDataContext?.address?.location?.coordinates[1];
-    const lng = leadDataContext?.address?.location?.coordinates[0];
+    const lat = leadDataContext.address?.location?.coordinates[1];
+    const lng = leadDataContext.address?.location?.coordinates[0];
 
     if (lat && lng) {
       const url = `https://www.google.com/maps?q=${lat},${lng}`;
@@ -1008,13 +999,13 @@ const JobOngoing = () => {
   }, [route.params?.measurementSummary]);
 
   const calculatedPrice = isReduce
-    ? Number(leadDataContext?.bookingDetails.amountYetToPay) - Number(amount)
-    : Number(leadDataContext?.bookingDetails.amountYetToPay) + Number(amount);
+    ? Number(leadDataContext.bookingDetails.amountYetToPay) - Number(amount)
+    : Number(leadDataContext.bookingDetails.amountYetToPay) + Number(amount);
 
   const checkAmount = entered => {
     const enteredNum = parseInt(entered, 10) || 0;
     const paidNum =
-      parseInt(leadDataContext?.bookingDetails.paidAmount, 10) || 0;
+      parseInt(leadDataContext.bookingDetails.paidAmount, 10) || 0;
     if (enteredNum > paidNum) {
       ToastAndroid.showWithGravity(
         'Entered amount should not exceed paid amount.',
@@ -1028,7 +1019,7 @@ const JobOngoing = () => {
 
   const updatePrice = async () => {
     setLoading(true);
-    const bookingId = leadDataContext?._id;
+    const bookingId = leadDataContext._id;
 
     // 🔢 Ensure numeric safety
     const currentTotal =
@@ -1096,7 +1087,7 @@ const JobOngoing = () => {
     setModalVisible(false);
     try {
       const formData = {
-        bookingId: leadDataContext?._id,
+        bookingId: leadDataContext._id,
         status:
           vendorDataContext?.vendor?.serviceType === 'house-painter' ||
             vendorDataContext?.vendor?.serviceType === 'House Painting'
@@ -1107,10 +1098,10 @@ const JobOngoing = () => {
           name: vendorDataContext.vendor?.vendorName,
           phone: vendorDataContext.vendor?.mobileNumber,
           profile: vendorDataContext.vendor?.profileImage,
-          acceptedDate: leadDataContext?.assignedProfessional?.acceptedDate,
-          acceptedTime: leadDataContext?.assignedProfessional?.acceptedTime,
-          startedDate: leadDataContext?.assignedProfessional?.startedDate,
-          startedTime: leadDataContext?.assignedProfessional?.startedTime,
+          acceptedDate: leadDataContext.assignedProfessional?.acceptedDate,
+          acceptedTime: leadDataContext.assignedProfessional?.acceptedTime,
+          startedDate: leadDataContext.assignedProfessional?.startedDate,
+          startedTime: leadDataContext.assignedProfessional?.startedTime,
           endedDate: moment().format('ll'),
           endedTime: moment().format('LT'),
         },
@@ -1193,7 +1184,11 @@ const JobOngoing = () => {
       >
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <TouchableOpacity
-            onPress={() => handleGoBack()}
+            onPress={() =>
+              navigation.navigate('BottomTab', {
+                screen: 'Ongoing',
+              })
+            }
           >
             <Ionicons name="arrow-back" color="black" size={23} />
           </TouchableOpacity>
@@ -1225,12 +1220,12 @@ const JobOngoing = () => {
               fontFamily: 'Poppins-SemiBold',
             }}
           >
-            {leadDataContext?.bookingDetails?.status}
+            {leadDataContext.bookingDetails?.status}
             {/* Project Ongoing{' '} */}
-            {/* {moment(leadDataContext?.assignedProfessional?.startedDate).format(
+            {/* {moment(leadDataContext.assignedProfessional?.startedDate).format(
               'll',
             )}{' '}
-            : {leadDataContext?.assignedProfessional?.startedTime} */}
+            : {leadDataContext.assignedProfessional?.startedTime} */}
           </Text>
           {latestChange && (
             <View style={styles.headerBlock}>
@@ -1260,11 +1255,11 @@ const JobOngoing = () => {
               <View style={{ alignItems: 'flex-end' }}>
                 <Text style={styles.dateText}>
                   {' '}
-                  {moment(leadDataContext?.selectedSlot?.slotDate).format('ll')}
+                  {moment(leadDataContext.selectedSlot?.slotDate).format('ll')}
                 </Text>
                 <Text style={styles.timeText}>
                   {' '}
-                  {leadDataContext?.selectedSlot?.slotTime}
+                  {leadDataContext.selectedSlot?.slotTime}
                 </Text>
               </View>
             </View>
@@ -1274,8 +1269,8 @@ const JobOngoing = () => {
                 style={{ marginTop: 9, marginRight: 5, width: 20, height: 20 }}
               />
               <Text style={styles.descriptionText}>
-                {leadDataContext?.address?.houseFlatNumber},{' '}
-                {leadDataContext?.address?.streetArea}
+                {leadDataContext.address?.houseFlatNumber},{' '}
+                {leadDataContext.address?.streetArea}
               </Text>
             </View>
             {/* {(leadDataContext?.bookingDetails.status === 'Completed' ||
@@ -1349,7 +1344,7 @@ const JobOngoing = () => {
                   },
                 ]}
                 disabled={disableAllTheHell}
-                onPress={() => openDialPad(leadDataContext?.customer?.phone)}
+                onPress={() => openDialPad(leadDataContext.customer?.phone)}
               >
                 <Feather name="phone" color="white" size={17} />
                 <Text style={styles.contactText}> Contact</Text>
@@ -1558,14 +1553,14 @@ const JobOngoing = () => {
             </>
           )}
           {
-            // leadDataContext?.bookingDetails?.status === 'Pending Hiring' ||
-            leadDataContext?.bookingDetails?.status === 'Hired' ||
-              leadDataContext?.bookingDetails?.status === 'Project Ongoing' ||
-              leadDataContext?.bookingDetails?.status ===
+            // leadDataContext.bookingDetails?.status === 'Pending Hiring' ||
+            leadDataContext.bookingDetails?.status === 'Hired' ||
+              leadDataContext.bookingDetails?.status === 'Project Ongoing' ||
+              leadDataContext.bookingDetails?.status ===
               'Waiting for final payment' ||
-              // leadDataContext?.bookingDetails?.status === 'Survey Completed' ||
+              // leadDataContext.bookingDetails?.status === 'Survey Completed' ||
               vendorDataContext?.vendor?.serviceType === 'deep cleaning' || // deep cleaing
-              leadDataContext?.bookingDetails?.status === 'Project Completed' ? (
+              leadDataContext.bookingDetails?.status === 'Project Completed' ? (
               <View
                 style={{
                   backgroundColor: 'white',
@@ -1734,9 +1729,9 @@ const JobOngoing = () => {
                           </Text>
                           <Text style={styles.amountDue}>
                             {currency(newTotal)}{' '}
-                            {(leadDataContext?.bookingDetails?.status ===
+                            {(leadDataContext.bookingDetails?.status ===
                               'Project Ongoing' ||
-                              leadDataContext?.bookingDetails?.status ===
+                              leadDataContext.bookingDetails?.status ===
                               'Job Ongoing') &&
                               !iconDisabled && (
                                 <TouchableOpacity
@@ -1778,11 +1773,11 @@ const JobOngoing = () => {
                           <Text style={styles.amountLabel}>Total Amount</Text>
                           <Text style={styles.amountBold}>
                             {currency(originalTotal)}{' '}
-                            {(leadDataContext?.bookingDetails?.status ===
+                            {(leadDataContext.bookingDetails?.status ===
                               'Project Ongoing' ||
-                              leadDataContext?.bookingDetails?.status ===
+                              leadDataContext.bookingDetails?.status ===
                               'Job Ongoing') &&
-                              !leadDataContext?.bookingDetails?.paymentLink
+                              !leadDataContext.bookingDetails?.paymentLink
                                 ?.isActive && (
                                 <TouchableOpacity
                                   onPress={() => setSecondModalVisible(true)}
@@ -1867,7 +1862,7 @@ const JobOngoing = () => {
               </Text>
             )}
 
-            {leadDataContext?.assignedProfessional?.endedDate && (
+            {leadDataContext.assignedProfessional?.endedDate && (
               <Text
                 style={{
                   fontFamily: 'Poppins-Medium',
@@ -1876,10 +1871,10 @@ const JobOngoing = () => {
                 }}
               >
                 Survey End at:{' '}
-                {moment(leadDataContext?.assignedProfessional?.endedDate).format(
+                {moment(leadDataContext.assignedProfessional?.endedDate).format(
                   'DD-MM-YYYY',
                 )}{' '}
-                : {leadDataContext?.assignedProfessional?.endedTime}
+                : {leadDataContext.assignedProfessional?.endedTime}
               </Text>
             )}
 
@@ -1895,10 +1890,10 @@ const JobOngoing = () => {
                 ? 'Survey Start'
                 : 'Job Ongoing'}{' '}
               at:{' '}
-              {moment(leadDataContext?.assignedProfessional?.startedDate).format(
+              {moment(leadDataContext.assignedProfessional?.startedDate).format(
                 'DD-MM-YYYY',
               )}{' '}
-              : {leadDataContext?.assignedProfessional?.startedTime}
+              : {leadDataContext.assignedProfessional?.startedTime}
             </Text>
             {team.length > 0 && (
               <>
@@ -1943,8 +1938,8 @@ const JobOngoing = () => {
             )} */}
           </View>
         </ScrollView>
-        {/* {leadDataContext?.bookingDetails?.status !== 'Survey Completed' &&
-          !leadDataContext?.bookingDetails?.startProject
+        {/* {leadDataContext.bookingDetails?.status !== 'Survey Completed' &&
+          !leadDataContext.bookingDetails?.startProject
           ? (
             <TouchableOpacity
               style={[styles.endBtn, { backgroundColor: '#ED1F24' }]}
@@ -1965,7 +1960,7 @@ const JobOngoing = () => {
           >
             <Text style={styles.endBtnText}>END SURVEY</Text>
           </TouchableOpacity>
-        ) : leadDataContext?.bookingDetails?.status == 'Job Ongoing' ? (
+        ) : leadDataContext.bookingDetails?.status == 'Job Ongoing' ? (
           <TouchableOpacity
             style={[
               styles.endBtn,
@@ -1983,23 +1978,23 @@ const JobOngoing = () => {
               {/* DEEP */}{' '}
             </Text>
           </TouchableOpacity>
-        ) : leadDataContext?.bookingDetails?.status === 'Pending Hiring' ||
-          (leadDataContext?.bookingDetails?.status === 'Hired' &&
-            leadDataContext?.bookingDetails?.startProject) ? (
+        ) : leadDataContext.bookingDetails?.status === 'Pending Hiring' ||
+          (leadDataContext.bookingDetails?.status === 'Hired' &&
+            leadDataContext.bookingDetails?.startProject) ? (
           <TouchableOpacity
             style={[
               styles.endBtn,
               {
                 backgroundColor:
-                  leadDataContext?.bookingDetails?.status === 'Hired' &&
-                    leadDataContext?.bookingDetails?.startProject
+                  leadDataContext.bookingDetails?.status === 'Hired' &&
+                    leadDataContext.bookingDetails?.startProject
                     ? '#119b11ff'
                     : 'rgba(200, 220, 200, 1)',
               },
             ]}
             disabled={
-              leadDataContext?.bookingDetails?.status === 'Hired' &&
-                leadDataContext?.bookingDetails?.startProject
+              leadDataContext.bookingDetails?.status === 'Hired' &&
+                leadDataContext.bookingDetails?.startProject
                 ? false
                 : true
             }
@@ -2156,7 +2151,7 @@ const JobOngoing = () => {
                 Amount Paid
               </Text>
               <Text style={{ fontFamily: 'Poppins-SemiBold', marginTop: 10 }}>
-                ₹ {leadDataContext?.bookingDetails.paidAmount}
+                ₹ {leadDataContext.bookingDetails.paidAmount}
                 {/* {calculatedPrice} */}
               </Text>
             </View>

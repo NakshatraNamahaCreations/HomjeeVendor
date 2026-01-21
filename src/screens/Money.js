@@ -6,20 +6,104 @@ import {
   TouchableOpacity,
   ScrollView,
   StatusBar,
+  FlatList,
+  RefreshControl,
 } from 'react-native';
-import React from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import Header from '../components/Header';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useThemeColor } from '../Utilities/ThemeContext';
+import { getRequest } from '../ApiService/apiHelper';
+import { API_ENDPOINTS } from '../ApiService/apiConstants';
+import { useVendorContext } from '../Utilities/VendorContext';
+import PageLoader from '../components/PageLoader';
+import moment from 'moment';
 
 const Money = ({ navigation }) => {
   const { deviceTheme } = useThemeColor();
+  const { vendorDataContext } = useVendorContext();
+  const vendorId = vendorDataContext?._id;
+  const [paymentData, setPaymentData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState(null);
+
+  const fetchPaymentRecords = useCallback(
+    async (signal) => {
+      setError(null);
+      setLoading(true); // Loading state starts when data is being fetched
+      try {
+        const response = await getRequest(
+          `${API_ENDPOINTS.GET_MONEY_DASHBOARD}${vendorId}`,
+          signal ? { signal } : undefined
+        );
+
+        // Combine paidDate and paidTime into a single string and convert to Date
+        const sortedPayments = response?.payments
+          ?.map(payment => {
+            // Combine paidDate and paidTime into one string for parsing
+            const fullDateTime = `${payment.paidDate} ${payment.paidTime}`; // e.g., "19/01/2026 02:56:15 PM"
+
+            // Parse the combined string into a Date object
+            const paymentDate = moment(fullDateTime, "DD/MM/YYYY hh:mm:ss A").toDate();
+
+            return {
+              ...payment,
+              paymentDate, // Store Date object here
+              // Format paymentDate for rendering
+              formattedPaymentDate: moment(paymentDate).format("DD/MM/YYYY hh:mm:ss A")
+            };
+          })
+          .sort((a, b) => b.paymentDate - a.paymentDate) || []; // Sort Date objects
+
+        setPaymentData(sortedPayments);
+      } catch (err) {
+        if (err.name !== 'AbortError') setError(err);
+      } finally {
+        setLoading(false); // Loading ends when data is fetched
+      }
+    },
+    [vendorId]
+  );
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchPaymentRecords(controller.signal).finally(() => setLoading(false));
+    return () => controller.abort(); // Cleanup the request when the component unmounts or vendorId changes
+  }, [vendorId, fetchPaymentRecords]);
+
+  // Pull to refresh handler
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    const controller = new AbortController();
+    await fetchPaymentRecords(controller.signal); // Fetch the latest data
+    setRefreshing(false); // Stop refreshing once data is fetched
+  }, [fetchPaymentRecords]);
+
+  console.log("paymentData Money Dash", paymentData);
+
+
+  const renderItem = ({ item }) => (
+    <View style={styles.mainleadone}>
+      <View style={styles.leadone}></View>
+      <View style={styles.location}>
+        <Text style={styles.notifHead}>
+          <Text style={styles.boldText}>₹ {item.amount}</Text> received on {item.paidDate} at {item.paidTime}{' '}
+          as {item.paymentType} done by {item.customerName}
+        </Text>
+
+      </View>
+      {/* <Text style={styles.bookingId}>Booking Id: {item.bookingId}</Text> */}
+    </View>
+  );
+
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar
         barStyle={deviceTheme === 'dark' ? 'light-content' : 'dark-content'}
       />
-
+      {loading && <PageLoader />}
       <Header />
       <View style={{ padding: 10 }}>
         <Text
@@ -31,49 +115,21 @@ const Money = ({ navigation }) => {
           Money Dashboard
         </Text>
 
-        <ScrollView showsVerticalScrollIndicator={false}>
-          {Array.from({ length: 15 }).map((_, idx) => (
-            <View key={idx + 1} style={styles.mainleadone}>
-              <View style={styles.leadone}></View>
-
-              <View style={styles.location}>
-                <Text
-                  style={{
-                    fontSize: 12,
-                    color: '#000000',
-                    fontFamily: 'Poppins-SemiBold',
-                    marginRight: 120,
-                  }}
-                >
-                  Sonali K
-                </Text>
-                <Text
-                  style={{
-                    fontSize: 12,
-                    color: '#008E00',
-                    fontFamily: 'Poppins-SemiBold',
-                    marginRight: 20,
-                    marginTop: 15,
-                  }}
-                >
-                  ₹ 3,637
-                </Text>
-              </View>
-
-              <Text
-                style={{
-                  color: '#000000',
-                  fontFamily: 'Poppins-SemiBold',
-                  fontSize: 12,
-                  marginLeft: 5,
-                  marginTop: -20,
-                }}
-              >
-                24th Feb 2025 . 11:00 AM
-              </Text>
+        <FlatList
+          data={paymentData}
+          keyExtractor={(item, index) => `${item._id}-${index}`} // Unique key for each item
+          renderItem={renderItem}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <Text>No payment records found.</Text>
             </View>
-          ))}
-        </ScrollView>
+          }
+        />
+        <View style={{ marginBottom: 20 }} />
       </View>
     </SafeAreaView>
   );
@@ -84,107 +140,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#F6F6F6',
     marginBottom: 100,
   },
-  discoverleads: {
-    margin: 10,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    padding: 20,
-  },
-  logo: {
-    width: 100,
-    height: 30,
-  },
-  notificationWrapper: {
-    position: 'relative',
-  },
-  notificationWrappertwo: {
-    borderRadius: 28,
-    borderWidth: 1,
-    width: '22%',
-    paddingHorizontal: 35,
-    paddingTop: 3,
-    paddingBottom: 3,
-    marginLeft: 100,
-  },
-  icon: {
-    width: 30,
-    height: 20,
-  },
-  iconsnewlead: {
-    left: 5,
-    top: -2,
-  },
-
-  badge: {
-    right: -10,
-    backgroundColor: 'red',
-    borderRadius: 8,
-    paddingHorizontal: 4,
-    paddingVertical: 2,
-  },
-  badgetwo: {
-    position: 'absolute',
-    left: 40,
-    borderRadius: 8,
-    paddingHorizontal: 4,
-    paddingVertical: 2,
-    top: 5,
-  },
-  badgeText: {
-    color: 'white',
-    fontSize: 10,
-    fontWeight: 'bold',
-  },
-  badgeTexttwo: {
-    color: '#ED1F24',
-    fontSize: 12,
-    fontWeight: 'bold',
-    right: 5,
-    bottom: 3,
-    marginRight: 20,
-  },
-  title: {
-    fontSize: 12,
-    color: '#434343',
-    // marginTop: 16,
+  notifHead: {
+    color: '#000000',
+    fontSize: 13,
     fontFamily: 'Poppins-Regular',
-    textAlign: 'left',
-    padding: 30,
-    marginLeft: -25,
-    letterSpacing: 0,
-    fontWeight: 500,
   },
-  titles: {
-    marginRight: 200,
-    fontSize: 14,
-    fontFamily: 'Poppins-SemiBold',
-    letterSpacing: 0,
-    right: 4,
+  boldText: {
+    color: '#1b8800',
   },
-  headertwo: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    top: -20,
-    marginBottom: -20,
-  },
-  newleads: {
-    fontFamily: 'Poppins-Regular',
-    fontSize: 12,
-    color: '#636363',
-    letterSpacing: 0,
-    left: 3,
-  },
-  locationicon: {
-    width: 20,
-    height: 15,
-    top: 12,
-    paddingRight: 10,
-    right: 10,
+  bookingId: {
+    fontFamily: 'Poppins-Medium', color: '#1b8800', fontSize: 10,
   },
   leadone: {
     flexDirection: 'row',
@@ -200,6 +165,11 @@ const styles = StyleSheet.create({
     padding: 10,
     marginBottom: 10,
     borderRadius: 5,
+  },
+  emptyState: {
+    color: '#363636',
+    fontSize: 13,
+    fontFamily: 'Poppins-Medium',
   },
 });
 

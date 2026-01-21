@@ -47,10 +47,12 @@ import DynamicImage from '../Utilities/DynamicImage';
 const JobOngoing = () => {
   useBackHandler();
   const route = useRoute();
+  const leadId = route?.params?.leadId
   const { deviceTheme } = useThemeColor();
   const navigation = useNavigation();
+  const [bookinRes, setBookinRes] = useState(null);
   const { leadDataContext, setLeadDataContext } = useLeadContext();
-  const leadId = leadDataContext?._id;
+  // const leadId = idOfLead;
   const { vendorDataContext } = useVendorContext();
   const vendorId = vendorDataContext?._id;
   const [estimateData, setEstimateData] = useEstimateContext();
@@ -78,11 +80,12 @@ const JobOngoing = () => {
   const [packageList, setPackageList] = useState([]);
 
   const [markerPosition, setMarkerPosition] = useState(null);
-  console.log('leadDataContext Id', leadDataContext?._id);
+  // console.log('leadDataContext Id', leadDataContext?._id);
   // console.log('leadDataContext', leadDataContext);
   // console.log('vendorDataContext', vendorDataContext);
-  // console.log('quotes', quotes);
-
+  console.log('leadData API', leadData);
+  console.log('leadDataContext', leadDataContext);
+  const leadData = leadDataContext || bookinRes
   const today = moment().format('YYYY-MM-DD');
   const dayAfterTomorrow = moment().add(2, 'days').format('YYYY-MM-DD');
 
@@ -114,31 +117,45 @@ const JobOngoing = () => {
 
   const allowedStatusesForUpdate = ['Hired', 'Completed'];
 
-  console.log('bookingDetails>>>', leadDataContext?.bookingDetails);
 
-  const handleGoBack = () => {
-    // if (leadDataContext) {
-    //   setLeadDataContext(null);
-    // }
-    navigation.navigate('BottomTab', {
-      screen: 'Ongoing',
-    });
-  }
+  const fetchBookingData = async () => {
+    setLoading(true);
+    try {
+      const response = await getRequest(`${API_ENDPOINTS.GET_BOOKINGS_BY_bOOKING_ID}${leadId || leadDataContext?._id}`);
+      console.log("response", response)
+      setBookinRes(response.booking);
+      setLeadDataContext(response.booking)
+      setLoading(false);
+    } catch (err) {
+      setLoading(false);
+      console.error('Error fetching bookings:', err);
+    }
+  };
+
+  useEffect(() => {
+    if (!leadData) { // Only fetch if leadContextData is not already present
+      fetchBookingData();
+    } else {
+      setLoading(false); // If data is already in context, stop loading
+    }
+  }, [leadId, leadData]);
+
+  const bd = leadData?.bookingDetails ?? {};
 
   const uniqueSubCategories = [
-    ...new Set(leadDataContext?.service?.map(unq => unq.subCategory)),
+    ...new Set(leadData?.service?.map(unq => unq.subCategory)),
   ];
   const queryString = uniqueSubCategories
     .map(sub => `subCategory=${encodeURIComponent(sub)}`)
     .join('&');
 
-  const hiring = leadDataContext?.assignedProfessional?.hiring || {};
+  const hiring = leadData?.assignedProfessional?.hiring || {};
   const projectDates = Array.isArray(hiring.projectDate)
     ? [...hiring.projectDate]
     : [];
   projectDates.sort(); // ISO YYYY-MM-DD sorts lexicographically ok
 
-  const bookingId = leadDataContext?._id;
+  const bookingId = leadData?._id;
 
   const startDate = projectDates[0]
     ? moment(projectDates[0]).format('DD MMM YYYY')
@@ -150,8 +167,8 @@ const JobOngoing = () => {
   let jobEndedDateAt = null;
   let jobEndedTimeAt = null;
 
-  const ts = leadDataContext?.bookingDetails?.startProjectApprovedAt;
-  const endTs = leadDataContext?.bookingDetails?.jobEndRequestedAt;
+  const ts = bd.startProjectApprovedAt;
+  const endTs = bd.jobEndRequestedAt;
   if (ts) {
     const d = new Date(ts);
     if (!isNaN(d.getTime())) {
@@ -200,24 +217,6 @@ const JobOngoing = () => {
   useEffect(() => {
     fetchPackages();
   }, []);
-
-  useEffect(() => {
-    fetchBookingData();
-  }, [leadId]);
-
-  const fetchBookingData = async () => {
-    setLoading(true);
-    getRequest(`${API_ENDPOINTS.GET_BOOKINGS_BY_bOOKING_ID}${leadId}`)
-      .then(response => {
-        setLeadDataContext(response.booking);
-        setLoading(false);
-      })
-      .catch(err => {
-        if (err) return;
-        setLoading(false);
-        console.error('Error fetching bookings:', err);
-      });
-  };
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -292,27 +291,27 @@ const JobOngoing = () => {
 
   const backgroundColorStatus = () => {
     if (
-      leadDataContext?.bookingDetails?.status === 'Survey Ongoing' ||
-      leadDataContext?.bookingDetails?.status === 'Project Ongoing' ||
-      leadDataContext?.bookingDetails?.status === 'Job Ongoing'
+      bd.status === 'Survey Ongoing' ||
+      bd.status === 'Project Ongoing' ||
+      bd.status === 'Job Ongoing'
     ) {
       return '#FF7F00';
-    } else if (leadDataContext?.bookingDetails?.status === 'Survey Completed') {
+    } else if (bd.status === 'Survey Completed') {
       return 'green';
     } else if (
-      leadDataContext?.bookingDetails?.status === 'Customer Cancelled' ||
-      leadDataContext?.bookingDetails?.status === 'Waiting for final payment'
+      bd.status === 'Customer Cancelled' ||
+      bd.status === 'Waiting for final payment'
     ) {
       return '#ff0000';
     } else if (
-      leadDataContext?.bookingDetails?.status === 'Customer Unreachable'
+      bd.status === 'Customer Unreachable'
     ) {
       return '#ff0000';
-    } else if (leadDataContext?.bookingDetails?.status === 'Pending Hiring') {
+    } else if (bd.status === 'Pending Hiring') {
       return '#fabb05ff';
     } else if (
-      leadDataContext?.bookingDetails?.status === 'Hired' ||
-      leadDataContext?.bookingDetails?.status === 'Project Completed'
+      bd.status === 'Hired' ||
+      bd.status === 'Project Completed'
     ) {
       return '#008e00ff';
     }
@@ -340,17 +339,16 @@ const JobOngoing = () => {
   // console.log('Vendor Service Type:', vendorDataContext?.vendor?.serviceType);
 
   // --- 💰 Payment Calculation Logic ---
-  const bd = leadDataContext?.bookingDetails ?? {};
   const priceChanges = bd.priceChanges || [];
   const latestChange = priceChanges[priceChanges.length - 1] || null;
-  // const latestChange = leadDataContext?.bookingDetails?.priceChanges?.slice(-1)[0];
+  // const latestChange = leadData.bookingDetails?.priceChanges?.slice(-1)[0];
   const hasPendingPriceEdit =
     !!latestChange &&
     latestChange.status === 'pending' &&
-    leadDataContext?.bookingDetails?.hasPriceUpdated;
+    bd.hasPriceUpdated;
 
   const paymentLinkActive =
-    leadDataContext?.bookingDetails?.paymentLink?.isActive === true;
+    bd.paymentLink?.isActive === true;
   const isDeepCleaning =
     vendorDataContext?.vendor?.serviceType === 'deep-cleaning';
   const isHousePainter =
@@ -364,8 +362,8 @@ const JobOngoing = () => {
   // "End Survey" — unaffected
   const showEndSurvey =
     isHousePainter &&
-    leadDataContext?.bookingDetails?.status !== 'Survey Completed' &&
-    !leadDataContext?.bookingDetails?.startProject;
+    bd.status !== 'Survey Completed' &&
+    !bd.startProject;
 
   const approvedChanges = priceChanges.filter(c => c.status === 'approved');
   const hasApprovedChange = approvedChanges.length > 0;
@@ -410,8 +408,8 @@ const JobOngoing = () => {
   // (bd.finalPayment?.status === 'partial' ? bd.finalPayment.prePayment || 0 :
   //   bd.finalPayment?.status === 'paid' ? bd.finalPayment.amount || 0 : 0);
 
-  console.log("paid", paid);
-  console.log("amountYetToPay", bd.amountYetToPay);
+  // console.log("paid", paid);
+  // console.log("amountYetToPay", bd.amountYetToPay);
 
 
 
@@ -497,8 +495,8 @@ const JobOngoing = () => {
 
   let disableAllTheHell = false;
 
-  const serviceType = leadDataContext?.serviceType?.toLowerCase().trim();
-  console.log('serviceType', serviceType);
+  const serviceType = leadData?.serviceType?.toLowerCase().trim();
+  // console.log('serviceType', serviceType);
   if (
     (serviceType === 'deep_cleaning' &&
       bd.status?.toLowerCase().trim() === 'project completed' &&
@@ -514,7 +512,7 @@ const JobOngoing = () => {
     disableAllTheHell = true;
   }
 
-  console.log('iconDisabled', iconDisabled);
+  // console.log('iconDisabled', iconDisabled);
   // ----------------------------------------------------------------
   const priceEditPending =
     !!bd.hasPriceUpdated && lastChange?.status === 'pending';
@@ -539,7 +537,7 @@ const JobOngoing = () => {
     (paymentRequestActive || secondPaid) && // visible right after request
     finalPending;
 
-  console.log("canShowEndProject", canShowEndProject);
+  // console.log("canShowEndProject", canShowEndProject);
 
   // 🔒 Disable until 2nd payment is successful
   const endProjectEnabled =
@@ -560,7 +558,7 @@ const JobOngoing = () => {
 
     try {
       const response = await getRequest(
-        `${API_ENDPOINTS.GET_MEASUREMENTS_BY_LEADID}${leadId}`,
+        `${API_ENDPOINTS.GET_MEASUREMENTS_BY_LEADID}${leadId || leadDataContext?._id}`,
       );
       console.log('response', response);
 
@@ -583,15 +581,15 @@ const JobOngoing = () => {
 
   useEffect(() => {
     if (
-      leadDataContext &&
-      leadDataContext?.address &&
-      leadDataContext?.address.location &&
-      Array.isArray(leadDataContext?.address.location.coordinates) &&
-      leadDataContext?.address.location.coordinates.length === 2
+      leadData &&
+      leadData?.address &&
+      leadData?.address.location &&
+      Array.isArray(leadData?.address.location.coordinates) &&
+      leadData?.address.location.coordinates.length === 2
     ) {
       // GeoJSON format: [longitude, latitude]
       const [longitude, latitude] =
-        leadDataContext?.address.location.coordinates;
+        leadData?.address.location.coordinates;
 
       setRegion({
         latitude,
@@ -604,7 +602,7 @@ const JobOngoing = () => {
         longitude,
       });
     }
-  }, [leadDataContext]);
+  }, [leadData]);
 
   const hasFinalized = quotes?.some(ele => ele.finalized);
 
@@ -707,7 +705,7 @@ const JobOngoing = () => {
     // }
     try {
       const formData = {
-        bookingId: leadDataContext?._id,
+        bookingId: leadData?._id,
         status: status,
         vendorId: vendorDataContext._id,
         // reasonForCancelled: cancelReason,
@@ -773,7 +771,7 @@ const JobOngoing = () => {
           'Status updated to Pending Hiring',
           ToastAndroid.LONG,
         );
-        console.log('Payment Link:', res.data.paymentLink);
+        // console.log('Payment Link:', res.data.paymentLink);
         // navigation.navigate('BottomTab', {
         //   screen: 'Ongoing',
         // });
@@ -959,6 +957,7 @@ const JobOngoing = () => {
   );
 
   const fetchQuotes = async () => {
+    const decideLeadId = leadId || leadDataContext?._id
     if (!leadId) {
       setLoading(false);
       return;
@@ -968,7 +967,7 @@ const JobOngoing = () => {
       const { data } = await axios.get(
         `${API_BASE_URL}${API_ENDPOINTS.GET_QUOTATION_BY_ID}`,
         {
-          params: { leadId, vendorId },
+          params: { decideLeadId, vendorId },
         },
       );
       setQuotes(data?.data?.list ?? []);
@@ -988,8 +987,8 @@ const JobOngoing = () => {
   }, [leadId, vendorId]);
 
   const handleNavigateToMap = () => {
-    const lat = leadDataContext?.address?.location?.coordinates[1];
-    const lng = leadDataContext?.address?.location?.coordinates[0];
+    const lat = leadData?.address?.location?.coordinates[1];
+    const lng = leadData?.address?.location?.coordinates[0];
 
     if (lat && lng) {
       const url = `https://www.google.com/maps?q=${lat},${lng}`;
@@ -1008,13 +1007,13 @@ const JobOngoing = () => {
   }, [route.params?.measurementSummary]);
 
   const calculatedPrice = isReduce
-    ? Number(leadDataContext?.bookingDetails.amountYetToPay) - Number(amount)
-    : Number(leadDataContext?.bookingDetails.amountYetToPay) + Number(amount);
+    ? Number(bd.amountYetToPay) - Number(amount)
+    : Number(bd.amountYetToPay) + Number(amount);
 
   const checkAmount = entered => {
     const enteredNum = parseInt(entered, 10) || 0;
     const paidNum =
-      parseInt(leadDataContext?.bookingDetails.paidAmount, 10) || 0;
+      parseInt(bd.paidAmount, 10) || 0;
     if (enteredNum > paidNum) {
       ToastAndroid.showWithGravity(
         'Entered amount should not exceed paid amount.',
@@ -1028,11 +1027,11 @@ const JobOngoing = () => {
 
   const updatePrice = async () => {
     setLoading(true);
-    const bookingId = leadDataContext?._id;
+    const bookingId = leadData?._id;
 
     // 🔢 Ensure numeric safety
     const currentTotal =
-      Number(leadDataContext?.bookingDetails?.finalTotal) || 0;
+      Number(bd.finalTotal) || 0;
     const adjustment = Number(amount) || 0;
     const newPrice = isReduce
       ? currentTotal - adjustment
@@ -1096,7 +1095,7 @@ const JobOngoing = () => {
     setModalVisible(false);
     try {
       const formData = {
-        bookingId: leadDataContext?._id,
+        bookingId: leadData?._id,
         status:
           vendorDataContext?.vendor?.serviceType === 'house-painter' ||
             vendorDataContext?.vendor?.serviceType === 'House Painting'
@@ -1107,10 +1106,10 @@ const JobOngoing = () => {
           name: vendorDataContext.vendor?.vendorName,
           phone: vendorDataContext.vendor?.mobileNumber,
           profile: vendorDataContext.vendor?.profileImage,
-          acceptedDate: leadDataContext?.assignedProfessional?.acceptedDate,
-          acceptedTime: leadDataContext?.assignedProfessional?.acceptedTime,
-          startedDate: leadDataContext?.assignedProfessional?.startedDate,
-          startedTime: leadDataContext?.assignedProfessional?.startedTime,
+          acceptedDate: leadData?.assignedProfessional?.acceptedDate,
+          acceptedTime: leadData?.assignedProfessional?.acceptedTime,
+          startedDate: leadData?.assignedProfessional?.startedDate,
+          startedTime: leadData?.assignedProfessional?.startedTime,
           endedDate: moment().format('ll'),
           endedTime: moment().format('LT'),
         },
@@ -1193,7 +1192,13 @@ const JobOngoing = () => {
       >
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <TouchableOpacity
-            onPress={() => handleGoBack()}
+            onPress={() => {
+              navigation.navigate('BottomTab', {
+                screen: 'Ongoing',
+              }),
+                setLeadDataContext()
+            }
+            }
           >
             <Ionicons name="arrow-back" color="black" size={23} />
           </TouchableOpacity>
@@ -1225,12 +1230,12 @@ const JobOngoing = () => {
               fontFamily: 'Poppins-SemiBold',
             }}
           >
-            {leadDataContext?.bookingDetails?.status}
+            {bd?.status}
             {/* Project Ongoing{' '} */}
-            {/* {moment(leadDataContext?.assignedProfessional?.startedDate).format(
+            {/* {moment(leadData.assignedProfessional?.startedDate).format(
               'll',
             )}{' '}
-            : {leadDataContext?.assignedProfessional?.startedTime} */}
+            : {leadData.assignedProfessional?.startedTime} */}
           </Text>
           {latestChange && (
             <View style={styles.headerBlock}>
@@ -1255,16 +1260,16 @@ const JobOngoing = () => {
           <View style={styles.headerBlock}>
             <View style={styles.headerTop}>
               <Text style={styles.customerName}>
-                {leadDataContext?.customer?.name}
+                {leadData?.customer?.name}
               </Text>
               <View style={{ alignItems: 'flex-end' }}>
                 <Text style={styles.dateText}>
                   {' '}
-                  {moment(leadDataContext?.selectedSlot?.slotDate).format('ll')}
+                  {moment(leadData?.selectedSlot?.slotDate).format('ll')}
                 </Text>
                 <Text style={styles.timeText}>
                   {' '}
-                  {leadDataContext?.selectedSlot?.slotTime}
+                  {leadData?.selectedSlot?.slotTime}
                 </Text>
               </View>
             </View>
@@ -1274,16 +1279,16 @@ const JobOngoing = () => {
                 style={{ marginTop: 9, marginRight: 5, width: 20, height: 20 }}
               />
               <Text style={styles.descriptionText}>
-                {leadDataContext?.address?.houseFlatNumber},{' '}
-                {leadDataContext?.address?.streetArea}
+                {leadData?.address?.houseFlatNumber},{' '}
+                {leadData?.address?.streetArea}
               </Text>
             </View>
-            {/* {(leadDataContext?.bookingDetails.status === 'Completed' ||
-              leadDataContext?.bookingDetails.status === 'Hired' ||
-              leadDataContext?.bookingDetails.status !== 'Pending Hiring' ||
-              leadDataContext?.bookingDetails.status !== 'Ongoing' ||
-              leadDataContext?.bookingDetails.status === 'Negotiation' ||
-              leadDataContext?.bookingDetails.status === 'Set Remainder') &&
+            {/* {(leadData?.bookingDetails.status === 'Completed' ||
+              leadData?.bookingDetails.status === 'Hired' ||
+              leadData?.bookingDetails.status !== 'Pending Hiring' ||
+              leadData?.bookingDetails.status !== 'Ongoing' ||
+              leadData?.bookingDetails.status === 'Negotiation' ||
+              leadData?.bookingDetails.status === 'Set Remainder') &&
               vendorDataContext?.vendor?.serviceType === 'house-painter' && (
                 <TouchableOpacity
                   style={[
@@ -1301,9 +1306,9 @@ const JobOngoing = () => {
                   <FontAwesome name="angle-right" color="white" size={20} />
                 </TouchableOpacity>
               )} */}
-            {(leadDataContext?.bookingDetails?.status === 'Hired' ||
-              leadDataContext?.bookingDetails?.status === 'Survey Completed') &&
-              // !leadDataContext?.bookingDetails?.isJobStarted &&
+            {(bd.status === 'Hired' ||
+              bd.status === 'Survey Completed') &&
+              // !leadData?.bookingDetails?.isJobStarted &&
               (vendorDataContext?.vendor?.serviceType === 'house-painter' ||
                 vendorDataContext?.vendor?.serviceType ===
                 'House Painting') && (
@@ -1349,14 +1354,14 @@ const JobOngoing = () => {
                   },
                 ]}
                 disabled={disableAllTheHell}
-                onPress={() => openDialPad(leadDataContext?.customer?.phone)}
+                onPress={() => openDialPad(leadData?.customer?.phone)}
               >
                 <Feather name="phone" color="white" size={17} />
                 <Text style={styles.contactText}> Contact</Text>
               </TouchableOpacity>
             </View>
           </View>
-          {leadDataContext?.service[0]?.category === 'Deep Cleaning' ? (
+          {leadData?.service[0]?.category === 'Deep Cleaning' ? (
             <>
               <View style={styles.packageRow}>
                 <Text style={styles.sectionHeader}>Package Details</Text>
@@ -1365,7 +1370,7 @@ const JobOngoing = () => {
                 </TouchableOpacity>
               </View>
               <View style={{ backgroundColor: 'white', marginVertical: 10 }}>
-                {leadDataContext?.service?.map((ele, idx) => (
+                {leadData?.service?.map((ele, idx) => (
                   <View style={styles.card} key={idx}>
                     <Text style={styles.packageTitle}>{ele.serviceName}</Text>
                     <View style={styles.location}>
@@ -1558,14 +1563,14 @@ const JobOngoing = () => {
             </>
           )}
           {
-            // leadDataContext?.bookingDetails?.status === 'Pending Hiring' ||
-            leadDataContext?.bookingDetails?.status === 'Hired' ||
-              leadDataContext?.bookingDetails?.status === 'Project Ongoing' ||
-              leadDataContext?.bookingDetails?.status ===
+            // bd.status === 'Pending Hiring' ||
+            bd.status === 'Hired' ||
+              bd.status === 'Project Ongoing' ||
+              bd.status ===
               'Waiting for final payment' ||
-              // leadDataContext?.bookingDetails?.status === 'Survey Completed' ||
+              // bd.status === 'Survey Completed' ||
               vendorDataContext?.vendor?.serviceType === 'deep cleaning' || // deep cleaing
-              leadDataContext?.bookingDetails?.status === 'Project Completed' ? (
+              bd.status === 'Project Completed' ? (
               <View
                 style={{
                   backgroundColor: 'white',
@@ -1734,9 +1739,9 @@ const JobOngoing = () => {
                           </Text>
                           <Text style={styles.amountDue}>
                             {currency(newTotal)}{' '}
-                            {(leadDataContext?.bookingDetails?.status ===
+                            {(bd.status ===
                               'Project Ongoing' ||
-                              leadDataContext?.bookingDetails?.status ===
+                              bd.status ===
                               'Job Ongoing') &&
                               !iconDisabled && (
                                 <TouchableOpacity
@@ -1778,11 +1783,11 @@ const JobOngoing = () => {
                           <Text style={styles.amountLabel}>Total Amount</Text>
                           <Text style={styles.amountBold}>
                             {currency(originalTotal)}{' '}
-                            {(leadDataContext?.bookingDetails?.status ===
+                            {(bd.status ===
                               'Project Ongoing' ||
-                              leadDataContext?.bookingDetails?.status ===
+                              bd.status ===
                               'Job Ongoing') &&
-                              !leadDataContext?.bookingDetails?.paymentLink
+                              !bd.paymentLink
                                 ?.isActive && (
                                 <TouchableOpacity
                                   onPress={() => setSecondModalVisible(true)}
@@ -1867,7 +1872,7 @@ const JobOngoing = () => {
               </Text>
             )}
 
-            {leadDataContext?.assignedProfessional?.endedDate && (
+            {leadData?.assignedProfessional?.endedDate && (
               <Text
                 style={{
                   fontFamily: 'Poppins-Medium',
@@ -1876,10 +1881,10 @@ const JobOngoing = () => {
                 }}
               >
                 Survey End at:{' '}
-                {moment(leadDataContext?.assignedProfessional?.endedDate).format(
+                {moment(leadData?.assignedProfessional?.endedDate).format(
                   'DD-MM-YYYY',
                 )}{' '}
-                : {leadDataContext?.assignedProfessional?.endedTime}
+                : {leadData?.assignedProfessional?.endedTime}
               </Text>
             )}
 
@@ -1895,10 +1900,10 @@ const JobOngoing = () => {
                 ? 'Survey Start'
                 : 'Job Ongoing'}{' '}
               at:{' '}
-              {moment(leadDataContext?.assignedProfessional?.startedDate).format(
+              {moment(leadData?.assignedProfessional?.startedDate).format(
                 'DD-MM-YYYY',
               )}{' '}
-              : {leadDataContext?.assignedProfessional?.startedTime}
+              : {leadData?.assignedProfessional?.startedTime}
             </Text>
             {team.length > 0 && (
               <>
@@ -1943,8 +1948,8 @@ const JobOngoing = () => {
             )} */}
           </View>
         </ScrollView>
-        {/* {leadDataContext?.bookingDetails?.status !== 'Survey Completed' &&
-          !leadDataContext?.bookingDetails?.startProject
+        {/* {leadData.bookingDetails?.status !== 'Survey Completed' &&
+          !leadData.bookingDetails?.startProject
           ? (
             <TouchableOpacity
               style={[styles.endBtn, { backgroundColor: '#ED1F24' }]}
@@ -1965,7 +1970,7 @@ const JobOngoing = () => {
           >
             <Text style={styles.endBtnText}>END SURVEY</Text>
           </TouchableOpacity>
-        ) : leadDataContext?.bookingDetails?.status == 'Job Ongoing' ? (
+        ) : bd.status == 'Job Ongoing' ? (
           <TouchableOpacity
             style={[
               styles.endBtn,
@@ -1983,23 +1988,23 @@ const JobOngoing = () => {
               {/* DEEP */}{' '}
             </Text>
           </TouchableOpacity>
-        ) : leadDataContext?.bookingDetails?.status === 'Pending Hiring' ||
-          (leadDataContext?.bookingDetails?.status === 'Hired' &&
-            leadDataContext?.bookingDetails?.startProject) ? (
+        ) : bd.status === 'Pending Hiring' ||
+          (bd.status === 'Hired' &&
+            bd.startProject) ? (
           <TouchableOpacity
             style={[
               styles.endBtn,
               {
                 backgroundColor:
-                  leadDataContext?.bookingDetails?.status === 'Hired' &&
-                    leadDataContext?.bookingDetails?.startProject
+                  bd.status === 'Hired' &&
+                    bd.startProject
                     ? '#119b11ff'
                     : 'rgba(200, 220, 200, 1)',
               },
             ]}
             disabled={
-              leadDataContext?.bookingDetails?.status === 'Hired' &&
-                leadDataContext?.bookingDetails?.startProject
+              bd.status === 'Hired' &&
+                bd.startProject
                 ? false
                 : true
             }
@@ -2141,7 +2146,7 @@ const JobOngoing = () => {
                 Total Amount
               </Text>
               <Text style={{ fontFamily: 'Poppins-SemiBold', marginTop: 10 }}>
-                ₹ {leadDataContext?.bookingDetails?.bookingAmount}
+                ₹ {bd.bookingAmount}
                 {/* calculatedPrice */}
               </Text>
             </View>
@@ -2156,7 +2161,7 @@ const JobOngoing = () => {
                 Amount Paid
               </Text>
               <Text style={{ fontFamily: 'Poppins-SemiBold', marginTop: 10 }}>
-                ₹ {leadDataContext?.bookingDetails.paidAmount}
+                ₹ {bd.paidAmount}
                 {/* {calculatedPrice} */}
               </Text>
             </View>
@@ -2172,9 +2177,9 @@ const JobOngoing = () => {
               </Text>
               <Text style={{ fontFamily: 'Poppins-SemiBold', marginTop: 10 }}>
                 ₹ {calculatedPrice}
-                {/* {leadDataContext?.bookingDetails?.paidAmount === 0
-                  ? leadDataContext?.bookingDetails?.bookingAmount
-                  : leadDataContext?.bookingDetails?.amountYetToPay} */}
+                {/* {leadData?.bookingDetails?.paidAmount === 0
+                  ? leadData?.bookingDetails?.bookingAmount
+                  : leadData?.bookingDetails?.amountYetToPay} */}
               </Text>
             </View>
             <View style={styles.dottedLine} />
@@ -2242,7 +2247,7 @@ const JobOngoing = () => {
               style={styles.confirmButton}
               onPress={
                 vendorDataContext?.vendor?.serviceType === 'deep cleaning' ||
-                  leadDataContext?.service[0]?.category === 'Deep Cleaning'
+                  leadData?.service[0]?.category === 'Deep Cleaning'
                   ? handleEndProject
                   : handleCompleteSurvey
               }
@@ -2326,8 +2331,8 @@ const JobOngoing = () => {
                 <Text style={{ fontWeight: 'bold', fontSize: 18 }}>✕</Text>
               </TouchableOpacity>
             </View>
-            {leadDataContext?.bookingDetails?.status === 'Hired' &&
-              !leadDataContext?.bookingDetails?.isJobStarted ? (
+            {bd.status === 'Hired' &&
+              !bd.isJobStarted ? (
               // ✅ After Hired, Before Start → Show Cancellation/Rescheduling options
               <>
                 <TouchableOpacity style={styles.statusOption}>
@@ -2350,7 +2355,7 @@ const JobOngoing = () => {
                   <Text style={styles.statusOptionText}>Customer Cancel</Text>
                 </TouchableOpacity>
               </>
-            ) : leadDataContext?.bookingDetails?.isJobStarted ? (
+            ) : bd.isJobStarted ? (
               // ✅ Project has started → Show same options (if needed)
               <>
                 <TouchableOpacity style={styles.statusOption}>
@@ -2416,7 +2421,7 @@ const JobOngoing = () => {
                 </TouchableOpacity>
               </>
             )}
-            {/* {leadDataContext?.bookingDetails.isJobStarted ? (
+            {/* {leadData?.bookingDetails.isJobStarted ? (
               <>
                 <TouchableOpacity
                   style={styles.statusOption}

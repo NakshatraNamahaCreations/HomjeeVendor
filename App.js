@@ -26,17 +26,17 @@ function App() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider>
         <VendorProvider>
-          <EstimateProvider>
-            <LeadProvider>
-              <MeasurementProvider>
-                <RoomNameProvider>
-                  <PerformanceProvider>
+          <PerformanceProvider>
+            <EstimateProvider>
+              <LeadProvider>
+                <MeasurementProvider>
+                  <RoomNameProvider>
                     {isConnected ? <MyStack /> : <NoInternet />}
-                  </PerformanceProvider>
-                </RoomNameProvider>
-              </MeasurementProvider>
-            </LeadProvider>
-          </EstimateProvider>
+                  </RoomNameProvider>
+                </MeasurementProvider>
+              </LeadProvider>
+            </EstimateProvider>
+          </PerformanceProvider>
         </VendorProvider>
       </ThemeProvider>
     </GestureHandlerRootView>

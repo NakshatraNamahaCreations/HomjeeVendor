@@ -41,7 +41,7 @@ const screenWidth = Dimensions.get('window').width;
 const OngoingLeadsScreen = () => {
   const { deviceTheme } = useThemeColor();
   const { vendorDataContext } = useVendorContext();
-  const { setLeadDataContext } = useLeadContext();
+  const { leadDataContext, setLeadDataContext } = useLeadContext();
   const professionalId = vendorDataContext?._id;
   const navigation = useNavigation();
   const TABS = ['All Leads', 'Today', 'Tomorrow'];
@@ -53,6 +53,7 @@ const OngoingLeadsScreen = () => {
   const [selectedStatus, setSelectedStatus] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [navigationLoader, setNavigationLoader] = useState(false);
   const [showSearchBar, setShowSearchBar] = useState(false);
 
   const displayedLeads = filterLeads(
@@ -62,7 +63,7 @@ const OngoingLeadsScreen = () => {
     searchText,
   );
 
-  // console.log('displayedLeads', displayedLeads);
+  console.log('leadDataContext', leadDataContext);
   const fetchConfirmedLeads = useCallback(
     async signal => {
       if (!refreshing) setLoading(true);
@@ -99,56 +100,6 @@ const OngoingLeadsScreen = () => {
 
   // console.log('leadsList Ongoing', leadsList);
 
-  const leadsData = [
-    {
-      id: 1,
-      name: 'B S.Sivappa',
-      day: 'Today',
-      time: '12:00 PM',
-      category: 'House Painting',
-      status: 'Negotiations',
-    },
-    {
-      id: 2,
-      name: 'Pradeep',
-      day: 'Today',
-      time: '12:00 PM',
-      category: 'Deep Cleaning',
-      status: 'Customer Cancelled',
-    },
-    {
-      id: 3,
-      name: 'Prashanth',
-      day: 'Today',
-      time: '12:00 PM',
-      status: 'Hired',
-      category: 'House Painting',
-    },
-    {
-      id: 4,
-      name: 'Bharath',
-      day: 'Tomorrow',
-      time: '12:00 PM',
-      category: 'Deep Cleaning',
-      status: 'Project Completed',
-    },
-    {
-      id: 5,
-      name: 'Bheema',
-      day: 'Tomorrow',
-      time: '12:00 PM',
-      category: 'House Painting',
-      status: 'Cancelled',
-    },
-    {
-      id: 6,
-      name: 'Bheema',
-      day: 'Tomorrow',
-      time: '12:00 PM',
-      category: 'Deep Cleaning',
-      status: 'Customer Unreachable',
-    },
-  ];
 
   useEffect(() => {
     Animated.spring(translateX, {
@@ -194,101 +145,29 @@ const OngoingLeadsScreen = () => {
     setFilterPopupVisible(false);
   };
 
-  // const LeadItem = React.memo(({ item }) => (
-  //   <TouchableOpacity
-  //     key={item?._id}
-  //     onPress={() =>
-  //       navigation.navigate('LeadDescriptionScreen', { lead: item })
-  //     }
-  //   >
-  //     <View style={styles.card}>
-  //       <Text
-  //         style={[
-  //           styles.cardCategory,
-  //           item?.service[0]?.category === 'House Painters & Waterproofing'
-  //             ? 'House Painting'
-  //             : 'House Painting'
-  //             ? styles.housePaintingText
-  //             : item?.service[0]?.category === 'Deep Cleaning'
-  //             ? styles.deepCleaningText
-  //             : {},
-  //         ]}
-  //       >
-  //         {item?.service[0]?.category}
-  //       </Text>
-  //       <View style={styles.cardHeader}>
-  //         <Text style={styles.cardName}>{item?.customer?.name}</Text>
-  //         <View style={styles.cardRightTime}>
-  //           <Text style={styles.cardDay}>
-  //             {' '}
-  //             {moment(item?.bookingDetails?.bookingDate).format('ll')}
-  //           </Text>
-  //           <Text style={styles.cardTime}>
-  //             {' '}
-  //             {moment(item?.bookingDetails?.bookingTime).format('ll')}
-  //           </Text>
-  //         </View>
-  //       </View>
-  //       <View style={styles.cardBody}>
-  //         <Image
-  //           source={require('../assets/icons/location.png')}
-  //           style={styles.cardIcon}
-  //         />
-  //         <Text style={styles.cardText} numberOfLines={1}>
-  //           {item?.address.houseFlatNumber},{item?.address.streetArea}
-  //         </Text>
-  //       </View>
-  //       {/* {item.status && (
-  //         <View style={styles.statusBadge}>
-  //           <Text style={styles.statusText}>{item.status}</Text>
-  //         </View>
-  //       )} */}
-  //     </View>
-  //   </TouchableOpacity>
-  // ));
-
-  // const navigationDecision = lead => {
-  //   setLeadDataContext(lead);
-  //   if (
-  //     lead.bookingDetails?.status === 'Confirmed' || //responded
-  //     lead.bookingDetails?.status === 'Customer Unreachable' ||
-  //     lead.bookingDetails?.status === 'Customer Cancelled'
-  //   ) {
-  //     return navigation.navigate('LeadDescriptionScreen'); //navigating to start job screen
-  //   } else if (
-  //     lead.bookingDetails?.status === 'Ongoing' // job started
-  //   ) {
-  //     return navigation.navigate('JobOngoing'); //navigating to end job screen
-  //   } else if (lead.bookingDetails?.status === 'Completed') {
-  //     return navigation.navigate('CompletedScreen');
-  //   }
-  // };
-
   const navigationDecision = lead => {
-    setLeadDataContext(lead);
+    setNavigationLoader(true); // Show the loader
 
     const status = lead.bookingDetails?.status;
     const hasLeadLocked = lead.bookingDetails?.hasLeadLocked;
 
-    // 1️⃣ Customer Cancelled (highest priority)
-    if (status === 'Customer Cancelled' ||
-      status === 'Rescheduled'
-    ) {
+    // Navigate first, without waiting for context update
+    if (status === 'Customer Cancelled' || status === 'Rescheduled') {
       if (hasLeadLocked) {
-        return; // 🚫 do not navigate anywhere
+        setNavigationLoader(false); // Stop loader if no navigation happens
+        return;
       }
-      return navigation.navigate('LeadDescriptionScreen'); //navigating to start job screen
+      // Navigate immediately to the appropriate screen
+      navigation.navigate('LeadDescriptionScreen');
     }
 
-    // 2️⃣ Lead description states
-    if (
-      status === 'Confirmed' ||  //responded
-      status === 'Customer Unreachable'
-    ) {
-      return navigation.navigate('LeadDescriptionScreen');
+    // For other statuses
+    if (status === 'Confirmed' || status === 'Customer Unreachable') {
+      // Navigate immediately to the appropriate screen
+      navigation.navigate('LeadDescriptionScreen');
     }
 
-    // 3️⃣ Job / survey / ongoing states
+    // For job or survey ongoing statuses
     if (
       [
         'Survey Ongoing',
@@ -301,33 +180,63 @@ const OngoingLeadsScreen = () => {
         'Waiting for final payment',
       ].includes(status)
     ) {
-      console.log('JobOngoing');
-      return navigation.navigate('JobOngoing');//navigating to end job screen
+      // Navigate immediately to the job ongoing screen
+      navigation.navigate('JobOngoing');
     }
+
+    // Update the context after navigation is triggered
+    setLeadDataContext(lead);
+    setNavigationLoader(false); // Stop loader after the context is updated
   };
 
   // const navigationDecision = lead => {
+  //   setNavigationLoader(true)
   //   setLeadDataContext(lead);
-  //   if (
-  //     lead.bookingDetails?.status === 'Confirmed' || //responded
-  //     lead.bookingDetails?.status === 'Customer Unreachable' ||
-  //     lead.bookingDetails?.status === 'Customer Cancelled'
+  //   const status = lead.bookingDetails?.status;
+  //   const hasLeadLocked = lead.bookingDetails?.hasLeadLocked;
+  //   // 1️⃣ Customer Cancelled (highest priority)
+  //   if (status === 'Customer Cancelled' ||
+  //     status === 'Rescheduled'
   //   ) {
-  //     return navigation.navigate('LeadDescriptionScreen'); //navigating to start job screen
-  //   } else if (
-  //     lead.bookingDetails?.status === 'Survey Ongoing' ||
-  //     lead.bookingDetails?.status === 'Survey Completed' ||
-  //     lead.bookingDetails?.status === 'Pending Hiring' ||
-  //     lead.bookingDetails?.status === 'Hired' ||
-  //     lead.bookingDetails?.status === 'Project Ongoing' ||
-  //     lead.bookingDetails?.status === 'Job Ongoing' ||
-  //     lead.bookingDetails?.status === 'Project Completed' ||
-  //     lead.bookingDetails?.status === 'Waiting for final payment'
+  //     if (hasLeadLocked) {
+  //       return;
+  //     }
+  //     setNavigationLoader(false);
+  //     navigation.navigate('LeadDescriptionScreen')
+  //     return //navigating to start job screen
+
+  //   }
+
+  //   // 2️⃣ Lead description states
+  //   if (
+  //     status === 'Confirmed' ||  //responded
+  //     status === 'Customer Unreachable'
+  //   ) {
+  //     setNavigationLoader(false);
+  //     navigation.navigate('LeadDescriptionScreen');
+  //     return
+  //   }
+
+  //   // 3️⃣ Job / survey / ongoing states
+  //   if (
+  //     [
+  //       'Survey Ongoing',
+  //       'Survey Completed',
+  //       'Pending Hiring',
+  //       'Hired',
+  //       'Project Ongoing',
+  //       'Job Ongoing',
+  //       'Project Completed',
+  //       'Waiting for final payment',
+  //     ].includes(status)
   //   ) {
   //     console.log('JobOngoing');
-  //     return navigation.navigate('JobOngoing'); //navigating to end job screen
+  //     setNavigationLoader(false);
+  //     navigation.navigate('JobOngoing');//navigating to end job screen
+  //     return
   //   }
   // };
+
 
   const showStatus = lead => {
     if (lead.bookingDetails?.status === 'Confirmed') {
@@ -509,7 +418,7 @@ const OngoingLeadsScreen = () => {
           <StatusBar
             barStyle={deviceTheme === 'dark' ? 'light-content' : 'dark-content'}
           />
-          {loading && <PageLoader />}
+          {(loading || navigationLoader) && <PageLoader />}
           <Header />
 
           <View style={styles.container}>

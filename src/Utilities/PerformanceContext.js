@@ -40,6 +40,11 @@ export const PerformanceProvider = ({ children }) => {
 
     const renamedServiceType = isHousePainting ? "house_painting" : "deep_cleaning";
 
+    const isPerfReady = useMemo(
+        () => !!performanceData && !!kpiData,
+        [performanceData, kpiData]
+    );
+
     // ---------------- KPI color helper ----------------
     const getKpiColor = useCallback((value, ranges, options = { positive: true }) => {
         if (!ranges) return "#6c757d";
@@ -176,22 +181,32 @@ export const PerformanceProvider = ({ children }) => {
         ];
     }, [performanceData, kpiData, isDeepCleaning, getKpiColor, colorToBand]);
 
-    const isPerformanceLow = useMemo(
-        () => isPerformanceLowFromBands(bands),
-        [bands, isPerformanceLowFromBands]
-    );
+    // const isPerformanceLow = useMemo(
+    //     () => isPerformanceLowFromBands(bands),
+    //     [bands, isPerformanceLowFromBands]
+    // );
+
+    const isPerformanceLow = useMemo(() => {
+        if (!isPerfReady) return null; // ✅ unknown until both are loaded
+        return isPerformanceLowFromBands(bands);
+    }, [isPerfReady, bands, isPerformanceLowFromBands]);
 
     // ✅ client rule: buy coins enabled only when coins < 100 and performance good
-    const buyCoinsEnabled = useMemo(
-        () => coins < 100 && !isPerformanceLow,
-        [coins, isPerformanceLow]
-    );
+    const buyCoinsEnabled = useMemo(() => {
+        if (isPerformanceLow == null) return false; // until ready
+        return coins < 100 && !isPerformanceLow;
+    }, [coins, isPerformanceLow]);
+    // const buyCoinsEnabled = useMemo(
+    //     () => coins < 100 && !isPerformanceLow,
+    //     [coins, isPerformanceLow]
+    // );
 
     const value = useMemo(
         () => ({
             loading,
             performanceData,
             kpiData,
+            isPerfReady,
             coins,
             serviceType,
             isHousePainting,
@@ -207,6 +222,7 @@ export const PerformanceProvider = ({ children }) => {
             loading,
             performanceData,
             kpiData,
+            isPerfReady,
             coins,
             serviceType,
             isHousePainting,

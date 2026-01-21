@@ -1,5 +1,5 @@
-// export const API_BASE_URL = 'http://192.168.1.81:9000/api'; // development
-export const API_BASE_URL = 'https://homjee-backend.onrender.com/api'; // production
+export const API_BASE_URL = 'http://192.168.1.81:9000/api'; // development
+// export const API_BASE_URL = 'https://homjee-backend.onrender.com/api'; // production
 
 export const API_ENDPOINTS = {
   // USER AUTH
@@ -16,7 +16,7 @@ export const API_ENDPOINTS = {
   TEAM_MEMBERS_STATUS: '/vendor/team-members-status/',
   MARK_LEAVES: '/vendor/team/leaves/',
   VENDOR_AVAILABILITY: '/vendor/check-vendor-availability/',
-  CHECK_AVAILABILITY_RANGE: '/vendor/check/',
+  CHECK_AVAILABILITY_RANGE: '/vendor/check-teammember-availability/',
 
   // BOOKINGS
   GET_NEARBY_BOOKING_DEEP_CLEANING:
@@ -83,6 +83,9 @@ export const API_ENDPOINTS = {
   FETCH_WALLET_TRANSACTIONS: "/wallet/get-wallet-transaction/vendor/",
   SEND_PAYMENT_LINK: "/wallet/send-recharge-link/",
   PAYMENT_LINK_STATUS: "/wallet/get-link-status/payment-link/",
+
+  // MONET DASHBOARD
+  GET_MONEY_DASHBOARD: "/bookings/customer-payments/money-dashboard/"
 };
 
 
@@ -95,3 +98,4 @@ export const API_ENDPOINTS = {
 //  survey completed
 //  pending hiring
 // project ongoing
+
