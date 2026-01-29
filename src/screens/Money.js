@@ -18,8 +18,10 @@ import { API_ENDPOINTS } from '../ApiService/apiConstants';
 import { useVendorContext } from '../Utilities/VendorContext';
 import PageLoader from '../components/PageLoader';
 import moment from 'moment';
+import { useNavigation } from '@react-navigation/native';
 
-const Money = ({ navigation }) => {
+const Money = () => {
+  const navigation = useNavigation()
   const { deviceTheme } = useThemeColor();
   const { vendorDataContext } = useVendorContext();
   const vendorId = vendorDataContext?._id;
@@ -84,7 +86,11 @@ const Money = ({ navigation }) => {
 
 
   const renderItem = ({ item }) => (
-    <View style={styles.mainleadone}>
+    <TouchableOpacity style={styles.mainleadone}
+      onPress={() => navigation.navigate('PaymentDetailed', {
+        lead: item,
+      })}
+    >
       <View style={styles.leadone}></View>
       <View style={styles.location}>
         <Text style={styles.notifHead}>
@@ -94,7 +100,7 @@ const Money = ({ navigation }) => {
 
       </View>
       {/* <Text style={styles.bookingId}>Booking Id: {item.bookingId}</Text> */}
-    </View>
+    </TouchableOpacity>
   );
 
 
@@ -143,7 +149,7 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: '#F6F6F6',
-    marginBottom: 100,
+    // marginBottom: 100,
   },
   notifHead: {
     color: '#000000',

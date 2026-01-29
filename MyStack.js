@@ -50,6 +50,7 @@ import StartMeasurement from './src/screens/Home Painting/StartMeasurement';
 import RoomMeasurementScreen from './src/screens/Home Painting/RoomMeasurementScreen';
 import SelectPaint from './src/screens/Home Painting/SelectPaint';
 import QuotesView from './src/screens/Home Painting/QuotesView';
+import MiddleScreenOfMoneyDash from './src/screens/MiddleScreenOfMoneyDash';
 
 const Stack = createNativeStackNavigator();
 
@@ -591,6 +592,18 @@ function MyStack() {
           options={{
             headerShown: true,
             headerTitle: 'Quotes',
+            headerTitleStyle: {
+              fontFamily: 'Poppins-SemiBold',
+              fontSize: 17,
+            },
+          }}
+        />
+        <Stack.Screen
+          name="PaymentDetailed"
+          component={MiddleScreenOfMoneyDash}
+          options={{
+            headerShown: true,
+            headerTitle: 'Payment Details',
             headerTitleStyle: {
               fontFamily: 'Poppins-SemiBold',
               fontSize: 17,
