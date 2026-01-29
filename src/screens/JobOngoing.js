@@ -84,7 +84,9 @@ const JobOngoing = () => {
   // console.log('quotes', quotes);
 
   const today = moment().format('YYYY-MM-DD');
-  const dayAfterTomorrow = moment().add(2, 'days').format('YYYY-MM-DD');
+  const tomorrow = moment().add(1, 'day');
+  const dayAfterTomorrow = moment().add(2, 'day');
+  // const dayAfterTomorrow = moment().add(2, 'days').format('YYYY-MM-DD');
 
   const [openCalendar, setOpenCalendar] = useState(false);
   const [selectedRescheduleDate, setSelectedRescheduleDate] = useState(null);
@@ -114,7 +116,7 @@ const JobOngoing = () => {
 
   const allowedStatusesForUpdate = ['Hired', 'Completed'];
 
-  console.log('bookingDetails>>>', leadDataContext?.bookingDetails);
+  console.log('bookingDetails>>>', leadDataContext);
 
   const handleGoBack = () => {
     // if (leadDataContext) {
@@ -179,9 +181,9 @@ const JobOngoing = () => {
   // console.log('Ended Date:', jobEndedDateAt);
   // console.log('Ended Time:', jobEndedTimeAt);
 
-  useEffect(() => {
-    preloadAvailability();
-  }, [openCalendar]);
+  // useEffect(() => {
+  //   preloadAvailability();
+  // }, [openCalendar]);
 
   const fetchPackages = async () => {
     setLoading(true);
@@ -225,27 +227,27 @@ const JobOngoing = () => {
     setRefreshing(false);
   }, [fetchBookingData]);
 
+  // 1) Make preloadAvailability return info for selectedRescheduleDate
   const preloadAvailability = async () => {
+    if (!selectedRescheduleDate) return null;
+
     setIsLoading(true);
     try {
-      const start = moment().format('YYYY-MM-DD');
-      const end = moment().add(30, 'days').format('YYYY-MM-DD');
+      const start = moment(selectedRescheduleDate, 'YYYY-MM-DD').format('YYYY-MM-DD');
+      const end = moment(selectedRescheduleDate, 'YYYY-MM-DD')
+        .add(daysRequired - 1, 'days')
+        .format('YYYY-MM-DD');
 
       const res = await axios.get(
         `${API_BASE_URL}${API_ENDPOINTS.CHECK_AVAILABILITY_RANGE}${vendorId}/availability-range`,
         {
-          params: {
-            startDate: start,
-            endDate: end,
-            daysRequired,
-          },
+          params: { startDate: start, endDate: end, daysRequired },
         },
       );
 
       const data = res.data;
-      console.log('Availability Res:', data);
+      if (!data.success) return null;
 
-      if (!data.success) return;
       setAvailability(data.availability);
 
       const blocked = {};
@@ -254,16 +256,23 @@ const JobOngoing = () => {
           blocked[date] = { disabled: true, disableTouchEvent: true };
         }
       });
-      setMarkedDates(blocked);
-      setIsLoading(false);
+
+      setMarkedDates({
+        ...disabledMarkedDates,
+        ...blocked,
+      });
+
+      // return the info for the currently selected start date
+      return data.availability[selectedRescheduleDate] || null;
     } catch (err) {
       console.error('Error preloading availability:', err);
+      return null;
     } finally {
       setIsLoading(false);
     }
   };
 
-  // console.log('availableTeam', availableTeam);
+  console.log('availableTeam', availableTeam);
   const openDialPad = phoneNumber => {
     // console.log('phoneNumber', phoneNumber);
 
@@ -375,7 +384,7 @@ const JobOngoing = () => {
   // Only count cumulative delta for APPROVED changes
   const originalTotal = bd.originalTotalAmount || bd.bookingAmount || 0; //  uncommand it later
 
-  console.log("originalTotal", originalTotal);
+  // console.log("originalTotal", originalTotal);
 
   // const originalTotal = bd.finalTotal || bd.bookingAmount || 0;
   const totalApprovedDelta = approvedChanges.reduce(
@@ -410,10 +419,8 @@ const JobOngoing = () => {
   // (bd.finalPayment?.status === 'partial' ? bd.finalPayment.prePayment || 0 :
   //   bd.finalPayment?.status === 'paid' ? bd.finalPayment.amount || 0 : 0);
 
-  console.log("paid", paid);
-  console.log("amountYetToPay", bd.amountYetToPay);
-
-
+  // console.log("paid", paid);
+  // console.log("amountYetToPay", bd.amountYetToPay);
 
   // Amount Yet to Pay always relative to visible displayed TOTAL
   let currentVisibleTotal = originalTotal; // default fallback
@@ -514,7 +521,7 @@ const JobOngoing = () => {
     disableAllTheHell = true;
   }
 
-  console.log('iconDisabled', iconDisabled);
+  // console.log('iconDisabled', iconDisabled);
   // ----------------------------------------------------------------
   const priceEditPending =
     !!bd.hasPriceUpdated && lastChange?.status === 'pending';
@@ -539,7 +546,7 @@ const JobOngoing = () => {
     (paymentRequestActive || secondPaid) && // visible right after request
     finalPending;
 
-  console.log("canShowEndProject", canShowEndProject);
+  // console.log("canShowEndProject", canShowEndProject);
 
   // 🔒 Disable until 2nd payment is successful
   const endProjectEnabled =
@@ -645,6 +652,8 @@ const JobOngoing = () => {
     Array.isArray(selectedMembers) && selectedMembers.length >= 2;
 
   const onDayPress = dateString => {
+    console.log('Date is blocked:', dateString);
+
     // if clicked date itself is blocked → stop
     if (markedDates[dateString]?.disabled) {
       console.log('Date is blocked:', dateString);
@@ -680,6 +689,17 @@ const JobOngoing = () => {
         ...newRange,
       };
     });
+  };
+
+  const disabledMarkedDates = {
+    [today]: {
+      disabled: true,
+      disableTouchEvent: true,
+    },
+    [tomorrow.format('YYYY-MM-DD')]: {
+      disabled: true,
+      disableTouchEvent: true,
+    },
   };
 
   const toggleMember = memberId => {
@@ -1179,7 +1199,7 @@ const JobOngoing = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar
-        barStyle={deviceTheme === 'dark' ? 'light-content' : 'dark-content'}
+        barStyle={deviceTheme === 'dark' ? 'light-content' : 'black'}
       />
       {loading && <PageLoader />}
       {isLoading && <ResponseLoader />}
@@ -2687,8 +2707,12 @@ const JobOngoing = () => {
             >
               <Calendar
                 onDayPress={day => onDayPress(day.dateString)}
-                markedDates={markedDates}
-                minDate={moment().format('YYYY-MM-DD')} // hide past days
+                markedDates={{
+                  ...markedDates,
+                  ...disabledMarkedDates,
+                }
+                }
+                minDate={dayAfterTomorrow.format('YYYY-MM-DD')}
                 theme={{
                   selectedDayTextColor: '#fff',
                   todayTextColor: '#2980B9',
@@ -2703,24 +2727,24 @@ const JobOngoing = () => {
                 borderRadius: 6,
                 marginTop: 20,
               }}
-              disabled={!isStored ? true : false}
-              onPress={() => {
+              disabled={!isStored}
+              onPress={async () => {
                 if (!isStored) return;
                 if (!selectedRescheduleDate) return;
 
-                // 1. Find available members from your API response (preloaded availability)
-                const selectedInfo = availability[selectedRescheduleDate];
-                // 👆 availability is the API response object you stored from preloadAvailability
+                // wait for availability to load for this selection
+                const selectedInfo = await preloadAvailability();
 
-                if (selectedInfo && selectedInfo.canStart) {
-                  setAvailableTeam(selectedInfo.availableMembers); // save members
-                  setOpenCalendar(false); // close calendar
-                  setTeamModalVisible(true); // open team modal
+                if (selectedInfo && selectedInfo.canStart && selectedInfo.availableMembers?.length) {
+                  setAvailableTeam(selectedInfo.availableMembers);
+                  setOpenCalendar(false);
+                  setTeamModalVisible(true);
                 }
               }}
             >
               <Text style={styles.rescheduleBtnText}>Done</Text>
             </TouchableOpacity>
+
           </View>
         </View>
       </Modal>

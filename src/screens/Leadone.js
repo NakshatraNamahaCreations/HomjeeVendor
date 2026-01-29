@@ -37,7 +37,7 @@ const Leadone = () => {
   const lat = vendorDataContext?.address?.latitude || null;
   const long = vendorDataContext?.address?.longitude || null;
 
-  // console.log('vendorDataContext', vendorDataContext);
+  console.log('vendorDataContext.Id', vendorDataContext?._id);
   console.log('isPerformanceLow', isPerformanceLow);
 
 

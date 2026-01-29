@@ -15,7 +15,7 @@ import { getRequest, postRequest } from '../ApiService/apiHelper';
 import { API_ENDPOINTS } from '../ApiService/apiConstants';
 import PageLoader from '../components/PageLoader';
 import moment from 'moment';
-import MapView, { Marker } from 'react-native-maps';
+// import MapView, { Marker } from 'react-native-maps';
 import { useVendorContext } from '../Utilities/VendorContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
@@ -202,7 +202,7 @@ const Leaddetails = () => {
                     {bookingDetails.address?.streetArea}
                   </Text>
                 </View>
-                {enableUI && (
+                {/* {enableUI && (
                   <View style={{ marginTop: 20 }}>
                     <MapView
                       style={{
@@ -221,7 +221,7 @@ const Leaddetails = () => {
                       )}
                     </MapView>
                   </View>
-                )}
+                )} */}
                 <View style={styles.dottedLine} />
 
                 <Text style={styles.sectionLabel}>Slot Date & Time</Text>

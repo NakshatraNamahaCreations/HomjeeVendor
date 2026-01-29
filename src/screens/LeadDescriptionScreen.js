@@ -14,7 +14,7 @@ import {
   StatusBar,
 } from 'react-native';
 import { Calendar } from 'react-native-calendars';
-import MapView, { Marker } from 'react-native-maps';
+// import MapView, { Marker } from 'react-native-maps';
 import { API_BASE_URL, API_ENDPOINTS } from '../ApiService/apiConstants';
 import { getRequest, postRequest } from '../ApiService/apiHelper';
 import PageLoader from '../components/PageLoader';
@@ -811,7 +811,7 @@ const LeadDescriptionScreen = () => {
               </View> */}
             </View>
           )}
-          {enableUI && (
+          {/* {enableUI && (
             <View
               style={{ flexDirection: 'row', marginTop: 10, marginBottom: 50 }}
             >
@@ -831,13 +831,9 @@ const LeadDescriptionScreen = () => {
                     title="Selected Location"
                   />
                 )}
-              </MapView>
-              {/* <Text style={styles.descriptionText}>
-                {leadDataContext?.address.houseFlatNumber},{' '}
-                {leadDataContext?.address.streetArea}
-              </Text> */}
+              </MapView> 
             </View>
-          )}
+          )} */}
         </View>
       </ScrollView>
 

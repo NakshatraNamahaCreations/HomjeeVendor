@@ -125,7 +125,12 @@ const Money = ({ navigation }) => {
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
             <View style={styles.emptyState}>
-              <Text>No payment records found.</Text>
+              <Text style={{
+                color: '#b1b1b1',
+                fontSize: 14,
+                fontFamily: 'Poppins-Medium',
+                textAlign: 'center',
+              }} >No payment records found.</Text>
             </View>
           }
         />
@@ -167,9 +172,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   emptyState: {
-    color: '#363636',
-    fontSize: 13,
-    fontFamily: 'Poppins-Medium',
+    marginTop: 200
   },
 });
 
