@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import Header from '../../components/Header';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation } from '@react-navigation/native';
+import { CommonActions, useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useThemeColor } from '../../Utilities/ThemeContext';
 import { useVendorContext } from '../../Utilities/VendorContext';
@@ -37,13 +37,24 @@ const Menu = () => {
   const { vendorDataContext } = useVendorContext();
 
   const handleLogout = () => {
-    navigation.navigate('login');
-    AsyncStorage.clear();
-    ToastAndroid.showWithGravity(
-      'Logout Successfully',
-      ToastAndroid.SHORT,
-      ToastAndroid.CENTER,
-    );
+    try {
+      AsyncStorage.clear();
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: "login" }],
+        })
+      );
+
+      ToastAndroid.showWithGravity(
+        'Logout Successfully',
+        ToastAndroid.SHORT,
+        ToastAndroid.CENTER,
+      );
+    }
+    catch (e) {
+      console.log("logout error", e);
+    }
   };
 
   return (
@@ -59,17 +70,42 @@ const Menu = () => {
           </TouchableOpacity>
         </View>
         <View style={styles.profileContainer}>
-          <Image
-            source={require('../../assets/images/profilemenu.png')}
-            style={{ width: 80, height: 80 }}
-          />
+          <View
+            style={{
+              width: 100,
+              height: 100,
+              borderRadius: 50,
+              backgroundColor: "#ED1F24",
+              alignItems: "center",
+              justifyContent: "center",
+              // padding: 1,
+            }}
+          >
+            <View
+              style={{
+                width: 90,
+                height: 90,
+                borderRadius: 44,
+                overflow: "hidden", // ✅ important to clip image inside
+                backgroundColor: "#fff",
+              }}
+            >
+              <Image
+                source={{ uri: vendorDataContext?.vendor?.profileImage }}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                }}
+                resizeMode="cover"  // ✅ fills circle without stretching
+              />
+            </View>
+          </View>
           <Text style={styles.profileName}>
-            {vendorDataContext.vendor?.vendorName} (
-            {vendorDataContext.vendor?.serviceType})
+            {vendorDataContext.vendor?.vendorName}
           </Text>
           <Text style={styles.status}>Live</Text>
-          <Text style={styles.lastActive}>Last Active</Text>
-          <Text style={styles.lastActiveTime}>09 Jan 2023 | 5:30 PM</Text>
+          <Text style={styles.lastActive}>{vendorDataContext.vendor?.serviceType}</Text>
+          {/* <Text style={styles.lastActiveTime}>09 Jan 2023 | 5:30 PM</Text> */}
         </View>
         <View style={{}}>
           <MenuItem

@@ -1,0 +1,378 @@
+{
+    "address": {
+        "location": {
+            "type": "Point",
+            "coordinates": [
+                77.523167624098,
+                12.900977458821279
+            ]
+        },
+        "houseFlatNumber": "2nd floor, fir muscle",
+        "streetArea": "Bangalore Development Authority, 407, Link Road, Channasandra, Srinivaspura, Bengaluru, Karnataka 560098, India",
+        "landMark": "",
+        "city": "Bengaluru"
+    },
+    "_id": "69831f932c7c44c91927ab8b",
+    "customer": {
+        "customerId": "6880b589351dfdf66f696613",
+        "name": "Jason",
+        "phone": "8526190332",
+        "_id": "69831f932c7c44c91927ab8c"
+    },
+    "service": [
+        {
+            "category": "House Painting",
+            "serviceName": "House Painters & Waterproofing",
+            "price": 99,
+            "quantity": 1,
+            "teamMembersRequired": 0,
+            "duration": 0,
+            "coinDeduction": 25,
+            "_id": "69831f932c7c44c91927ab8d"
+        }
+    ],
+    "bookingDetails": {
+        "paymentLink": {
+            "url": "https://websitehomjee.netlify.app/checkout/payment/69831f932c7c44c91927ab8b/1770200979052/auto-pay",
+            "isActive": false,
+            "providerRef": "OMO202602041504"
+        },
+        "bookingDate": "2026-02-04T10:16:45.957Z",
+        "bookingTime": "3:46 PM",
+        "booking_id": "HJ-20260204-3300",
+        "status": "Confirmed",
+        "isJobStarted": false,
+        "hasPriceUpdated": false,
+        "priceUpdateRequestedToUser": false,
+        "priceUpdateRequestedToAdmin": false,
+        "originalTotalAmount": 0,
+        "finalTotal": 0,
+        "firstPayment": {
+            "status": "pending",
+            "amount": 0,
+            "method": "None",
+            "requestedAmount": 0,
+            "remaining": 0,
+            "prePayment": 0
+        },
+        "secondPayment": {
+            "status": "pending",
+            "amount": 0,
+            "method": "None",
+            "requestedAmount": 0,
+            "remaining": 0,
+            "prePayment": 0
+        },
+        "finalPayment": {
+            "status": "pending",
+            "amount": 0,
+            "method": "None",
+            "requestedAmount": 0,
+            "remaining": 0,
+            "prePayment": 0
+        },
+        "paidAmount": 99,
+        "amountYetToPay": 0,
+        "bookingAmount": 0,
+        "paymentMethod": "UPI",
+        "paymentStatus": "Partial Payment",
+        "startProject": false,
+        "siteVisitCharges": 99,
+        "otp": 4876,
+        "priceChanges": []
+    },
+    "payments": [
+        {
+            "at": "2026-02-04T10:29:39.002Z",
+            "method": "UPI",
+            "amount": 99,
+            "providerRef": "OMO202602041831",
+            "purpose": "site_visit",
+            "_id": "69831f932c7c44c91927ab8e"
+        }
+    ],
+    "serviceType": "house_painting",
+    "selectedSlot": {
+        "slotTime": "06:00 PM",
+        "slotDate": "2026-02-04",
+        "_id": "69831f932c7c44c91927ab8f"
+    },
+    "isEnquiry": false,
+    "isRead": false,
+    "isDismmised": false,
+    "formName": "Website Service Page",
+    "createdDate": "2026-02-04T10:29:39.002Z",
+    "invitedVendors": [
+        {
+            "professionalId": "6982df5d287725908937c395",
+            "invitedAt": "2026-02-04T10:30:14.576Z",
+            "responseStatus": "accepted",
+            "coinsDeducted": true,
+            "coinsDeductedValue": 25,
+            "coinsRefunded": false,
+            "coinsRefundedValue": 0,
+            "_id": "69831fb62c7c44c91927abc5",
+            "coinsDeductedAt": "2026-02-04T10:30:14.740Z",
+            "respondedAt": "2026-02-04T10:30:14.740Z"
+        }
+    ],
+    "__v": 0,
+    "assignedProfessional": {
+        "hiring": {
+            "projectDate": [],
+            "status": "active",
+            "teamMember": []
+        },
+        "professionalId": "6982df5d287725908937c395",
+        "name": "Suman Raj",
+        "phone": "8973267337",
+        "profile": "https://res.cloudinary.com/dddc5vq0h/image/upload/v1770184540/vendorDocs/1770184539739-vr%20profile.jpg",
+        "acceptedDate": "2026-02-03T18:30:00.000Z",
+        "acceptedTime": "4:00 PM",
+        "_id": "69831fb62c7c44c91927abd2"
+    }
+}
+ 
+
+{
+    "address": {
+        "location": {
+            "type": "Point",
+            "coordinates": [
+                77.523167624098,
+                12.900977458821279
+            ]
+        },
+        "houseFlatNumber": "2nd floor, fir muscle",
+        "streetArea": "Bangalore Development Authority, 407, Link Road, Channasandra, Srinivaspura, Bengaluru, Karnataka 560098, India",
+        "landMark": "",
+        "city": "Bengaluru"
+    },
+    "_id": "69831f932c7c44c91927ab8b",
+    "customer": {
+        "customerId": "6880b589351dfdf66f696613",
+        "name": "Jason",
+        "phone": "8526190332",
+        "_id": "69831f932c7c44c91927ab8c"
+    },
+    "service": [
+        {
+            "category": "House Painting",
+            "serviceName": "House Painters & Waterproofing",
+            "price": 99,
+            "quantity": 1,
+            "teamMembersRequired": 0,
+            "duration": 0,
+            "coinDeduction": 25,
+            "_id": "69831f932c7c44c91927ab8d"
+        }
+    ],
+    "bookingDetails": {
+        "paymentLink": {
+            "url": "https://websitehomjee.netlify.app/checkout/payment/69831f932c7c44c91927ab8b/1770200979052/auto-pay",
+            "isActive": false,
+            "providerRef": "OMO202602041504"
+        },
+        "bookingDate": "2026-02-04T10:16:45.957Z",
+        "bookingTime": "3:46 PM",
+        "booking_id": "HJ-20260204-3300",
+        "status": "Survey Ongoing",
+        "isJobStarted": false,
+        "hasPriceUpdated": false,
+        "priceUpdateRequestedToUser": false,
+        "priceUpdateRequestedToAdmin": false,
+        "originalTotalAmount": 0,
+        "finalTotal": 0,
+        "firstPayment": {
+            "status": "pending",
+            "amount": 0,
+            "method": "None",
+            "requestedAmount": 0,
+            "remaining": 0,
+            "prePayment": 0
+        },
+        "secondPayment": {
+            "status": "pending",
+            "amount": 0,
+            "method": "None",
+            "requestedAmount": 0,
+            "remaining": 0,
+            "prePayment": 0
+        },
+        "finalPayment": {
+            "status": "pending",
+            "amount": 0,
+            "method": "None",
+            "requestedAmount": 0,
+            "remaining": 0,
+            "prePayment": 0
+        },
+        "paidAmount": 99,
+        "amountYetToPay": 0,
+        "bookingAmount": 0,
+        "paymentMethod": "UPI",
+        "paymentStatus": "Partial Payment",
+        "startProject": false,
+        "siteVisitCharges": 99,
+        "otp": 4876,
+        "priceChanges": []
+    },
+    "payments": [
+        {
+            "at": "2026-02-04T10:29:39.002Z",
+            "method": "UPI",
+            "amount": 99,
+            "providerRef": "OMO202602041831",
+            "purpose": "site_visit",
+            "_id": "69831f932c7c44c91927ab8e"
+        }
+    ],
+    "serviceType": "house_painting",
+    "selectedSlot": {
+        "slotTime": "06:00 PM",
+        "slotDate": "2026-02-04",
+        "_id": "69831f932c7c44c91927ab8f"
+    },
+    "isEnquiry": false,
+    "isRead": false,
+    "isDismmised": false,
+    "formName": "Website Service Page",
+    "createdDate": "2026-02-04T10:29:39.002Z",
+    "invitedVendors": [
+        {
+            "professionalId": "6982df5d287725908937c395",
+            "invitedAt": "2026-02-04T10:30:14.576Z",
+            "responseStatus": "accepted",
+            "coinsDeducted": true,
+            "coinsDeductedValue": 25,
+            "coinsRefunded": false,
+            "coinsRefundedValue": 0,
+            "_id": "69831fb62c7c44c91927abc5",
+            "coinsDeductedAt": "2026-02-04T10:30:14.740Z",
+            "respondedAt": "2026-02-04T10:30:14.740Z"
+        }
+    ],
+    "__v": 0,
+    "assignedProfessional": {
+        "hiring": {
+            "projectDate": [],
+            "status": "active",
+            "teamMember": []
+        },
+        "professionalId": "6982df5d287725908937c395",
+        "name": "Suman Raj",
+        "phone": "8973267337",
+        "profile": "https://res.cloudinary.com/dddc5vq0h/image/upload/v1770184540/vendorDocs/1770184539739-vr%20profile.jpg",
+        "acceptedDate": "2026-02-03T18:30:00.000Z",
+        "acceptedTime": "4:00 PM",
+        "_id": "69831fb62c7c44c91927abd2",
+        "startedDate": "2026-02-04T10:30:57.313Z",
+        "startedTime": "4:00 PM"
+    }
+}
+
+
+{
+    "paymentLink": {
+        "url": "https://websitehomjee.netlify.app/checkout/payment/6983323f5cefe4093fa87810/1770205759910/auto-pay",
+        "isActive": false,
+        "providerRef": "OMO202602042539"
+    },
+    "bookingDate": "2026-02-04T11:49:19.145Z",
+    "bookingTime": "5:19 PM",
+    "booking_id": "HJ-20260204-6409",
+    "status": "Confirmed",
+    "isJobStarted": false,
+    "hasPriceUpdated": false,
+    "priceUpdateRequestedToUser": false,
+    "priceUpdateRequestedToAdmin": false,
+    "originalTotalAmount": 5199,
+    "finalTotal": 5199,
+    "firstPayment": {
+        "status": "paid",
+        "amount": 1040,
+        "paidAt": "2026-02-04T11:49:19.861Z",
+        "method": "UPI",
+        "requestedAmount": 1040,
+        "remaining": 0,
+        "prePayment": 0
+    },
+    "finalPayment": {
+        "status": "pending",
+        "amount": 0,
+        "method": "None",
+        "requestedAmount": 0,
+        "remaining": 0,
+        "prePayment": 0
+    },
+    "paidAmount": 1040,
+    "amountYetToPay": 4159,
+    "bookingAmount": 1040,
+    "paymentMethod": "UPI",
+    "paymentStatus": "Partial Payment",
+    "startProject": false,
+    "siteVisitCharges": 0,
+    "otp": 4882,
+    "priceChanges": [],
+    "secondPayment": {
+        "status": "pending",
+        "amount": 0,
+        "method": "None",
+        "requestedAmount": 0,
+        "remaining": 0,
+        "prePayment": 0
+    }
+}
+
+
+{
+    "paymentLink": {
+        "url": "https://websitehomjee.netlify.app/checkout/payment/6983323f5cefe4093fa87810/1770205759910/auto-pay",
+        "isActive": false,
+        "providerRef": "OMO202602042539"
+    },
+    "bookingDate": "2026-02-04T11:49:19.145Z",
+    "bookingTime": "5:19 PM",
+    "booking_id": "HJ-20260204-6409",
+    "status": "Job Ongoing",
+    "isJobStarted": true,
+    "hasPriceUpdated": false,
+    "priceUpdateRequestedToUser": false,
+    "priceUpdateRequestedToAdmin": false,
+    "originalTotalAmount": 5199,
+    "finalTotal": 5199,
+    "firstPayment": {
+        "status": "paid",
+        "amount": 1040,
+        "paidAt": "2026-02-04T11:49:19.861Z",
+        "method": "UPI",
+        "requestedAmount": 1040,
+        "remaining": 0,
+        "prePayment": 0
+    },
+    "finalPayment": {
+        "status": "pending",
+        "amount": 0,
+        "method": "None",
+        "requestedAmount": 0,
+        "remaining": 0,
+        "prePayment": 0
+    },
+    "paidAmount": 1040,
+    "amountYetToPay": 4159,
+    "bookingAmount": 1040,
+    "paymentMethod": "UPI",
+    "paymentStatus": "Partial Payment",
+    "startProject": true,
+    "siteVisitCharges": 0,
+    "otp": 4882,
+    "priceChanges": [],
+    "secondPayment": {
+        "status": "pending",
+        "amount": 0,
+        "method": "None",
+        "requestedAmount": 0,
+        "remaining": 0,
+        "prePayment": 0
+    }
+}

@@ -56,6 +56,7 @@ const JobOngoing = () => {
   const [estimateData, setEstimateData] = useEstimateContext();
   const measurementId = estimateData?._id;
   const [statusModalVisible, setStatusModalVisible] = useState(false);
+  const [statusType, setStatusType] = useState(0);
   // const { lead } = route?.params || DEFAULT_LEAD;
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -110,7 +111,7 @@ const JobOngoing = () => {
   const [starJob, setStarJob] = useState(false); //reschedule
   const [showRescheduleModal, setShowRescheduleModal] = useState(false);
   const [cancelModal, setCancelModal] = useState(false);
-  const [ReachablePrompt, setReachablePrompt] = useState(false);
+  const [openStatusModal, setOpenStatusModal] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState('');
   const availableSlots = ['10:30am', '12:30pm', '01:30pm', '2:30pm', '5:30pm'];
 
@@ -125,7 +126,7 @@ const JobOngoing = () => {
     navigation.navigate('BottomTab', {
       screen: 'Ongoing',
     });
-  }
+  };
 
   const uniqueSubCategories = [
     ...new Set(leadDataContext?.service?.map(unq => unq.subCategory)),
@@ -233,7 +234,9 @@ const JobOngoing = () => {
 
     setIsLoading(true);
     try {
-      const start = moment(selectedRescheduleDate, 'YYYY-MM-DD').format('YYYY-MM-DD');
+      const start = moment(selectedRescheduleDate, 'YYYY-MM-DD').format(
+        'YYYY-MM-DD',
+      );
       const end = moment(selectedRescheduleDate, 'YYYY-MM-DD')
         .add(daysRequired - 1, 'days')
         .format('YYYY-MM-DD');
@@ -310,11 +313,10 @@ const JobOngoing = () => {
       return 'green';
     } else if (
       leadDataContext?.bookingDetails?.status === 'Customer Cancelled' ||
-      leadDataContext?.bookingDetails?.status === 'Waiting for final payment'
-    ) {
-      return '#ff0000';
-    } else if (
-      leadDataContext?.bookingDetails?.status === 'Customer Unreachable'
+      leadDataContext?.bookingDetails?.status === 'Waiting for final payment' ||
+      leadDataContext?.bookingDetails?.status === 'Customer Unreachable' ||
+      leadDataContext?.bookingDetails?.status === 'Customer Denied' ||
+      leadDataContext?.bookingDetails?.status === 'Negotiation'
     ) {
       return '#ff0000';
     } else if (leadDataContext?.bookingDetails?.status === 'Pending Hiring') {
@@ -410,7 +412,7 @@ const JobOngoing = () => {
   const isRejected = !!latestChange && latestChange.status === 'rejected';
 
   // Dynamic amount paid (aggregate all paid up to now)
-  const paid = bd.paidAmount // command and replace beblow cmd
+  const paid = bd.paidAmount; // command and replace beblow cmd
   // uncommand if need
   // (bd.firstPayment?.status === 'paid' ? bd.firstPayment.amount || 0 : 0) +
   // (bd.secondPayment?.status === 'partial'
@@ -533,9 +535,13 @@ const JobOngoing = () => {
   const firstPaid = bd.firstPayment?.status === 'paid';
   const secondPaid = bd.secondPayment?.status === 'paid';
   const secondPending = bd.secondPayment?.status === 'pending';
-  const finalPending = bd.finalPayment?.status === 'pending' || bd.finalPayment?.status === 'partial';
+  const finalPending =
+    bd.finalPayment?.status === 'pending' ||
+    bd.finalPayment?.status === 'partial';
 
-  const canShowRequestNextPayment =  // req.2nd installment
+  console.log('firstPaid', firstPaid);
+
+  const canShowRequestNextPayment = // req.2nd installment
     serviceMatch && firstPaid && secondPending && !paymentRequestActive;
 
   const requestNextEnabled = canShowRequestNextPayment && !priceEditPending;
@@ -561,6 +567,26 @@ const JobOngoing = () => {
     bd.status === 'Waiting for final payment' ||
     bd.finalPayment?.status === 'paid';
 
+  // CUSTOMER  UNREACHABLE
+  // const custUnReach =
+  //   leadDataContext?.bookingDetails?.status !== 'Customer Unreachable' 
+  //   leadDataContext?.bookingDetails?.status === 'Negotiation' ||
+  //               leadDataContext?.bookingDetails?.status === 'Customer Denied'
+
+  const status = leadDataContext?.bookingDetails?.status;
+
+  const custUnReach = ['Customer Unreachable', 'Negotiation', 'Customer Denied'].includes(status)
+
+  const started = !!leadDataContext?.bookingDetails?.startProject;
+  const showStartProjectBtn =
+    status === 'Pending Hiring' ||
+    status === 'Customer Cancelled' ||
+    (status === 'Hired' && started) ||
+    (status === 'Customer Unreachable' && firstPaid);
+
+  console.log('showStartProjectBtn', showStartProjectBtn);
+
+  // ............................................................................
   const fetchMeasurements = async () => {
     setLoading(true);
     setEstimateData(null);
@@ -716,21 +742,44 @@ const JobOngoing = () => {
 
   // console.log('disableAllTheHell', disableAllTheHell);
 
-  const handleUpdateStatus = async status => {
+  const handleStatusModal = type => {
+    setStatusType(type);
+    setStatusModalVisible(false);
+    setOpenStatusModal(true);
+  };
+
+  const getConfirmText = statusType => {
+    if ([1, 2, 3].includes(statusType))
+      return 'Are you sure you want to update the status?';
+    if (statusType === 4) return 'Are you sure you want to cancel the job?';
+    return '';
+  };
+
+  const STATUS_MAP = {
+    1: 'Customer Unreachable',
+    2: 'Customer Denied',
+    3: 'Negotiation',
+    4: 'Customer Cancelled',
+  };
+
+  const handleUpdateStatus = async statusType => {
     setLoading(true);
-    // if (status === 'Customer Cancelled' && cancelReason === '') {
-    //   return ToastAndroid.showWithGravity(
-    //     'Reason for cancel is required',
-    //     ToastAndroid.LONG,
-    //     ToastAndroid.CENTER,
-    //   );
-    // }
+
+    const statusText = STATUS_MAP[statusType];
+
+    if (!statusText) {
+      ToastAndroid.showWithGravity(
+        'Invalid status',
+        ToastAndroid.LONG,
+        ToastAndroid.CENTER,
+      );
+      return;
+    }
     try {
       const formData = {
         bookingId: leadDataContext?._id,
-        status: status,
+        status: statusText,
         vendorId: vendorDataContext._id,
-        // reasonForCancelled: cancelReason,
       };
 
       const result = await postRequest(API_ENDPOINTS.UPDATE_STATUS, formData);
@@ -1212,9 +1261,7 @@ const JobOngoing = () => {
         }}
       >
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <TouchableOpacity
-            onPress={() => handleGoBack()}
-          >
+          <TouchableOpacity onPress={() => handleGoBack()}>
             <Ionicons name="arrow-back" color="black" size={23} />
           </TouchableOpacity>
           <Text
@@ -1246,11 +1293,6 @@ const JobOngoing = () => {
             }}
           >
             {leadDataContext?.bookingDetails?.status}
-            {/* Project Ongoing{' '} */}
-            {/* {moment(leadDataContext?.assignedProfessional?.startedDate).format(
-              'll',
-            )}{' '}
-            : {leadDataContext?.assignedProfessional?.startedTime} */}
           </Text>
           {latestChange && (
             <View style={styles.headerBlock}>
@@ -1322,7 +1364,13 @@ const JobOngoing = () => {
                 </TouchableOpacity>
               )} */}
             {(leadDataContext?.bookingDetails?.status === 'Hired' ||
-              leadDataContext?.bookingDetails?.status === 'Survey Completed') &&
+              leadDataContext?.bookingDetails?.status === 'Survey Completed' ||
+              leadDataContext?.bookingDetails?.status ===
+              'Customer Unreachable' ||
+              leadDataContext?.bookingDetails?.status === 'Customer Denied' ||
+              leadDataContext?.bookingDetails?.status === 'Negotiation' ||
+              leadDataContext?.bookingDetails?.status ===
+              'Customer Cancelled') &&
               // !leadDataContext?.bookingDetails?.isJobStarted &&
               (vendorDataContext?.vendor?.serviceType === 'house-painter' ||
                 vendorDataContext?.vendor?.serviceType ===
@@ -1580,6 +1628,9 @@ const JobOngoing = () => {
           {
             // leadDataContext?.bookingDetails?.status === 'Pending Hiring' ||
             leadDataContext?.bookingDetails?.status === 'Hired' ||
+              leadDataContext?.bookingDetails?.status === 'Customer Cancelled' ||
+              (leadDataContext?.bookingDetails?.status === 'Customer Unreachable'
+                && firstPaid) ||
               leadDataContext?.bookingDetails?.status === 'Project Ongoing' ||
               leadDataContext?.bookingDetails?.status ===
               'Waiting for final payment' ||
@@ -1831,11 +1882,10 @@ const JobOngoing = () => {
                             Amount Yet to be Paid
                           </Text>
                           <Text style={styles.amountDue}>
-                            {
-                              firstPaid && secondPending && finalPending
-                                ? currency(bd.amountYetToPay) :
-                                // either bd.finalPayment.remaining
-                                currency(originalTotal - paid)}
+                            {firstPaid && secondPending && finalPending
+                              ? currency(bd.amountYetToPay)
+                              : // either bd.finalPayment.remaining
+                              currency(originalTotal - paid)}
                           </Text>
                         </View>
                       </>
@@ -1896,9 +1946,9 @@ const JobOngoing = () => {
                 }}
               >
                 Survey End at:{' '}
-                {moment(leadDataContext?.assignedProfessional?.endedDate).format(
-                  'DD-MM-YYYY',
-                )}{' '}
+                {moment(
+                  leadDataContext?.assignedProfessional?.endedDate,
+                ).format('DD-MM-YYYY')}{' '}
                 : {leadDataContext?.assignedProfessional?.endedTime}
               </Text>
             )}
@@ -1910,14 +1960,14 @@ const JobOngoing = () => {
                 marginBottom: 10,
               }}
             >
-              {vendorDataContext?.vendor?.serviceType === 'house-painter'
-                || vendorDataContext?.vendor?.serviceType === "House Painting"
+              {vendorDataContext?.vendor?.serviceType === 'house-painter' ||
+                vendorDataContext?.vendor?.serviceType === 'House Painting'
                 ? 'Survey Start'
                 : 'Job Ongoing'}{' '}
               at:{' '}
-              {moment(leadDataContext?.assignedProfessional?.startedDate).format(
-                'DD-MM-YYYY',
-              )}{' '}
+              {moment(
+                leadDataContext?.assignedProfessional?.startedDate,
+              ).format('DD-MM-YYYY')}{' '}
               : {leadDataContext?.assignedProfessional?.startedTime}
             </Text>
             {team.length > 0 && (
@@ -1963,21 +2013,7 @@ const JobOngoing = () => {
             )} */}
           </View>
         </ScrollView>
-        {/* {leadDataContext?.bookingDetails?.status !== 'Survey Completed' &&
-          !leadDataContext?.bookingDetails?.startProject
-          ? (
-            <TouchableOpacity
-              style={[styles.endBtn, { backgroundColor: '#ED1F24' }]}
-              onPress={() => setModalVisible(true)}
-            >
-              <Text style={styles.endBtnText}>
-                {vendorDataContext?.vendor?.serviceType === 'house-painter'
-                  ? 'END SURVEY'
-                  : 'END PROJECT'}
-              </Text>
-            </TouchableOpacity>
-          ) : */}
-        {showEndSurvey ? (
+        {showEndSurvey && !custUnReach ? (
           // END SURVEY - House Painter (always allowed)
           <TouchableOpacity
             style={[styles.endBtn, { backgroundColor: '#ED1F24' }]}
@@ -2003,67 +2039,99 @@ const JobOngoing = () => {
               {/* DEEP */}{' '}
             </Text>
           </TouchableOpacity>
-        ) : leadDataContext?.bookingDetails?.status === 'Pending Hiring' ||
-          (leadDataContext?.bookingDetails?.status === 'Hired' &&
-            leadDataContext?.bookingDetails?.startProject) ? (
-          <TouchableOpacity
-            style={[
-              styles.endBtn,
-              {
-                backgroundColor:
-                  leadDataContext?.bookingDetails?.status === 'Hired' &&
-                    leadDataContext?.bookingDetails?.startProject
-                    ? '#119b11ff'
-                    : 'rgba(200, 220, 200, 1)',
-              },
-            ]}
-            disabled={
-              leadDataContext?.bookingDetails?.status === 'Hired' &&
-                leadDataContext?.bookingDetails?.startProject
-                ? false
-                : true
-            }
-            onPress={() => setStartProject(true)}
-          >
-            <Text style={styles.endBtnText}>START PROJECT</Text>
-          </TouchableOpacity>
-        ) : canShowRequestNextPayment ? (
-          <TouchableOpacity
-            style={[
-              styles.endBtn,
-              { backgroundColor: requestNextEnabled ? '#ff7f00ff' : '#ffb97a' },
-            ]}
-            disabled={!requestNextEnabled}
-            onPress={
-              requestNextEnabled ? () => setRequestNext(true) : undefined
-            }
-          >
-            <Text style={styles.endBtnText}>Request Next Payment</Text>
-          </TouchableOpacity>
-        ) : (
-          !disableAllTheHell &&
-          !shouldHideEndProject && (
+        ) :
+          //  leadDataContext?.bookingDetails?.status === 'Pending Hiring' ||  -- old logic to show start project btn (hp)
+          //   leadDataContext?.bookingDetails?.status === 'Customer Cancelled' ||
+          //   (leadDataContext?.bookingDetails?.status === 'Hired' &&
+          //     leadDataContext?.bookingDetails?.startProject)
+          showStartProjectBtn ? (
             <TouchableOpacity
+              // old logic toshow bg and disable
+              // style={[
+              //   styles.endBtn,
+              //   {
+              //     backgroundColor:
+              //       leadDataContext?.bookingDetails?.status === 'Hired' ||
+              //         leadDataContext?.bookingDetails?.status === 'Customer Cancelled' &&
+              //         leadDataContext?.bookingDetails?.startProject
+              //         ? '#119b11ff'
+              //         : 'rgba(200, 220, 200, 1)',
+              //   },
+              // ]}
+              // disabled={
+              //   leadDataContext?.bookingDetails?.status === 'Hired' ||
+              //     leadDataContext?.bookingDetails?.status === 'Customer Cancelled' &&
+              //     leadDataContext?.bookingDetails?.startProject
+              //     ? false
+              //     : true
+              // }
+
+              //            style={[
+              //   styles.endBtn,    // chatGPT
+              //   {
+              //     backgroundColor:
+              //       status === "Hired" && started ? "#119b11ff" : "rgba(200, 220, 200, 1)",
+              //   },
+              // ]}
+              // disabled={!(status === "Hired" && started)} 
               style={[
                 styles.endBtn,
                 {
-                  backgroundColor: endProjectEnabled
-                    ? '#ed1f24ff'
-                    : '#ff9294ff', // dull red when disabled
+                  backgroundColor:
+                    (status === 'Hired' && started) ||
+                      status === 'Customer Cancelled' ||
+                      (status === 'Customer Unreachable' && firstPaid)
+                      ? '#119b11ff'
+                      : 'rgba(200, 220, 200, 1)',
                 },
               ]}
-              disabled={!endProjectEnabled}
+              disabled={!((status === 'Hired' && started) ||
+                status === 'Customer Cancelled' ||
+                (status === 'Customer Unreachable' && firstPaid)
+              )}
+              onPress={() => setStartProject(true)}
+            >
+              {/* api REQUESTING_SEND_OTP calling */}
+              <Text style={styles.endBtnText}>START PROJECT</Text>
+            </TouchableOpacity>
+          ) : canShowRequestNextPayment ? (
+            <TouchableOpacity
+              style={[
+                styles.endBtn,
+                { backgroundColor: requestNextEnabled ? '#ff7f00ff' : '#ffb97a' },
+              ]}
+              disabled={!requestNextEnabled}
               onPress={
-                endProjectEnabled ? () => setEndProject(true) : undefined
+                requestNextEnabled ? () => setRequestNext(true) : undefined
               }
             >
-              <Text style={styles.endBtnText}>
-                End Project
-                {/* House */}
-              </Text>
+              <Text style={styles.endBtnText}>Request Next Payment</Text>
             </TouchableOpacity>
-          )
-        )}
+          ) : (
+            !disableAllTheHell &&
+            !shouldHideEndProject &&
+            !custUnReach && (
+              <TouchableOpacity
+                style={[
+                  styles.endBtn,
+                  {
+                    backgroundColor: endProjectEnabled
+                      ? '#ed1f24ff'
+                      : '#ff9294ff', // dull red when disabled
+                  },
+                ]}
+                disabled={!endProjectEnabled}
+                onPress={
+                  endProjectEnabled ? () => setEndProject(true) : undefined
+                }
+              >
+                <Text style={styles.endBtnText}>
+                  End Project
+                  {/* House */}
+                </Text>
+              </TouchableOpacity>
+            )
+          )}
       </View>
 
       {/* edit price */}
@@ -2238,7 +2306,7 @@ const JobOngoing = () => {
             <Text style={{ fontFamily: 'Poppins-Bold', fontSize: 16 }}>
               End the{' '}
               {vendorDataContext?.vendor?.serviceType === 'house-painter' ||
-                vendorDataContext?.vendor?.serviceType === "House Painting"
+                vendorDataContext?.vendor?.serviceType === 'House Painting'
                 ? 'survey'
                 : 'project'}
             </Text>
@@ -2252,7 +2320,7 @@ const JobOngoing = () => {
             >
               Are you sure you want to end the{' '}
               {vendorDataContext?.vendor?.serviceType === 'house-painter' ||
-                vendorDataContext?.vendor?.serviceType === "House Painting"
+                vendorDataContext?.vendor?.serviceType === 'House Painting'
                 ? 'survey'
                 : 'project'}
               ?
@@ -2326,7 +2394,7 @@ const JobOngoing = () => {
         </View>
       </Modal>
 
-      {/* update status */}
+      {/* update status STATUS-TYPE */}
       <Modal
         transparent
         visible={statusModalVisible}
@@ -2346,11 +2414,17 @@ const JobOngoing = () => {
                 <Text style={{ fontWeight: 'bold', fontSize: 18 }}>✕</Text>
               </TouchableOpacity>
             </View>
-            {leadDataContext?.bookingDetails?.status === 'Hired' &&
+            {leadDataContext?.bookingDetails?.status === 'Hired' ||
+              leadDataContext?.bookingDetails?.status === 'Customer Cancelled' ||
+              (leadDataContext?.bookingDetails?.status ===
+                'Customer Unreachable' && firstPaid) &&
               !leadDataContext?.bookingDetails?.isJobStarted ? (
               // ✅ After Hired, Before Start → Show Cancellation/Rescheduling options
               <>
-                <TouchableOpacity style={styles.statusOption}>
+                <TouchableOpacity
+                  style={styles.statusOption}
+                  onPress={() => handleStatusModal(1)}
+                >
                   <Text style={styles.statusOptionText}>
                     Customer Unreachable
                   </Text>
@@ -2362,10 +2436,7 @@ const JobOngoing = () => {
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.statusOption}
-                  onPress={() => {
-                    setCancelModal(true);
-                    setStatusModalVisible(false);
-                  }}
+                  onPress={() => handleStatusModal(4)}
                 >
                   <Text style={styles.statusOptionText}>Customer Cancel</Text>
                 </TouchableOpacity>
@@ -2373,7 +2444,10 @@ const JobOngoing = () => {
             ) : leadDataContext?.bookingDetails?.isJobStarted ? (
               // ✅ Project has started → Show same options (if needed)
               <>
-                <TouchableOpacity style={styles.statusOption}>
+                <TouchableOpacity
+                  style={styles.statusOption}
+                  onPress={() => handleStatusModal(1)}
+                >
                   <Text style={styles.statusOptionText}>
                     Customer Unreachable
                   </Text>
@@ -2385,10 +2459,7 @@ const JobOngoing = () => {
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.statusOption}
-                  onPress={() => {
-                    setCancelModal(true);
-                    setStatusModalVisible(false);
-                  }}
+                  onPress={() => handleStatusModal(4)}
                 >
                   <Text style={styles.statusOptionText}>Customer Cancel</Text>
                 </TouchableOpacity>
@@ -2422,103 +2493,39 @@ const JobOngoing = () => {
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.statusOption}>
-                  <Text style={styles.statusOptionText}>
+                  <Text
+                    style={styles.statusOptionText}
+                    onPress={() => handleStatusModal(1)}
+                  >
                     Customer Unreachable
                   </Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.statusOption}>
+                <TouchableOpacity
+                  style={styles.statusOption}
+                  onPress={() => handleStatusModal(2)}
+                >
                   <Text style={styles.statusOptionText}>Customer Denied</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.statusOption}>
+                <TouchableOpacity
+                  style={styles.statusOption}
+                  onPress={() => handleStatusModal(3)}
+                >
                   <Text style={styles.statusOptionText}>
                     Customer Negotiation going on
                   </Text>
                 </TouchableOpacity>
               </>
             )}
-            {/* {leadDataContext?.bookingDetails.isJobStarted ? (
-              <>
-                <TouchableOpacity
-                  style={styles.statusOption}
-                  //  onPress={() => {
-                  //    setReachablePrompt(true);
-                  //    setStatusModalVisible(false);
-                  //  }}
-                >
-                  <Text style={styles.statusOptionText}>
-                    Customer Unreachable
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.statusOption}
-                  // onPress={() => handleUpdateStatus('Customer Reschedule')}
-                >
-                  <Text style={styles.statusOptionText}>
-                    Customer Reschedule
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.statusOption}
-                  onPress={() => {
-                    setCancelModal(true);
-                    setStatusModalVisible(false);
-                  }}
-                >
-                  <Text style={styles.statusOptionText}>Customer Cancel</Text>
-                </TouchableOpacity>
-              </>
-            ) : (
-              <>
-                <TouchableOpacity style={styles.statusOption}>
-                  <Text style={styles.statusOptionText}>Set Remainder</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.statusOption}
-                  disabled={hasQuoteLocked ? true : false}
-                  onPress={() => {
-                    if (!hasFinalized) {
-                      setShowAlertPopup(true);
-                      setStatusModalVisible(false);
-                    } else {
-                      setOpenCalendar(true);
-                      setStatusModalVisible(false);
-                    }
-                  }}
-                >
-                  <Text
-                    style={[
-                      styles.statusOptionText,
-                      { color: hasQuoteLocked ? 'gray' : 'black' },
-                    ]}
-                  >
-                    Mark Hiring
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.statusOption}>
-                  <Text style={styles.statusOptionText}>
-                    Customer Unreachable
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.statusOption}>
-                  <Text style={styles.statusOptionText}>Customer Denied</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.statusOption}>
-                  <Text style={styles.statusOptionText}>
-                    Customer Negotiation going on
-                  </Text>
-                </TouchableOpacity>
-              </>
-            )} */}
           </View>
         </View>
       </Modal>
 
-      {/* prompt for Not Reachable */}
+      {/* prompt for customer cancel ,unreachable, denied, negatiation going */}
       <Modal
         animationType="fade"
         transparent={true}
-        visible={ReachablePrompt}
-        onRequestClose={() => setReachablePrompt(false)}
+        visible={openStatusModal}
+        onRequestClose={() => setOpenStatusModal(false)}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.StatusModalContainer}>
@@ -2528,11 +2535,21 @@ const JobOngoing = () => {
                 justifyContent: 'flex-end',
               }}
             >
-              <TouchableOpacity onPress={() => setReachablePrompt(false)}>
+              <TouchableOpacity onPress={() => setOpenStatusModal(false)}>
                 <AntDesign name="close" color="black" size={20} />
               </TouchableOpacity>
             </View>
-            <Text style={styles.modalTitle}>Customer Unreachable!</Text>
+            <Text style={styles.modalTitle}>
+              {statusType === 1
+                ? 'Customer Unreachable!'
+                : statusType === 2
+                  ? 'Customer Denied'
+                  : statusType === 3
+                    ? 'Customer Negotiation going on'
+                    : statusType === 4
+                      ? 'Cancel Job!'
+                      : ''}
+            </Text>
             <Text
               style={{
                 fontSize: 13,
@@ -2541,19 +2558,21 @@ const JobOngoing = () => {
                 marginBottom: 8,
               }}
             >
-              Are you sure want to update the status.
+              <Text>
+                <Text>{getConfirmText(statusType)}</Text>
+              </Text>
             </Text>
 
             <TouchableOpacity
               style={styles.confirmButton}
-              onPress={() => handleUpdateStatus('Customer Unreachable')}
+              onPress={() => handleUpdateStatus(statusType)}
             >
               <Text style={styles.confirmButtonText}>Confirm</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.cancelButton}
               onPress={() => {
-                setReachablePrompt(false);
+                setOpenStatusModal(false);
               }}
             >
               <Text style={styles.cancelButtonText}>Cancel</Text>
@@ -2562,54 +2581,6 @@ const JobOngoing = () => {
         </View>
       </Modal>
 
-      {/* prompt for cancellening */}
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={cancelModal}
-        onRequestClose={() => setCancelModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.StatusModalContainer}>
-            <View
-              style={{
-                flexDirection: 'row',
-                justifyContent: 'flex-end',
-              }}
-            >
-              <TouchableOpacity onPress={() => setCancelModal(false)}>
-                <AntDesign name="close" color="black" size={20} />
-              </TouchableOpacity>
-            </View>
-            <Text style={styles.modalTitle}>Cancel Job!</Text>
-            <Text
-              style={{
-                fontSize: 13,
-                fontFamily: 'Poppins-Medium',
-                color: '#000',
-                marginBottom: 8,
-              }}
-            >
-              Are sure want to cancel the job.
-            </Text>
-
-            <TouchableOpacity
-              style={styles.confirmButton}
-              onPress={() => handleUpdateStatus('Customer Cancelled')}
-            >
-              <Text style={styles.confirmButtonText}>Confirm</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.cancelButton}
-              onPress={() => {
-                setCancelModal(false);
-              }}
-            >
-              <Text style={styles.cancelButtonText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
       {/* Reschedule */}
       <Modal
         transparent
@@ -2710,8 +2681,7 @@ const JobOngoing = () => {
                 markedDates={{
                   ...markedDates,
                   ...disabledMarkedDates,
-                }
-                }
+                }}
                 minDate={dayAfterTomorrow.format('YYYY-MM-DD')}
                 theme={{
                   selectedDayTextColor: '#fff',
@@ -2735,7 +2705,11 @@ const JobOngoing = () => {
                 // wait for availability to load for this selection
                 const selectedInfo = await preloadAvailability();
 
-                if (selectedInfo && selectedInfo.canStart && selectedInfo.availableMembers?.length) {
+                if (
+                  selectedInfo &&
+                  selectedInfo.canStart &&
+                  selectedInfo.availableMembers?.length
+                ) {
                   setAvailableTeam(selectedInfo.availableMembers);
                   setOpenCalendar(false);
                   setTeamModalVisible(true);
@@ -2744,7 +2718,6 @@ const JobOngoing = () => {
             >
               <Text style={styles.rescheduleBtnText}>Done</Text>
             </TouchableOpacity>
-
           </View>
         </View>
       </Modal>

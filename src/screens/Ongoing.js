@@ -145,79 +145,31 @@ const OngoingLeadsScreen = () => {
     setFilterPopupVisible(false);
   };
 
-  const navigationDecision = lead => {
-    setNavigationLoader(true); // Show the loader
-
-    const status = lead.bookingDetails?.status;
-    const hasLeadLocked = lead.bookingDetails?.hasLeadLocked;
-
-    // Navigate first, without waiting for context update
-    if (status === 'Customer Cancelled' || status === 'Rescheduled') {
-      if (hasLeadLocked) {
-        setNavigationLoader(false); // Stop loader if no navigation happens
-        return;
-      }
-      // Navigate immediately to the appropriate screen
-      navigation.navigate('LeadDescriptionScreen');
-    }
-
-    // For other statuses
-    if (status === 'Confirmed' || status === 'Customer Unreachable') {
-      // Navigate immediately to the appropriate screen
-      navigation.navigate('LeadDescriptionScreen');
-    }
-
-    // For job or survey ongoing statuses
-    if (
-      [
-        'Survey Ongoing',
-        'Survey Completed',
-        'Pending Hiring',
-        'Hired',
-        'Project Ongoing',
-        'Job Ongoing',
-        'Project Completed',
-        'Waiting for final payment',
-      ].includes(status)
-    ) {
-      // Navigate immediately to the job ongoing screen
-      navigation.navigate('JobOngoing');
-    }
-
-    // Update the context after navigation is triggered
-    setLeadDataContext(lead);
-    setNavigationLoader(false); // Stop loader after the context is updated
-  };
-
   // const navigationDecision = lead => {
-  //   setNavigationLoader(true)
-  //   setLeadDataContext(lead);
+  //   setNavigationLoader(true); // Show the loader
+
   //   const status = lead.bookingDetails?.status;
   //   const hasLeadLocked = lead.bookingDetails?.hasLeadLocked;
-  //   // 1️⃣ Customer Cancelled (highest priority)
-  //   if (status === 'Customer Cancelled' ||
-  //     status === 'Rescheduled'
-  //   ) {
+  //   const isSurveyStarted = lead.bookingDetails?.isSurveyStarted;
+
+
+  //   // Navigate first, without waiting for context update
+  //   if (status === 'Customer Cancelled' || status === 'Rescheduled') {
   //     if (hasLeadLocked) {
+  //       setNavigationLoader(false); // Stop loader if no navigation happens
   //       return;
   //     }
-  //     setNavigationLoader(false);
-  //     navigation.navigate('LeadDescriptionScreen')
-  //     return //navigating to start job screen
-
-  //   }
-
-  //   // 2️⃣ Lead description states
-  //   if (
-  //     status === 'Confirmed' ||  //responded
-  //     status === 'Customer Unreachable'
-  //   ) {
-  //     setNavigationLoader(false);
+  //     // Navigate immediately to the appropriate screen
   //     navigation.navigate('LeadDescriptionScreen');
-  //     return
   //   }
 
-  //   // 3️⃣ Job / survey / ongoing states
+  //   // For other statuses
+  //   if (status === 'Confirmed' || status === 'Customer Unreachable') {
+  //     // Navigate immediately to the appropriate screen
+  //     navigation.navigate('LeadDescriptionScreen');
+  //   }
+
+  //   // For job or survey ongoing statuses
   //   if (
   //     [
   //       'Survey Ongoing',
@@ -230,12 +182,89 @@ const OngoingLeadsScreen = () => {
   //       'Waiting for final payment',
   //     ].includes(status)
   //   ) {
-  //     console.log('JobOngoing');
-  //     setNavigationLoader(false);
-  //     navigation.navigate('JobOngoing');//navigating to end job screen
-  //     return
+  //     // Navigate immediately to the job ongoing screen
+  //     navigation.navigate('JobOngoing');
   //   }
+
+  //   // Update the context after navigation is triggered
+  //   setLeadDataContext(lead);
+  //   setNavigationLoader(false); // Stop loader after the context is updated
   // };
+
+  const navigationDecision = (lead) => {
+    try {
+      setNavigationLoader(true);
+
+      const status = lead?.bookingDetails?.status;
+      const hasLeadLocked = lead?.bookingDetails?.hasLeadLocked;
+      const isSurveyStarted = lead?.bookingDetails?.isSurveyStarted;
+
+      // ✅ Special case: Customer Unreachable
+      if (status === "Customer Unreachable" ||
+        status === "Negotiation" ||
+        status === "Customer Denied" ||
+        status === "Customer Cancelled"
+
+      ) {
+        if (isSurveyStarted) {
+          navigation.navigate("JobOngoing");
+        } else {
+          navigation.navigate("LeadDescriptionScreen");
+        }
+
+        setLeadDataContext(lead);
+        setNavigationLoader(false);
+        return;
+      }
+
+      // Customer Cancelled / Rescheduled
+      if (status === "Customer Cancelled" || status === "Rescheduled") {
+        if (hasLeadLocked) {
+          setNavigationLoader(false);
+          return;
+        }
+        navigation.navigate("LeadDescriptionScreen");
+        setLeadDataContext(lead);
+        setNavigationLoader(false);
+        return;
+      }
+
+      // Confirmed
+      if (status === "Confirmed") {
+        navigation.navigate("LeadDescriptionScreen");
+        setLeadDataContext(lead);
+        setNavigationLoader(false);
+        return;
+      }
+
+      // Job or survey ongoing statuses
+      if (
+        [
+          "Survey Ongoing",
+          "Survey Completed",
+          "Pending Hiring",
+          "Hired",
+          "Project Ongoing",
+          "Job Ongoing",
+          "Project Completed",
+          "Waiting for final payment",
+        ].includes(status)
+      ) {
+        navigation.navigate("JobOngoing");
+        setLeadDataContext(lead);
+        setNavigationLoader(false);
+        return;
+      }
+
+      // ✅ Default fallback (optional)
+      navigation.navigate("LeadDescriptionScreen");
+      setLeadDataContext(lead);
+      setNavigationLoader(false);
+    } catch (e) {
+      setNavigationLoader(false);
+      console.log("navigationDecision error:", e);
+    }
+  };
 
 
   const showStatus = lead => {
@@ -260,10 +289,11 @@ const OngoingLeadsScreen = () => {
       lead.bookingDetails?.status === 'Customer Cancelled' ||
       lead.bookingDetails?.status === 'Rescheduled' ||
       lead.bookingDetails?.status === 'Admin Cancelled' ||
-      lead.bookingDetails?.status === 'Waiting for final payment'
+      lead.bookingDetails?.status === 'Waiting for final payment' ||
+      lead.bookingDetails?.status === 'Customer Unreachable' ||
+      lead.bookingDetails?.status === 'Customer Denied' ||
+      lead.bookingDetails?.status === 'Negotiation'
     ) {
-      return '#ffecec';
-    } else if (lead.bookingDetails?.status === 'Customer Unreachable') {
       return '#ffecec';
     } else if (lead.bookingDetails?.status === 'Pending Hiring') {
       return '#fabd0533';
@@ -290,11 +320,12 @@ const OngoingLeadsScreen = () => {
       lead.bookingDetails?.status === 'Customer Cancelled' ||
       lead.bookingDetails?.status === 'Rescheduled' ||
       lead.bookingDetails?.status === 'Admin Cancelled' ||
-      lead.bookingDetails?.status === 'Waiting for final payment'
+      lead.bookingDetails?.status === 'Waiting for final payment' ||
+      lead.bookingDetails?.status === 'Customer Unreachable' ||
+      lead.bookingDetails?.status === 'Customer Denied' ||
+      lead.bookingDetails?.status === 'Negotiation'
     ) {
       return '#ff0000';
-    } else if (lead.bookingDetails?.status === 'Customer Unreachable') {
-      return 'red';
     } else if (lead.bookingDetails?.status === 'Pending Hiring') {
       return '#ebb103ff';
     } else if (

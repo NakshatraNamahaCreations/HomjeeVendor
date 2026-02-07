@@ -1,4 +1,4 @@
-export const API_BASE_URL = 'http://192.168.1.70:9000/api'; // development
+export const API_BASE_URL = 'http://192.168.1.68:9000/api'; // development
 // export const API_BASE_URL = 'https://homjee-backend.onrender.com/api'; // production
 
 export const API_ENDPOINTS = {
@@ -14,7 +14,8 @@ export const API_ENDPOINTS = {
   GET_TEAM_MEMBER_BY_OWN_ID: '/vendor/get-team-id/',
   GET_TEAM_MEMBER_BUSY_DATES: '/vendor/get-team-member-busy-dates/',
   TEAM_MEMBERS_STATUS: '/vendor/team-members-status/',
-  MARK_LEAVES: '/vendor/team/leaves/',
+  MARK_TEAM_MEMBER_LEAVES: '/vendor/team/leaves/',
+  MARK_VENDOR_LEAVES: '/vendor/vendor-leave',
   VENDOR_AVAILABILITY: '/vendor/check-vendor-availability/',
   CHECK_AVAILABILITY_RANGE: '/vendor/check-teammember-availability/',
 

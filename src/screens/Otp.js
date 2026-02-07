@@ -1,4 +1,4 @@
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { CommonActions, useNavigation, useRoute } from '@react-navigation/native';
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
@@ -86,7 +86,13 @@ const OTP = () => {
       if (result.data) {
         await AsyncStorage.setItem('user', JSON.stringify(result.data));
         setVendorDataContext(result.data);
-        navigation.navigate('BottomTab');
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: "BottomTab" }],
+          })
+        );
+        // navigation.navigate('BottomTab');
       }
       // await AsyncStorage.setItem('user', JSON.stringify(result.data));
     } catch (error) {

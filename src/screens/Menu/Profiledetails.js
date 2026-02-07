@@ -1,17 +1,48 @@
-import {View, Text, Image, StyleSheet} from 'react-native';
+import { View, Text, Image, StyleSheet } from 'react-native';
 import React from 'react';
+import { useVendorContext } from '../../Utilities/VendorContext';
+import moment from 'moment';
+
 
 const Profiledetails = () => {
+  const { vendorDataContext } = useVendorContext();
   return (
-    <View style={{marginTop: 20}}>
-      <Image
-        source={require('../../assets/images/profilemenu.png')}
-        style={{width: 80, height: 80, alignSelf: 'center'}}
-      />
-      <Text style={styles.profileName}>RAMESH H</Text>
+    <View style={{ marginTop: 20 }}>
+
+      <View
+        style={{
+          width: 100,
+          height: 100,
+          borderRadius: 50,
+          backgroundColor: "#ED1F24",
+          alignItems: "center",
+          justifyContent: "center", alignSelf: 'center'
+          // padding: 1,
+        }}
+      >
+        <View
+          style={{
+            width: 90,
+            height: 90,
+            borderRadius: 44,
+            overflow: "hidden", // ✅ important to clip image inside
+            backgroundColor: "#fff",
+          }}
+        >
+          <Image
+            source={{ uri: vendorDataContext?.vendor?.profileImage }}
+            style={{
+              width: "100%",
+              height: "100%",
+            }}
+            resizeMode="cover"  // ✅ fills circle without stretching
+          />
+        </View>
+      </View>
+      <Text style={styles.profileName}>{vendorDataContext.vendor?.vendorName}</Text>
       <Text style={styles.status}>Live</Text>
-      <Text style={styles.lastActive}>Last Active</Text>
-      <Text style={styles.lastActiveTime}>09 Jan 2023 | 5:30 PM</Text>
+      <Text style={styles.lastActive}>{vendorDataContext.vendor?.serviceType}</Text>
+      {/* <Text style={styles.lastActiveTime}>09 Jan 2023 | 5:30 PM</Text> */}
       <View>
         <Text
           style={{
@@ -41,7 +72,7 @@ const Profiledetails = () => {
             top: 30,
             marginLeft: 20,
           }}>
-          Ramesh H
+          {vendorDataContext.vendor?.vendorName}
         </Text>
         <Text
           style={{
@@ -62,7 +93,8 @@ const Profiledetails = () => {
             top: 30,
             marginLeft: 20,
           }}>
-          09 Jan 2023
+          {/* 09 Jan 2023 */}
+          {moment(vendorDataContext.vendor?.dateOfBirth).format('ll')}
         </Text>
         <Text
           style={{
@@ -83,31 +115,12 @@ const Profiledetails = () => {
             top: 30,
             marginLeft: 20,
           }}>
-          09 Jan 2023
+          {/* 09 Jan 2023 */}
+          {moment(vendorDataContext?.createdAt).format('ll')}
         </Text>
-        <Text
-          style={{
-            color: '#151515',
-            fontFamily: 'Poppins-Bold',
-            fontSize: 14,
-            top: 30,
-            marginLeft: 20,
-            marginTop: 10,
-          }}>
-          Father’s Name
-        </Text>
-        <Text
-          style={{
-            color: '#000000AD',
-            fontFamily: 'Poppins-SemiBold',
-            fontSize: 12,
-            top: 30,
-            marginLeft: 20,
-          }}>
-          Ramappa Ramesh H
-        </Text>
+
       </View>
-      <Text
+      {/* <Text
         style={{
           color: '#151515',
           fontFamily: 'Poppins-Bold',
@@ -126,7 +139,28 @@ const Profiledetails = () => {
           top: 30,
           marginLeft: 20,
         }}>
-        testing@gmail.com
+        {vendorDataContext.vendor?.vendorName}
+      </Text> */}
+      <Text
+        style={{
+          color: '#151515',
+          fontFamily: 'Poppins-Bold',
+          fontSize: 14,
+          top: 30,
+          marginLeft: 20,
+          marginTop: 10,
+        }}>
+        Aadhaar No
+      </Text>
+      <Text
+        style={{
+          color: '#000000AD',
+          fontFamily: 'Poppins-SemiBold',
+          fontSize: 12,
+          top: 30,
+          marginLeft: 20,
+        }}>
+        {vendorDataContext.documents?.aadhaarNumber}
       </Text>
       <Text
         style={{
@@ -137,7 +171,7 @@ const Profiledetails = () => {
           marginLeft: 20,
           marginTop: 10,
         }}>
-        Aadhar No.
+        Phone No
       </Text>
       <Text
         style={{
@@ -147,30 +181,9 @@ const Profiledetails = () => {
           top: 30,
           marginLeft: 20,
         }}>
-        xxxxxxxxxxxxxxxxx
+        {vendorDataContext.vendor?.mobileNumber}
       </Text>
-      <Text
-        style={{
-          color: '#151515',
-          fontFamily: 'Poppins-Bold',
-          fontSize: 14,
-          top: 30,
-          marginLeft: 20,
-          marginTop: 10,
-        }}>
-        Phone No.
-      </Text>
-      <Text
-        style={{
-          color: '#000000AD',
-          fontFamily: 'Poppins-SemiBold',
-          fontSize: 12,
-          top: 30,
-          marginLeft: 20,
-        }}>
-        9876543210
-      </Text>
-      <Text
+      {/* <Text
         style={{
           color: '#151515',
           fontFamily: 'Poppins-Bold',
@@ -190,8 +203,8 @@ const Profiledetails = () => {
           marginLeft: 20,
         }}>
         9876543210
-      </Text>
-      <View style={styles.downborder} />
+      </Text> */}
+      {/* <View style={styles.downborder} /> */}
     </View>
   );
 };

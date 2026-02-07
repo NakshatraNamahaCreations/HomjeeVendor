@@ -1,108 +1,10 @@
-// import {View, Text, Image, StyleSheet} from 'react-native';
-// import React from 'react';
-
-// const Viewid = () => {
-//   return (
-//     <View>
-//       <Image
-//         source={require('../../assets/images/logo.png.png')}
-//         style={{width: 141, height: 42, alignSelf: 'center', margin: 20}}
-//       />
-//       <Image
-//         source={require('../../assets/images/profilemenu.png')}
-//         style={{width: 80, height: 80, alignSelf: 'center'}}
-//       />
-//       <Text
-//         style={{
-//           alignSelf: 'center',
-//           color: '#000',
-//           fontFamily: 'Poppins-Bold',
-//           fontSize: 12,
-//           marginTop: 5,
-//         }}>
-//         RAMESH H
-//       </Text>
-//       <Text
-//         style={{
-//           alignSelf: 'center',
-//           color: '#000',
-//           fontFamily: 'Poppins-SemiBold',
-//           fontSize: 10,
-//           marginTop: 5,
-//         }}>
-//         Project Manager
-//       </Text>
-//       <View style={{flexDirection: 'row', paddingTop: 20}}>
-//         <Image
-//           source={require('../../assets/icons/dateofbirth.png')}
-//           style={{width: 15, height: 15, marginLeft: 15}}
-//         />
-//         <Text
-//           style={{
-//             marginLeft: 10,
-//             fontSize: 12,
-//             fontFamily: 'Poppins-SemiBold',
-//           }}>
-//           Date Of Birth
-//         </Text>
-//       </View>
-//       <Text
-//         style={{
-//           marginLeft: 45,
-//           fontSize: 12,
-//           fontFamily: 'Poppins-SemiBold',
-//           color: '#000000AD',
-//         }}>
-//         1234556789
-//       </Text>
-//       <View style={{flexDirection: 'row', paddingTop: 20}}>
-//         <Image
-//           source={require('../../assets/icons/userid.png')}
-//           style={{width: 15, height: 15, marginLeft: 15}}
-//         />
-//         <Text
-//           style={{
-//             marginLeft: 10,
-//             fontSize: 12,
-//             fontFamily: 'Poppins-SemiBold',
-//           }}>
-//           ID Number
-//         </Text>
-//       </View>
-//       <Text
-//         style={{
-//           marginLeft: 45,
-//           fontSize: 12,
-//           fontFamily: 'Poppins-SemiBold',
-//           color: '#000000AD',
-//         }}>
-//         1234556789
-//       </Text>
-//       <View></View>
-//       <View style={styles.downborder} />
-//     </View>
-//   );
-// };
-// const styles = StyleSheet.create({
-//   downborder: {
-//     position: 'relative',
-//     top: 350,
-//     left: 100,
-//     right: 20,
-//     borderBottomWidth: 5, // Increased thickness for visibility
-//     borderBottomColor: '#ED1F24', // Set to red as requested
-//     width: '40%',
-//     justifyContent: 'center',
-//     borderRadius: 20,
-
-//     // Span the full width
-//   },
-// });
-// export default Viewid;
 import React from 'react';
-import {View, Text, Image, StyleSheet, Dimensions} from 'react-native';
+import { View, Text, Image, StyleSheet, Dimensions } from 'react-native';
+import { useVendorContext } from '../../Utilities/VendorContext';
 
 const Viewid = () => {
+  const { vendorDataContext } = useVendorContext();
+
   const userData = {
     name: '',
     id: '',
@@ -117,21 +19,45 @@ const Viewid = () => {
       <Image source={userData.logo} style={styles.logo} resizeMode="contain" />
 
       {/* Profile Photo */}
-      <View style={styles.photoWrapper}>
-        <Image source={userData.photo} style={styles.photo} />
+      <View
+        style={{
+          width: 100,
+          height: 100,
+          borderRadius: 50,
+          backgroundColor: "#ED1F24",
+          alignItems: "center",
+          justifyContent: "center", alignSelf: 'center'
+          // padding: 1,
+        }}
+      >
+        <View
+          style={{
+            width: 90,
+            height: 90,
+            borderRadius: 44,
+            overflow: "hidden", // ✅ important to clip image inside
+            backgroundColor: "#fff",
+          }}
+        >
+          <Image
+            source={{ uri: vendorDataContext?.vendor?.profileImage }}
+            style={{
+              width: "100%",
+              height: "100%",
+            }}
+            resizeMode="cover"  // ✅ fills circle without stretching
+          />
+        </View>
       </View>
 
       {/* User Info */}
-      <Text style={styles.name}>{userData.name}PRADEEP SK</Text>
-      <Text style={{fontFamily: 'Poppins-SemiBold'}}>
-        {userData.name}Vendor
-      </Text>
-      <Text style={styles.job}>{userData.job}</Text>
-      <Text style={styles.id}>ID NO : 567890987{userData.id}</Text>
+      <Text style={styles.name}>{vendorDataContext.vendor?.vendorName}</Text>
+      <Text style={styles.status}>Live</Text>
+      <Text style={{ fontFamily: 'Poppins-SemiBold', marginBottom: 15 }}>{vendorDataContext.vendor?.serviceType}</Text>
+
+      <Text style={styles.id}>ID NO :  {vendorDataContext.documents?.aadhaarNumber}</Text>
       <View style={styles.dottedLine} />
-      <Text style={styles.id}>EMAIL : pradeep@gmail.com {userData.id}</Text>
-      <View style={styles.dottedLine} />
-      <Text style={styles.id}>PHONE : 7656789098 {userData.id}</Text>
+      <Text style={styles.id}>PHONE :  {vendorDataContext.vendor?.mobileNumber}</Text>
       {/* Category Label */}
 
       {/* Barcode Placeholder */}
@@ -157,6 +83,13 @@ const styles = StyleSheet.create({
   logo: {
     width: 120,
     height: 50,
+  },
+  status: {
+    fontFamily: 'Poppins-SemiBold',
+    color: '#ED1F24',
+    fontSize: 10,
+    letterSpacing: 0.2,
+    alignSelf: 'center',
   },
   photoWrapper: {
     borderWidth: 4,
@@ -184,7 +117,7 @@ const styles = StyleSheet.create({
   id: {
     fontSize: 16,
     color: '#111',
-    marginBottom: 12,
+    // marginBottom: 12,
     fontFamily: 'Poppins-SemiBold',
     alignSelf: 'flex-start',
     marginLeft: 10,

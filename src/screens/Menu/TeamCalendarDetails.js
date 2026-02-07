@@ -108,7 +108,7 @@ const TeamCalendarDetails = () => {
     try {
       const leaveDates = Object.keys(selectedDates);
       const res = await axios.put(
-        `${API_BASE_URL}${API_ENDPOINTS.MARK_LEAVES}${vendorId}/${teamMember._id}`,
+        `${API_BASE_URL}${API_ENDPOINTS.MARK_TEAM_MEMBER_LEAVES}${vendorId}/${teamMember._id}`,
         { leaveDates },
       );
       ToastAndroid.showWithGravity(
@@ -130,9 +130,9 @@ const TeamCalendarDetails = () => {
     }
   };
 
-  console.log('workingDates', workingDates);
-  console.log('resDate', resDate);
-  console.log('statusLabel', statusLabel);
+  // console.log('workingDates', workingDates);
+  // console.log('resDate', resDate);
+  // console.log('statusLabel', statusLabel);
 
   return (
     <ScrollView style={{ backgroundColor: '#fff' }}>

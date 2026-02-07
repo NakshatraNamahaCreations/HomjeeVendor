@@ -37,7 +37,7 @@ const Leadone = () => {
   const lat = vendorDataContext?.address?.latitude || null;
   const long = vendorDataContext?.address?.longitude || null;
 
-  console.log('vendorDataContext.Id', vendorDataContext?._id);
+  console.log('vendorDataContext.Id', vendorDataContext);
   console.log('isPerformanceLow', isPerformanceLow);
 
 
@@ -87,7 +87,7 @@ const Leadone = () => {
         }
 
         const response = await getRequest(
-          `${VENDOR_SERVICE_TYPE}${lat}/${long}`,
+          `${VENDOR_SERVICE_TYPE}${lat}/${long}?vendorId=${vendorId}`,
           signal ? { signal } : undefined
         );
         const bookings = Array.isArray(response?.bookings) ? response.bookings : [];

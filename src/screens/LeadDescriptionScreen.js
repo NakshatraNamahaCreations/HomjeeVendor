@@ -857,7 +857,8 @@ const LeadDescriptionScreen = () => {
         disabled={!enableUI}
       >
         <Text style={styles.confirmButtonText}>
-          {vendorDataContext?.vendor?.serviceType === 'house-painter'
+          {vendorDataContext?.vendor?.serviceType === 'house-painter' ||
+            vendorDataContext?.vendor?.serviceType === 'House Painting'
             ? 'START SURVEY'
             : 'START JOB'}
         </Text>
@@ -889,14 +890,16 @@ const LeadDescriptionScreen = () => {
             </View>
             <Text style={styles.modalTitle}>
               Start the{' '}
-              {vendorDataContext?.vendor?.serviceType === 'house-painter'
+              {vendorDataContext?.vendor?.serviceType === 'house-painter' ||
+                vendorDataContext?.vendor?.serviceType === 'House Painting'
                 ? 'survey'
                 : 'job'}
               !
             </Text>
             <Text style={styles.modalSubtitle}>
               Are you sure you want to start the{' '}
-              {vendorDataContext?.vendor?.serviceType === 'house-painter'
+              {vendorDataContext?.vendor?.serviceType === 'house-painter' ||
+                vendorDataContext?.vendor?.serviceType === 'House Painting'
                 ? 'survey'
                 : 'job'}
               ?

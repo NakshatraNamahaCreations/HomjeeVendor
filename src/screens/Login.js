@@ -6,7 +6,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   Alert,
-  SafeAreaView,
   ToastAndroid,
   Modal,
   StatusBar,
@@ -18,6 +17,7 @@ import { postRequest } from '../ApiService/apiHelper';
 import { useNavigation } from '@react-navigation/native';
 import ResponseLoader from '../components/ResponseLoader';
 import { useThemeColor } from '../Utilities/ThemeContext';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const Login = () => {
   const { deviceTheme } = useThemeColor();
@@ -94,10 +94,13 @@ const Login = () => {
     setShowCountryPicker(false);
   };
 
+  console.log("deviceTheme", deviceTheme);
+
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar
-        barStyle={deviceTheme === 'dark' ? 'light-content' : 'dark-content'}
+        barStyle={deviceTheme === 'dark' ? 'yellow' : 'red'}
       />
       {isLoading && <ResponseLoader />}
       <View style={styles.container}>

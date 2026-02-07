@@ -25,7 +25,6 @@ const TeamMember = () => {
   const { vendorDataContext, setVendorDataContext } = useVendorContext();
   console.log('vendorDataContext', vendorDataContext);
   const vendorId = vendorDataContext._id;
-  const vendorName = vendorDataContext.vendor.vendorName;
   const teamList = vendorDataContext.team || [];
 
   const [teamStatuses, setTeamStatuses] = useState({});
@@ -86,23 +85,44 @@ const TeamMember = () => {
     }
   };
   console.log('teamStatuses', teamStatuses);
+  console.log('teamList', teamList);
 
   return (
     <View style={{ margin: 20 }}>
       <ScrollView>
-        <Image
-          source={{ uri: vendorDataContext.vendor.profileImage }}
+        <View
           style={{
-            width: 80,
-            height: 80,
-            alignSelf: 'center',
+            width: 100,
+            height: 100,
             borderRadius: 50,
+            backgroundColor: "#ED1F24",
+            alignItems: "center",
+            justifyContent: "center", alignSelf: 'center'
+            // padding: 1,
           }}
-        />
-        <Text style={styles.profileName}>{vendorName}</Text>
+        >
+          <View
+            style={{
+              width: 90,
+              height: 90,
+              borderRadius: 44,
+              overflow: "hidden", // ✅ important to clip image inside
+              backgroundColor: "#fff",
+            }}
+          >
+            <Image
+              source={{ uri: vendorDataContext?.vendor?.profileImage }}
+              style={{
+                width: "100%",
+                height: "100%",
+              }}
+              resizeMode="cover"  // ✅ fills circle without stretching
+            />
+          </View>
+        </View>
+        <Text style={styles.profileName}>{vendorDataContext.vendor?.vendorName}</Text>
         <Text style={styles.status}>Live</Text>
-        <Text style={styles.lastActive}>Last Active</Text>
-        <Text style={styles.lastActiveTime}>09 Jan 2023 | 5:30 PM</Text>
+        <Text style={styles.lastActive}>{vendorDataContext.vendor?.serviceType}</Text>
 
         <Text
           style={{
@@ -116,7 +136,11 @@ const TeamMember = () => {
           Team Members
         </Text>
 
-        {teamList.map(team => {
+        {!teamList || teamList.length === 0 ? (
+          <Text style={{ fontSize: 12, fontFamily: 'Poppins-Medium', textAlign: "center", marginTop: 12, color: "#888" }}>
+            No team member added
+          </Text>
+        ) : teamList.map(team => {
           const statusLabel = getMemberStatus(team);
           const statusColor = STATUS_COLOR[statusLabel] || '#444';
 

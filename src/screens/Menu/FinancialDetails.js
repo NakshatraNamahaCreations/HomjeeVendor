@@ -1,17 +1,44 @@
-import {View, Text, Image, StyleSheet} from 'react-native';
+import { View, Text, Image, StyleSheet } from 'react-native';
 import React from 'react';
+import { useVendorContext } from '../../Utilities/VendorContext';
 
 const FinancialDetails = () => {
+  const { vendorDataContext } = useVendorContext();
   return (
-    <View style={{marginTop: 20}}>
-      <Image
-        source={require('../../assets/images/profilemenu.png')}
-        style={{width: 80, height: 80, alignSelf: 'center'}}
-      />
-      <Text style={styles.profileName}>RAMESH H</Text>
+    <View style={{ marginTop: 20 }}>
+      <View
+        style={{
+          width: 100,
+          height: 100,
+          borderRadius: 50,
+          backgroundColor: "#ED1F24",
+          alignItems: "center",
+          justifyContent: "center", alignSelf: 'center'
+          // padding: 1,
+        }}
+      >
+        <View
+          style={{
+            width: 90,
+            height: 90,
+            borderRadius: 44,
+            overflow: "hidden", // ✅ important to clip image inside
+            backgroundColor: "#fff",
+          }}
+        >
+          <Image
+            source={{ uri: vendorDataContext?.vendor?.profileImage }}
+            style={{
+              width: "100%",
+              height: "100%",
+            }}
+            resizeMode="cover"  // ✅ fills circle without stretching
+          />
+        </View>
+      </View>
+      <Text style={styles.profileName}>{vendorDataContext.vendor?.vendorName}</Text>
       <Text style={styles.status}>Live</Text>
-      <Text style={styles.lastActive}>Last Active</Text>
-      <Text style={styles.lastActiveTime}>09 Jan 2023 | 5:30 PM</Text>
+      <Text style={styles.lastActive}>{vendorDataContext.vendor?.serviceType}</Text>
       <View>
         <Text
           style={{
@@ -31,7 +58,7 @@ const FinancialDetails = () => {
             top: 30,
             marginLeft: 20,
           }}>
-          GST No.
+          GST No
         </Text>
         <Text
           style={{
@@ -41,7 +68,7 @@ const FinancialDetails = () => {
             top: 30,
             marginLeft: 20,
           }}>
-          29AAACH7409R1ZX
+          {vendorDataContext.documents?.gstNumber ? vendorDataContext.documents?.gstNumber : "N/A"}
         </Text>
         <Text
           style={{
@@ -62,7 +89,7 @@ const FinancialDetails = () => {
             top: 30,
             marginLeft: 20,
           }}>
-          State Bank of INDIA
+          {vendorDataContext.bankDetails?.bankName}
         </Text>
       </View>
 
@@ -85,7 +112,7 @@ const FinancialDetails = () => {
           top: 30,
           marginLeft: 20,
         }}>
-        xxxxxxxxxxxxxxxxx
+        {vendorDataContext.bankDetails?.accountNumber}
       </Text>
       <Text
         style={{
@@ -106,7 +133,7 @@ const FinancialDetails = () => {
           top: 30,
           marginLeft: 20,
         }}>
-        XXXXXXXXXXX
+        {vendorDataContext.bankDetails?.ifscCode}
       </Text>
       <View style={styles.downborder} />
     </View>
