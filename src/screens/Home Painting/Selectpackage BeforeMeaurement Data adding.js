@@ -1,5 +1,5 @@
 import { useNavigation, useRoute } from '@react-navigation/native';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -14,7 +14,6 @@ import { getRequest } from '../../ApiService/apiHelper';
 import PageLoader from '../../components/PageLoader';
 import { useBackHandler } from '@react-native-community/hooks';
 import { useEstimateContext } from '../../Utilities/EstimateContext';
-import { buildPackageProductSummary } from '../../Utilities/packageCalc';
 
 const Selectpackage = () => {
   const route = useRoute();
@@ -45,7 +44,6 @@ const Selectpackage = () => {
   useEffect(() => {
     fetchPackages();
   }, []);
-
 
   const deleteQuote = async id => {
     console.log('calling funtion');
@@ -95,8 +93,6 @@ const Selectpackage = () => {
     return () => sub && sub();
   }, [navigation, quoteId]);
 
-
-
   return (
     <View style={styles.container}>
       {loading && <PageLoader />}
@@ -144,28 +140,19 @@ const Selectpackage = () => {
         {/* Pre-defined packages */}
         <Text style={styles.sectionTitle}>All Package</Text>
 
-        {packagesList.map((pkg) => {
-          // ✅ NO hooks here (no useMemo inside map)
-          let summary = { products: [], totalCost: 0 };
-
-          try {
-            summary = buildPackageProductSummary(estimateData, pkg);
-          } catch (e) {
-            console.log('summary calc error:', e);
-          }
-
+        {packagesList.map(pkg => {
+          console.log("pkg", pkg)
           return (
             <TouchableOpacity
               key={pkg._id}
               style={[
                 styles.packageCard,
-                selectedPackage?._id === pkg._id && styles.selectedCard,
+                selectedPackage === pkg._id && styles.selectedCard,
               ]}
               onPress={() => setSelectedPackage(pkg)}
             >
               <View style={styles.cardHeader}>
                 <Text style={styles.packageTitle}>{pkg.packageName}</Text>
-
                 <TouchableOpacity
                   onPress={() => setSelectedPackage(pkg)}
                   style={[
@@ -178,32 +165,30 @@ const Selectpackage = () => {
                   )}
                 </TouchableOpacity>
               </View>
-
               <View style={styles.dottedLine} />
 
-              {/* ✅ Product-wise rows (paintName + sqft + cost) */}
-              {summary.products.map((p) => (
-                <View key={p.key} style={styles.packageDetailRow}>
-                  <Text style={styles.packageDetail}>
-                    {p.paintName} ({p.sqft} sqft)
-                  </Text>
-
-                  <Text style={styles.packagePrice}>
-                    ₹ {Math.round(p.cost).toLocaleString()}
-                  </Text>
-                </View>
-              ))}
+              {pkg.details?.map((detail, index) => {
+                return (
+                  <View key={index} style={styles.packageDetailRow}>
+                    <Text style={styles.packageDetail}>
+                      • {detail.paintName} ({detail.category} {detail.itemName}) -{' '}
+                      {detail.sqft || 25}
+                    </Text>
+                    <Text style={styles.packagePrice}>
+                      {' '}
+                      ₹ {detail.paintPrice}
+                    </Text>
+                  </View>
+                );
+              })}
 
               <View style={styles.priceDivider} />
-
-              {/* ✅ Total = sum of row costs */}
               <Text style={styles.totalPrice}>
-                ₹ {Math.round(summary.totalCost).toLocaleString()}
+                ₹ {pkg.packagePrice?.toLocaleString()}
               </Text>
             </TouchableOpacity>
-          );
+          )
         })}
-
         <View style={{ marginBottom: 100 }} />
       </ScrollView>
 

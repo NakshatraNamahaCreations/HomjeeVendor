@@ -1,4 +1,4 @@
-export const API_BASE_URL = 'http://192.168.1.68:9000/api'; // development
+export const API_BASE_URL = 'http://192.168.1.86:9000/api'; // development
 // export const API_BASE_URL = 'https://homjee-backend.onrender.com/api'; // production
 
 export const API_ENDPOINTS = {
@@ -38,7 +38,7 @@ export const API_ENDPOINTS = {
   REQUEST_NEXT_PAYMENT: '/bookings/request-next-payment/second/project/',
   COMPLETE_PROJECT: '/bookings/completing-job/final-payemt/request/end-job/',
   // need to check finalPayment  requesting and check website and vendor app payment part
-
+  SET_LEAD_REMINDER: "/bookings/set-reminder/lead/vendor",
   RESCHEDULE_BOOKING: '/bookings/reschedule-booking/vendor',
 
   // SLOT FOR RESCHEDULE

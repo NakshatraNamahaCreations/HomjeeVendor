@@ -61,11 +61,10 @@ const SelectRoom = () => {
 
   const saveRoomLine = async (quoteId, line) => {
     try {
-      const url = `${API_BASE_URL}${
-        API_ENDPOINTS.UPDATE_QUOTE_PRICING
-      }${encodeURIComponent(quoteId)}/rooms/${encodeURIComponent(
-        line.roomName,
-      )}/pricing`;
+      const url = `${API_BASE_URL}${API_ENDPOINTS.UPDATE_QUOTE_PRICING
+        }${encodeURIComponent(quoteId)}/rooms/${encodeURIComponent(
+          line.roomName,
+        )}/pricing`;
       console.log('➡️ POST pricing payload', JSON.stringify(line, null, 2));
       const { data } = await axios.post(url, line);
       return data?.data?.line || line;
@@ -186,6 +185,17 @@ const SelectRoom = () => {
     ),
   );
 
+  const sectionTypes = ['Interior', 'Exterior', 'Others'];
+
+  const groupedRooms = Object.entries(roomsData).reduce(
+    (acc, [name, details]) => {
+      if (!acc[details.sectionType]) acc[details.sectionType] = [];
+      acc[details.sectionType].push({ name, ...details });
+      return acc;
+    },
+    {},
+  );
+
   const zeroizeQuote = async () => {
     if (!quoteId) return;
 
@@ -229,7 +239,7 @@ const SelectRoom = () => {
           `${API_BASE_URL}${API_ENDPOINTS.GET_PAINT}`,
         );
         if (alive) setPaintsCache(data?.paints || data?.data?.paints || []);
-      } catch (e) {}
+      } catch (e) { }
     })();
     return () => {
       alive = false;
@@ -246,9 +256,8 @@ const SelectRoom = () => {
       setIsLoading(true);
       try {
         setLoadingQuote(true);
-        const url = `${API_BASE_URL}${
-          API_ENDPOINTS.GET_QUOTATION
-        }${encodeURIComponent(idToFetch)}`;
+        const url = `${API_BASE_URL}${API_ENDPOINTS.GET_QUOTATION
+          }${encodeURIComponent(idToFetch)}`;
         const { data } = await axios.get(url);
         if (!alive) return;
         if (applyStage === 'applying') return;
@@ -392,9 +401,8 @@ const SelectRoom = () => {
 
     (async () => {
       try {
-        const url = `${API_BASE_URL}${
-          API_ENDPOINTS.GET_QUOTATION
-        }${encodeURIComponent(quoteId)}`;
+        const url = `${API_BASE_URL}${API_ENDPOINTS.GET_QUOTATION
+          }${encodeURIComponent(quoteId)}`;
         const { data } = await axios.get(url);
         const q = data?.data?.quote || data?.data || null;
         if (!alive || !q) return;
@@ -409,12 +417,12 @@ const SelectRoom = () => {
             const m = srvLines.find(s => norm(s.roomName) === norm(l.roomName));
             return m
               ? {
-                  ...l,
-                  subtotal: m.subtotal,
-                  ceilingsTotal: m.ceilingsTotal,
-                  wallsTotal: m.wallsTotal,
-                  othersTotal: m.othersTotal,
-                }
+                ...l,
+                subtotal: m.subtotal,
+                ceilingsTotal: m.ceilingsTotal,
+                wallsTotal: m.wallsTotal,
+                othersTotal: m.othersTotal,
+              }
               : l;
           });
 
@@ -444,17 +452,6 @@ const SelectRoom = () => {
     }
     return map;
   }, [activeQuote]);
-
-  const sectionTypes = ['Interior', 'Exterior', 'Others'];
-
-  const groupedRooms = Object.entries(roomsData).reduce(
-    (acc, [name, details]) => {
-      if (!acc[details.sectionType]) acc[details.sectionType] = [];
-      acc[details.sectionType].push({ name, ...details });
-      return acc;
-    },
-    {},
-  );
 
   sectionTypes.forEach(t => (groupedRooms[t] ||= []));
   const [activeTab, setActiveTab] = useState(
@@ -618,8 +615,8 @@ const SelectRoom = () => {
       type === 'Ceiling'
         ? 'ceiling'
         : type === 'Wall'
-        ? 'wall'
-        : 'measurements';
+          ? 'wall'
+          : 'measurements';
 
     const paint = getPaintFromLine(line, kindKey);
     if (!paint) return [];
@@ -674,12 +671,12 @@ const SelectRoom = () => {
     // Calculate additional total from the line
     const additionalTotal = Number(
       line.additionalTotal ??
-        (Array.isArray(line.additionalServices)
-          ? line.additionalServices.reduce(
-              (s, it) => s + Number(it.total || 0),
-              0,
-            )
-          : 0),
+      (Array.isArray(line.additionalServices)
+        ? line.additionalServices.reduce(
+          (s, it) => s + Number(it.total || 0),
+          0,
+        )
+        : 0),
     );
 
     // Calculate paint subtotal (total cost of paint services)
@@ -962,8 +959,8 @@ const SelectRoom = () => {
                 {loadingQuote
                   ? null
                   : hasPricing
-                  ? renderFromQuoteLine(room, line)
-                  : null}
+                    ? renderFromQuoteLine(room, line)
+                    : null}
               </View>
             );
           })}

@@ -160,45 +160,51 @@ const TeamMember = () => {
               <View
                 style={{
                   flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  marginBottom: 10,
+                  // justifyContent: 'space-between',
+                  marginBottom: 10, alignItems: "center",
                   backgroundColor: 'white',
-                  paddingTop: 10,
-                  paddingBottom: 10,
+                  // paddingTop: 10,
+                  // paddingBottom: 10,
                   borderRadius: 5,
                   borderWidth: 1,
                   borderColor: '#DADADA',
+                  padding: 10
                 }}
               >
-                <Image
-                  source={{
-                    uri:
-                      team?.profileImage ||
-                      'https://www.vlp.org.uk/wp-content/uploads/2024/12/c830d1dee245de3c851f0f88b6c57c83c69f3ace-300x300.png',
-                  }}
-                  style={{
-                    width: 50,
-                    height: 50,
-                    marginLeft: 20,
-                    borderRadius: 50,
-                  }}
-                  resizeMode="cover"
-                />
-                <Text
-                  style={{
-                    color: '#151515',
-                    fontFamily: 'Poppins-Bold',
-                    fontSize: 14,
-                    marginTop: 10,
-                    textAlign: 'left',
-                    marginRight: 130,
-                  }}
-                >
-                  {team.name}
-                </Text>
-                <Text style={[styles.badge, { color: statusColor }]}>
-                  {statusLabel}
-                </Text>
+                <View style={{ flex: 0.2 }}>
+                  <Image
+                    source={{
+                      uri:
+                        team?.profileImage ||
+                        'https://www.vlp.org.uk/wp-content/uploads/2024/12/c830d1dee245de3c851f0f88b6c57c83c69f3ace-300x300.png',
+                    }}
+                    style={{
+                      width: 50,
+                      height: 50,
+                      // marginLeft: 20,
+                      borderRadius: 50,
+                    }}
+                    resizeMode="cover"
+                  />
+                </View>
+
+                <View style={{ flex: 0.4, justifyContent: "center" }}>
+                  <Text
+                    style={{
+                      color: '#151515',
+                      fontFamily: 'Poppins-Medium',
+                      fontSize: 13,
+                    }}
+                  >
+                    {team.name}
+                  </Text>
+                </View>
+                <View style={{ flex: 0.4, justifyContent: "center", alignItems: "flex-end" }}>
+                  <Text style={[styles.badge, { color: statusColor }]}>
+                    {statusLabel}
+                  </Text>
+                </View>
+
               </View>
             </TouchableOpacity>
           );
@@ -253,10 +259,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   badge: {
-    marginRight: 15,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Poppins-Medium',
     fontSize: 10,
-    marginTop: 15,
   },
 });
 export default TeamMember;

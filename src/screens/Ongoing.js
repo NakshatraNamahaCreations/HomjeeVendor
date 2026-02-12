@@ -575,7 +575,7 @@ const OngoingLeadsScreen = () => {
                       {[
                         'Customer Unreachable',
                         'Customer Cancelled',
-                        'Completed',
+                        'Project Completed',
                       ].map((option, index) => (
                         <TouchableOpacity
                           key={`deep-${index}`}
@@ -603,11 +603,11 @@ const OngoingLeadsScreen = () => {
                     {/* <Text style={styles.sectionHeading}>House Painting</Text> */}
                     <View style={styles.popupOptions}>
                       {[
-                        'Negotiations',
-                        'Pending',
+                        'Negotiation',
+                        'Confirmed', // Pending Hiring
                         'Hired',
-                        'Ongoing Projects',
-                        'Cancelled',
+                        'Project Ongoing',
+                        'Customer Cancelled',
                       ].map((option, index) => (
                         <TouchableOpacity
                           key={`house-${index}`}

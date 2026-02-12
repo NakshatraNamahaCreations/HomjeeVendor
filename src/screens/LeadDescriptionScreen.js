@@ -1103,6 +1103,7 @@ const LeadDescriptionScreen = () => {
               style={styles.statusOption}
               onPress={() => {
                 setShowRescheduleModal(true);
+                setStatusModalVisible(false)
                 //  handleUpdateStatus('Customer Reschedule')
               }}
             >

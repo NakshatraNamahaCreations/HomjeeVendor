@@ -69,16 +69,10 @@ const Leadone = () => {
       if (!refreshing) setLoading(true);
 
       try {
-        //Don’t fetch until performance is ready
         if (!isPerfReady) {
           setNearByBookigs([]);
           return;
         }
-        // // If performance is low 
-        // if (isPerformanceLow) {
-        //   setNearByBookigs([]);
-        //   return;
-        // }
         // Apply business rule for leads visibility
         const shouldHideLeads = coins < 100 && isPerformanceLow === true;
         if (shouldHideLeads) {

@@ -43,6 +43,7 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import ResponseLoader from '../components/ResponseLoader';
 import DynamicImage from '../Utilities/DynamicImage';
+import DateTimePickerModal from "react-native-modal-datetime-picker";
 
 const JobOngoing = () => {
   useBackHandler();
@@ -88,9 +89,16 @@ const JobOngoing = () => {
   const tomorrow = moment().add(1, 'day');
   const dayAfterTomorrow = moment().add(2, 'day');
   // const dayAfterTomorrow = moment().add(2, 'days').format('YYYY-MM-DD');
-
   const [openCalendar, setOpenCalendar] = useState(false);
-  const [selectedRescheduleDate, setSelectedRescheduleDate] = useState(null);
+
+  const [openRemainderCalendar, setOpenRemainderCalendar] = useState(false);
+  const [selectedRemainderDate, setSelectedRemainderDate] = useState(null);
+  const [selectedRemainderTime, setSelectedRemainderTime] = useState(null);
+  const [openTimePicker, setOpenTimePicker] = useState(false);
+
+  const todayISO = new Date().toISOString().split('T')[0];
+  const [isSlotLoaded, setIsSlotLoaded] = useState(false);
+  const [selectedRescheduleDate, setSelectedRescheduleDate] = useState(todayISO);
   const [markedDates, setMarkedDates] = useState({});
   const [availability, setAvailability] = useState({});
   const [isStored, setIsStored] = useState(false);
@@ -110,14 +118,54 @@ const JobOngoing = () => {
 
   const [starJob, setStarJob] = useState(false); //reschedule
   const [showRescheduleModal, setShowRescheduleModal] = useState(false);
-  const [cancelModal, setCancelModal] = useState(false);
   const [openStatusModal, setOpenStatusModal] = useState(false);
+  const [availableSlots, setAvailableSlots] = useState([]);
+  const [isSlotSelected, setIsSlotSelected] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState('');
-  const availableSlots = ['10:30am', '12:30pm', '01:30pm', '2:30pm', '5:30pm'];
+  const [requiredTime, setRequiredTime] = useState(null);
 
-  const allowedStatusesForUpdate = ['Hired', 'Completed'];
+
+  useEffect(() => {
+    if (!vendorDataContext?._id || !leadId || !selectedRescheduleDate) return;
+
+    fetchAvailableSlots();
+  }, [vendorDataContext?._id, leadId, selectedRescheduleDate]);
+
+  const fetchAvailableSlots = async () => {
+    setIsSlotLoaded(true);
+    try {
+      const res = await axios.post(
+        `${API_BASE_URL}${API_ENDPOINTS.FETCH_RESCHEDULE_BOOKING}${vendorDataContext?._id}`,
+        {
+          bookingId: leadId,
+          targetDate: selectedRescheduleDate,
+        },
+      );
+      const data = res.data;
+      console.log('Availability reshedule Res:', data);
+      setAvailableSlots(data?.availableSlots);
+      setRequiredTime(data?.requiredTotalMinutes);
+    } catch (err) {
+      console.error('Error fetching available vendor slots:', err);
+    } finally {
+      setIsSlotLoaded(false);
+    }
+  };
+
+  console.log("availableSlots in JOB ONGONG", availableSlots);
+
+  const handleResetSlotndClose = () => {
+    setShowRescheduleModal(false);
+    setIsSlotSelected(false);
+    setSelectedSlot('');
+  };
 
   console.log('bookingDetails>>>', leadDataContext);
+
+  const handleSlotSelection = slot => {
+    setIsSlotSelected(true);
+    setSelectedSlot(slot);
+  };
 
   const handleGoBack = () => {
     // if (leadDataContext) {
@@ -179,8 +227,55 @@ const JobOngoing = () => {
     }
   }
 
-  // console.log('Ended Date:', jobEndedDateAt);
-  // console.log('Ended Time:', jobEndedTimeAt);
+
+  const handleCloseRemainderPopup = () => {
+    setOpenRemainderCalendar(false);
+    setSelectedRemainderDate(null);
+    setSelectedRemainderTime(null);
+  }
+
+  const existingReminderAt = leadDataContext?.leadReminder?.reminderAt; // ISO from DB
+  const existingDate = existingReminderAt ? moment(existingReminderAt).format("YYYY-MM-DD") : null;
+  const existingTimeText = existingReminderAt ? moment(existingReminderAt).format("hh:mm A") : null;
+  const markedDateKey = selectedRemainderDate || existingDate;
+
+  const canSetReminder = !!selectedRemainderDate && !!selectedRemainderTime;
+
+  const formatTime = (dateObj) => {
+    try {
+      if (!dateObj) return "";
+      const hh = dateObj.getHours();
+      const mm = dateObj.getMinutes();
+      const ampm = hh >= 12 ? "PM" : "AM";
+      const h12 = hh % 12 || 12;
+      return `${String(h12).padStart(2, "0")}:${String(mm).padStart(2, "0")} ${ampm}`;
+    } catch (e) {
+      console.log(e);
+      return "";
+    }
+  };
+
+  const buildReminderISO = () => {
+    try {
+      if (!selectedRemainderDate || !selectedRemainderTime) return null;
+
+      const [y, m, d] = selectedRemainderDate.split("-").map(Number);
+
+      const hh = selectedRemainderTime.getHours();
+      const mm = selectedRemainderTime.getMinutes();
+
+      // local Date -> ISO
+      const combined = new Date(y, m - 1, d, hh, mm, 0, 0);
+      return combined.toISOString();
+    } catch (e) {
+      console.log(e);
+      return null;
+    }
+  };
+
+  // console.log('selectedRemainderTime:', formatTime(selectedRemainderTime));
+  // console.log('selectedRemainderDate:', selectedRemainderDate);
+  // console.log('canSetReminder:', buildReminderISO());
 
   // useEffect(() => {
   //   preloadAvailability();
@@ -275,7 +370,7 @@ const JobOngoing = () => {
     }
   };
 
-  console.log('availableTeam', availableTeam);
+  // console.log('availableTeam', availableTeam);
   const openDialPad = phoneNumber => {
     // console.log('phoneNumber', phoneNumber);
 
@@ -507,7 +602,7 @@ const JobOngoing = () => {
   let disableAllTheHell = false;
 
   const serviceType = leadDataContext?.serviceType?.toLowerCase().trim();
-  console.log('serviceType', serviceType);
+  // console.log('serviceType', serviceType);
   if (
     (serviceType === 'deep_cleaning' &&
       bd.status?.toLowerCase().trim() === 'project completed' &&
@@ -539,7 +634,7 @@ const JobOngoing = () => {
     bd.finalPayment?.status === 'pending' ||
     bd.finalPayment?.status === 'partial';
 
-  console.log('firstPaid', firstPaid);
+  // console.log('firstPaid', firstPaid);
 
   const canShowRequestNextPayment = // req.2nd installment
     serviceMatch && firstPaid && secondPending && !paymentRequestActive;
@@ -584,7 +679,7 @@ const JobOngoing = () => {
     (status === 'Hired' && started) ||
     (status === 'Customer Unreachable' && firstPaid);
 
-  console.log('showStartProjectBtn', showStartProjectBtn);
+  // console.log('showStartProjectBtn', showStartProjectBtn);
 
   // ............................................................................
   const fetchMeasurements = async () => {
@@ -678,11 +773,11 @@ const JobOngoing = () => {
     Array.isArray(selectedMembers) && selectedMembers.length >= 2;
 
   const onDayPress = dateString => {
-    console.log('Date is blocked:', dateString);
+    // console.log('Date is blocked:', dateString);
 
     // if clicked date itself is blocked → stop
     if (markedDates[dateString]?.disabled) {
-      console.log('Date is blocked:', dateString);
+      // console.log('Date is blocked:', dateString);
       return;
     }
 
@@ -795,6 +890,47 @@ const JobOngoing = () => {
       console.log('Error while updating status:', error);
       ToastAndroid.showWithGravity(
         error?.message || 'Failed to update status',
+        ToastAndroid.LONG,
+        ToastAndroid.CENTER,
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRescheduleBooking = async () => {
+    if (!isSlotSelected) {
+      ToastAndroid.show('Please select a slot', ToastAndroid.SHORT);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const formData = {
+        bookingId: leadDataContext._id,
+        vendorId: vendorDataContext._id,
+        slotDate: selectedRescheduleDate,
+        slotTime: selectedSlot,
+      };
+
+      const result = await postRequest(
+        API_ENDPOINTS.RESCHEDULE_BOOKING,
+        formData,
+      );
+
+      ToastAndroid.showWithGravity(
+        result.message || 'Booking Rescheduled',
+        ToastAndroid.LONG,
+        ToastAndroid.CENTER,
+      );
+
+      setStatusModalVisible(false);
+      handleResetSlotndClose(); // ✅ call function
+      navigation.goBack();
+    } catch (error) {
+      console.log('Error while rescheduling:', error);
+      ToastAndroid.showWithGravity(
+        error?.message || 'Failed to reschedule',
         ToastAndroid.LONG,
         ToastAndroid.CENTER,
       );
@@ -1424,6 +1560,36 @@ const JobOngoing = () => {
               </TouchableOpacity>
             </View>
           </View>
+          {leadDataContext?.leadReminder && leadDataContext.leadReminder?.status === "pending" &&
+            <View style={{
+              backgroundColor: 'white',
+              marginBottom: 15, borderRadius: 5,
+              padding: 10,
+              borderColor: "#ED1F24", borderWidth: 1,
+              marginHorizontal: 5
+            }}>
+              <Text style={{
+                fontSize: 14,
+                fontFamily: 'Poppins-Medium',
+                color: '#ED1F24', textAlign: "center"
+              }}>
+
+                Reminder set for{" "}
+                {leadDataContext.leadReminder?.reminderAt
+                  ? `${moment(leadDataContext.leadReminder?.reminderAt).format("DD-MM-YYYY")} at ${moment(
+                    leadDataContext.leadReminder?.reminderAt
+                  ).format("h:mma")}`
+                  : "--"}
+
+                {/* Reminder set for{" "}
+  {leadDataContext?.leadReminder?.reminderAt 
+    ? `${moment(leadDataContext.leadReminder.reminderAt).format("DD-MMM-YYYY")} at ${moment(
+        leadDataContext.leadReminder.reminderAt
+      ).format("h:mma")}` 
+    : "--"} */}   {/* 29 Mar 2025 at 5:30pm */}
+              </Text>
+            </View>
+          }
           {leadDataContext?.service[0]?.category === 'Deep Cleaning' ? (
             <>
               <View style={styles.packageRow}>
@@ -2429,7 +2595,12 @@ const JobOngoing = () => {
                     Customer Unreachable
                   </Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.statusOption}>
+                <TouchableOpacity style={styles.statusOption}
+                  onPress={() => {
+                    setShowRescheduleModal(true);
+                    setStatusModalVisible(false)
+                  }}
+                >
                   <Text style={styles.statusOptionText}>
                     Customer Reschedule
                   </Text>
@@ -2452,7 +2623,13 @@ const JobOngoing = () => {
                     Customer Unreachable
                   </Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.statusOption}>
+                <TouchableOpacity
+                  style={styles.statusOption}
+                  onPress={() => {
+                    setShowRescheduleModal(true);
+                    setStatusModalVisible(false)
+                  }}
+                >
                   <Text style={styles.statusOptionText}>
                     Customer Reschedule
                   </Text>
@@ -2467,7 +2644,13 @@ const JobOngoing = () => {
             ) : (
               // ❌ Default / Pre-Hired → Show hiring-related options
               <>
-                <TouchableOpacity style={styles.statusOption}>
+                <TouchableOpacity
+                  style={styles.statusOption}
+                  onPress={() => {
+                    setStatusModalVisible(false);
+                    setOpenRemainderCalendar(true)
+                  }}
+                >
                   <Text style={styles.statusOptionText}>Set Remainder</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -2586,18 +2769,26 @@ const JobOngoing = () => {
         transparent
         visible={showRescheduleModal}
         animationType="slide"
-        onRequestClose={() => setShowRescheduleModal(false)}
+        onRequestClose={handleResetSlotndClose}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.rescheduleModal}>
+        <View style={{
+          flex: 1,
+          backgroundColor: 'rgba(0, 0, 0, 0.4)',
+        }}>
+          <View style={styles.rescheduleModal1}>
             <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => setShowRescheduleModal(false)}
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'flex-end',
+                marginTop: 20,
+                marginRight: 10,
+              }}
+              onPress={handleResetSlotndClose}
             >
               <Text style={{ fontWeight: 'bold', fontSize: 18 }}>✕</Text>
             </TouchableOpacity>
             <Text style={styles.rescheduleTitle}>Reschedule Date and Time</Text>
-            <Text style={styles.subHeader}>Calendar</Text>
+
             <Calendar
               onDayPress={day => setSelectedRescheduleDate(day.dateString)}
               markedDates={{
@@ -2606,53 +2797,204 @@ const JobOngoing = () => {
                   selectedColor: '#E74C3C',
                 },
               }}
+              minDate={moment().format('YYYY-MM-DD')}
               theme={{
                 selectedDayTextColor: '#fff',
               }}
-              style={{ borderRadius: 8 }}
             />
             <Text style={styles.subHeader}>Available Slots</Text>
-            <View style={styles.slotWrapper}>
-              {availableSlots.map((slot, idx) => (
-                <TouchableOpacity
-                  key={idx}
-                  style={[
-                    styles.slotBox,
-                    selectedSlot === slot && {
-                      backgroundColor: '#E74C3C',
-                    },
-                  ]}
-                  onPress={() => setSelectedSlot(slot)}
-                >
-                  <Text
-                    style={[
-                      styles.slotText,
-                      selectedSlot === slot && { color: '#fff' },
-                    ]}
-                  >
-                    {slot}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+            <Text style={styles.durationHeader}>
+              Duration: {requiredTime} min's - (dev mode)
+            </Text>
+            {isSlotLoaded && <PageLoader />}
+            {availableSlots?.length > 0 ? (
+              <ScrollView>
+                <View style={styles.slotWrapper}>
+                  {availableSlots.map((slot, idx) => (
+                    <TouchableOpacity
+                      key={idx}
+                      style={[
+                        styles.slotBox,
+                        selectedSlot === slot && {
+                          backgroundColor: '#E74C3C',
+                        },
+                      ]}
+                      onPress={() => handleSlotSelection(slot)}
+                    >
+                      <Text
+                        style={[
+                          styles.slotText,
+                          selectedSlot === slot && { color: '#fff' },
+                        ]}
+                      >
+                        {slot}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </ScrollView>
+            ) : (
+              <Text
+                style={{
+                  color: '#6d6d6dff',
+                  fontSize: 15,
+                  marginTop: 10,
+                  textAlign: 'center',
+                  fontFamily: 'Poppins-Medium',
+                }}
+              >
+                No slots available
+              </Text>
+            )}
+
             <Text style={styles.crmNote}>
               Vendors while choosing the time slots - the available slots will
               come from the CRM. Based on that, select the time slot.
             </Text>
             <TouchableOpacity
-              style={styles.rescheduleBtn}
-              onPress={() => {
-                setShowRescheduleModal(false);
-                setStarJob(true);
-              }}
+              style={[
+                styles.rescheduleBtn,
+                { backgroundColor: isSlotSelected ? '#ED1F24' : 'gray' },
+              ]}
+              disabled={!isSlotSelected}
+              onPress={handleRescheduleBooking} // ✅ invoke properly
             >
               <Text style={styles.rescheduleBtnText}>Reschedule</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
+      {/* calendar - setAReminder */}
+      <Modal
+        transparent
+        visible={openRemainderCalendar}
+        animationType="slide"
+        onRequestClose={handleCloseRemainderPopup}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.rescheduleModal}>
+            <TouchableOpacity
+              style={{ flexDirection: 'row', justifyContent: 'flex-end' }}
+              onPress={handleCloseRemainderPopup}
+            >
+              <AntDesign name="close" color="black" size={20} />
+            </TouchableOpacity>
+            <Text style={styles.rescheduleTitle}>Remainder</Text>
+            <Text style={styles.subHeader}>Pick a date</Text>
+            <View
+            >
+              <Calendar
+                onDayPress={(day) => {
+                  try {
+                    setSelectedRemainderDate(day.dateString);
+                  } catch (e) {
+                    console.log(e);
+                  }
+                }}
+                minDate={tomorrow.format('YYYY-MM-DD')}
+                markedDates={
+                  markedDateKey
+                    ? {
+                      [markedDateKey]: {
+                        selected: true,
+                        disableTouchEvent: true,
+                        selectedDotColor: "orange",
+                      },
+                    }
+                    : {}
+                }
+                theme={{
+                  selectedDayTextColor: '#fff',
+                  todayTextColor: '#ED1F24',
+                }}
+                style={{ borderRadius: 8 }}
+              />
+              <Text style={styles.subHeader}>Pick a time</Text>
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <Feather name="clock" color="black" size={25} />
+                <TouchableOpacity
+                  style={{
+                    marginLeft: 8,
+                  }}
+                  onPress={() => {
+                    try {
+                      if (!selectedRemainderDate && !existingDate) return; // allow if either exists
+                      setOpenTimePicker(true);
+                    } catch (e) {
+                      console.log(e);
+                    }
+                  }}
+                >
+                  <Text style={{
+                    fontSize: 14,
+                    fontFamily: 'Poppins-Medium',
+                    color: selectedRemainderTime || existingTimeText ? "#000" : "#2c2c2c",
+                    borderColor: "#2c2c2c",
+                    borderWidth: 1.5,
+                    borderRadius: 6,
+                    paddingVertical: 4,
+                    paddingHorizontal: 10,
+                  }}>
+                    {selectedRemainderTime
+                      ? formatTime(selectedRemainderTime)
+                      : existingTimeText
+                        ? existingTimeText
+                        : "Select time"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
 
-      {/* calendar */}
+              <DateTimePickerModal
+                isVisible={openTimePicker}
+                mode="time"
+                onConfirm={(date) => {
+                  try {
+                    setSelectedRemainderTime(date);
+                    setOpenTimePicker(false);
+                  } catch (e) {
+                    console.log(e);
+                  }
+                }}
+                onCancel={() => setOpenTimePicker(false)}
+              />
+
+            </View>
+            <TouchableOpacity
+              style={{
+                backgroundColor: canSetReminder ? "#ED1F24" : "#b4b4b4ff",
+                paddingVertical: 12,
+                borderRadius: 6,
+                marginTop: 20,
+              }}
+              disabled={!canSetReminder}
+              onPress={async () => {
+                try {
+                  const reminderAt = buildReminderISO();
+                  console.log("reminderAt", reminderAt);
+
+                  if (!reminderAt) return;
+                  await postRequest(API_ENDPOINTS.SET_LEAD_REMINDER, {
+                    leadId,
+                    vendorId,
+                    reminderAt,
+                  });
+                  fetchBookingData()
+                  setOpenRemainderCalendar(false);
+                  setSelectedRemainderDate(null);
+                  setSelectedRemainderTime(null);
+
+                  // show toast if you use any
+                } catch (e) {
+                  console.log("set reminder error", e);
+                }
+              }}
+            >
+              <Text style={styles.rescheduleBtnText}>Set Reminder</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+      {/* calendar - hiring */}
       <Modal
         transparent
         visible={openCalendar}
@@ -3131,8 +3473,16 @@ const styles = StyleSheet.create({
   rescheduleModal: {
     backgroundColor: '#fff',
     padding: 20,
-    borderRadius: 12,
-    width: '90%',
+    // borderRadius: 12,
+    width: '100%',
+    alignSelf: 'center',
+  },
+  rescheduleModal1: {
+    backgroundColor: '#fff',
+    paddingHorizontal: 10,
+    height: '100%',
+    // borderRadius: 12,
+    width: '100%',
     alignSelf: 'center',
   },
   rescheduleTitle: {
@@ -3395,9 +3745,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   slotText: {
-    fontSize: 14,
-    fontFamily: 'Poppins-SemiBold',
-    color: '#E74C3C',
+    fontSize: 12,
+    fontFamily: 'Poppins-Medium',
+    color: '#000',
   },
   map: {
     marginBottom: 100,
@@ -3462,6 +3812,11 @@ const styles = StyleSheet.create({
     fontSize: 11,
     marginTop: 10,
     fontFamily: 'Poppins-Regular',
+  },
+  durationHeader: {
+    fontSize: 12,
+    fontFamily: 'Poppins-SemiBold',
+    color: '#E74C3C',
   },
   slotWrapper: {
     flexDirection: 'row',

@@ -58,7 +58,10 @@ export default function PaintDropdownModal({
                     setVisible(false); // close modal immediately
                   }}
                 >
-                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <View style={{
+                    justifyContent: 'flex-start',
+                    flex: 0.7
+                  }}>
                     {item.isSpecial && <Text style={styles.star}>⭐ </Text>}
                     <Text style={styles.itemText}>{item.name}</Text>
                   </View>
@@ -111,14 +114,15 @@ const styles = StyleSheet.create({
   close: { fontSize: 18, color: 'red', fontFamily: 'Poppins-Bold' },
   item: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    flex: 1, alignItems: "center",
+    // justifyContent: 'space-between',
     padding: 15,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
   selectedItem: { backgroundColor: '#f0f8ff' },
-  itemText: { fontSize: 14, fontFamily: 'Poppins-Medium' },
-  price: { fontSize: 14, color: '#555', fontFamily: 'Poppins-Medium' },
+  itemText: { fontSize: 13, fontFamily: 'Poppins-Medium' },
+  price: { flex: 0.3, flexDirection: "row", justifyContent: "flex-end", fontSize: 13, color: '#555', fontFamily: 'Poppins-Medium' },
   star: {
     fontSize: 16,
     color: 'gold',
