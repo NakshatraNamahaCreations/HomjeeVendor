@@ -77,8 +77,8 @@ const RoomMeasurementScreen = () => {
   // console.log('nameOfTheRoom', nameOfTheRoom);
   // console.log('localRoomName', localRoomName);
 
-  const lRefs = useRef([]); // L refs per row
-  const wRefs = useRef([]); // W refs per row
+  const lRefs = useRef({}); // L refs per row
+  const wRefs = useRef({}); // W refs per row
 
   const [isDirty, setIsDirty] = useState(false);
 
@@ -665,11 +665,11 @@ const RoomMeasurementScreen = () => {
       prev.map((s, i) =>
         i === sectionIndex
           ? {
-              ...s,
-              windows: s.windows.map((w, j) =>
-                j === winIndex ? { ...w, width: value } : w,
-              ),
-            }
+            ...s,
+            windows: s.windows.map((w, j) =>
+              j === winIndex ? { ...w, width: value } : w,
+            ),
+          }
           : s,
       ),
     );
@@ -684,11 +684,11 @@ const RoomMeasurementScreen = () => {
       prev.map((s, i) =>
         i === sectionIndex
           ? {
-              ...s,
-              windows: s.windows.map((w, j) =>
-                j === winIndex ? { ...w, height: value } : w,
-              ),
-            }
+            ...s,
+            windows: s.windows.map((w, j) =>
+              j === winIndex ? { ...w, height: value } : w,
+            ),
+          }
           : s,
       ),
     );
@@ -703,11 +703,11 @@ const RoomMeasurementScreen = () => {
       prev.map((s, i) =>
         i === sectionIndex
           ? {
-              ...s,
-              doors: s.doors.map((d, j) =>
-                j === doorIndex ? { ...d, width: value } : d,
-              ),
-            }
+            ...s,
+            doors: s.doors.map((d, j) =>
+              j === doorIndex ? { ...d, width: value } : d,
+            ),
+          }
           : s,
       ),
     );
@@ -722,11 +722,11 @@ const RoomMeasurementScreen = () => {
       prev.map((s, i) =>
         i === sectionIndex
           ? {
-              ...s,
-              doors: s.doors.map((d, j) =>
-                j === doorIndex ? { ...d, height: value } : d,
-              ),
-            }
+            ...s,
+            doors: s.doors.map((d, j) =>
+              j === doorIndex ? { ...d, height: value } : d,
+            ),
+          }
           : s,
       ),
     );
@@ -741,11 +741,11 @@ const RoomMeasurementScreen = () => {
       prev.map((s, i) =>
         i === sectionIndex
           ? {
-              ...s,
-              cupboards: s.cupboards.map((c, j) =>
-                j === cupIndex ? { ...c, width: value } : c,
-              ),
-            }
+            ...s,
+            cupboards: s.cupboards.map((c, j) =>
+              j === cupIndex ? { ...c, width: value } : c,
+            ),
+          }
           : s,
       ),
     );
@@ -760,11 +760,11 @@ const RoomMeasurementScreen = () => {
       prev.map((s, i) =>
         i === sectionIndex
           ? {
-              ...s,
-              cupboards: s.cupboards.map((c, j) =>
-                j === cupIndex ? { ...c, height: value } : c,
-              ),
-            }
+            ...s,
+            cupboards: s.cupboards.map((c, j) =>
+              j === cupIndex ? { ...c, height: value } : c,
+            ),
+          }
           : s,
       ),
     );
@@ -1058,9 +1058,9 @@ const RoomMeasurementScreen = () => {
       navigation.navigate({
         name: 'StartMeasurement',
         params: {
+          defaultTab: activeTab,
           rename: {
             tab: activeTab,
-            defaultTab: activeTab,
             from: type,
             to: roomKeyToSave,
           },
@@ -1146,14 +1146,14 @@ const RoomMeasurementScreen = () => {
                     style={[
                       styles.checkbox,
                       roomDefaultMode === MODE.REPAINT &&
-                        styles.checkboxSelected,
+                      styles.checkboxSelected,
                     ]}
                   />
                   <Text
                     style={[
                       styles.checkboxLabel,
                       roomDefaultMode === MODE.REPAINT &&
-                        styles.checkboxLabelSelected,
+                      styles.checkboxLabelSelected,
                     ]}
                   >
                     Repaint with Primer
@@ -1173,7 +1173,7 @@ const RoomMeasurementScreen = () => {
                     style={[
                       styles.checkboxLabel,
                       roomDefaultMode === MODE.FRESH &&
-                        styles.checkboxLabelSelected,
+                      styles.checkboxLabelSelected,
                     ]}
                   >
                     Fresh Paint
@@ -1208,14 +1208,14 @@ const RoomMeasurementScreen = () => {
                           style={[
                             styles.checkbox,
                             section.mode === MODE.REPAINT &&
-                              styles.checkboxSelected,
+                            styles.checkboxSelected,
                           ]}
                         />
                         <Text
                           style={[
                             styles.checkboxLabel,
                             section.mode === MODE.REPAINT &&
-                              styles.checkboxLabelSelected,
+                            styles.checkboxLabelSelected,
                           ]}
                         >
                           Repaint
@@ -1229,14 +1229,14 @@ const RoomMeasurementScreen = () => {
                           style={[
                             styles.checkbox,
                             section.mode === MODE.FRESH &&
-                              styles.checkboxSelected,
+                            styles.checkboxSelected,
                           ]}
                         />
                         <Text
                           style={[
                             styles.checkboxLabel,
                             section.mode === MODE.FRESH &&
-                              styles.checkboxLabelSelected,
+                            styles.checkboxLabelSelected,
                           ]}
                         >
                           Fresh
@@ -1255,10 +1255,12 @@ const RoomMeasurementScreen = () => {
                         placeholder="L"
                         placeholderTextColor="gray"
                         style={styles.input}
-                        keyboardType="numeric"
+                        keyboardType="default"
+                        inputMode="numeric"
                         value={section.width}
                         onChangeText={text => handleWidthChange(index, text)}
                         returnKeyType="next"
+                        enterKeyHint="next"
                         blurOnSubmit={false}
                         onSubmitEditing={() => {
                           try {
@@ -1289,12 +1291,12 @@ const RoomMeasurementScreen = () => {
                         placeholder="W"
                         placeholderTextColor="gray"
                         style={styles.input}
-                        keyboardType="numeric"
+                        keyboardType="default"
+                        inputMode="numeric"
                         value={section.height}
                         onChangeText={text => handleHeightChange(index, text)}
-                        returnKeyType={
-                          index < sections.length - 1 ? 'next' : 'done'
-                        }
+                        returnKeyType={index < sections.length - 1 ? "next" : "done"}
+                        enterKeyHint={index < sections.length - 1 ? "next" : "done"} // ✅ Android
                         blurOnSubmit={false}
                         onSubmitEditing={() => {
                           try {
@@ -1329,14 +1331,41 @@ const RoomMeasurementScreen = () => {
                         </Text>
                         <View style={styles.inputRow}>
                           <TextInput
+                            ref={r => {
+                              try {
+                                lRefs.current[index] = r;
+                              } catch (e) {
+                                console.log(e);
+                              }
+                            }}
                             placeholder="L"
                             placeholderTextColor="gray"
                             style={styles.input}
-                            keyboardType="numeric"
+                            keyboardType="default"
+                            inputMode="numeric"
                             value={win.width}
                             onChangeText={text =>
                               handleWindowWidthChange(index, winIndex, text)
                             }
+                            returnKeyType="next"
+                            enterKeyHint="next"
+                            blurOnSubmit={false}
+                            onSubmitEditing={() => {
+                              try {
+                                focusWidth(index);
+                              } catch (e) {
+                                console.log(e);
+                              }
+                            }}
+                            onKeyPress={({ nativeEvent }) => {
+                              if (nativeEvent.key === 'Enter') {
+                                try {
+                                  focusWidth(index);
+                                } catch (e) {
+                                  console.log(e);
+                                }
+                              }
+                            }}
                           />
                           <Text style={styles.multiply}>×</Text>
                           <TextInput
@@ -1484,14 +1513,14 @@ const RoomMeasurementScreen = () => {
                           style={[
                             styles.checkbox,
                             section.mode === MODE.REPAINT &&
-                              styles.checkboxSelected,
+                            styles.checkboxSelected,
                           ]}
                         />
                         <Text
                           style={[
                             styles.checkboxLabel,
                             section.mode === MODE.REPAINT &&
-                              styles.checkboxLabelSelected,
+                            styles.checkboxLabelSelected,
                           ]}
                         >
                           Repaint
@@ -1505,14 +1534,14 @@ const RoomMeasurementScreen = () => {
                           style={[
                             styles.checkbox,
                             section.mode === MODE.FRESH &&
-                              styles.checkboxSelected,
+                            styles.checkboxSelected,
                           ]}
                         />
                         <Text
                           style={[
                             styles.checkboxLabel,
                             section.mode === MODE.FRESH &&
-                              styles.checkboxLabelSelected,
+                            styles.checkboxLabelSelected,
                           ]}
                         >
                           Fresh
@@ -1521,21 +1550,75 @@ const RoomMeasurementScreen = () => {
                     </View>
                     <View style={styles.inputRow}>
                       <TextInput
+                        ref={r => {
+                          try {
+                            lRefs.current[index] = r;
+                          } catch (e) {
+                            console.log(e);
+                          }
+                        }}
                         placeholder="L"
                         placeholderTextColor="gray"
                         style={styles.input}
-                        keyboardType="numeric"
+                        keyboardType="default"
+                        inputMode="numeric"
                         value={section.width}
                         onChangeText={text => handleWidthChange(index, text)}
+                        returnKeyType="next"
+                        enterKeyHint="next"
+                        blurOnSubmit={false}
+                        onSubmitEditing={() => {
+                          try {
+                            focusWidth(index);
+                          } catch (e) {
+                            console.log(e);
+                          }
+                        }}
+                        onKeyPress={({ nativeEvent }) => {
+                          if (nativeEvent.key === 'Enter') {
+                            try {
+                              focusWidth(index);
+                            } catch (e) {
+                              console.log(e);
+                            }
+                          }
+                        }}
                       />
                       <Text style={styles.multiply}>×</Text>
                       <TextInput
+                        ref={r => {
+                          try {
+                            wRefs.current[index] = r;
+                          } catch (e) {
+                            console.log(e);
+                          }
+                        }}
                         placeholder="W"
                         placeholderTextColor="gray"
                         style={styles.input}
-                        keyboardType="numeric"
+                        keyboardType="default"
+                        inputMode="numeric"
                         value={section.height}
                         onChangeText={text => handleHeightChange(index, text)}
+                        returnKeyType={index < sections.length - 1 ? "next" : "done"}
+                        enterKeyHint={index < sections.length - 1 ? "next" : "done"} // ✅ Android
+                        blurOnSubmit={false}
+                        onSubmitEditing={() => {
+                          try {
+                            focusNextRowL(index);
+                          } catch (e) {
+                            console.log(e);
+                          }
+                        }}
+                        onKeyPress={({ nativeEvent }) => {
+                          if (nativeEvent.key === 'Enter') {
+                            try {
+                              focusNextRowL(index);
+                            } catch (e) {
+                              console.log(e);
+                            }
+                          }
+                        }}
                       />
                       <Text style={styles.equalSign}>=</Text>
                       <Text style={styles.areaText}>
@@ -1712,14 +1795,14 @@ const RoomMeasurementScreen = () => {
                     style={[
                       styles.checkbox,
                       roomDefaultMode === MODE.REPAINT &&
-                        styles.checkboxSelected,
+                      styles.checkboxSelected,
                     ]}
                   />
                   <Text
                     style={[
                       styles.checkboxLabel,
                       roomDefaultMode === MODE.REPAINT &&
-                        styles.checkboxLabelSelected,
+                      styles.checkboxLabelSelected,
                     ]}
                   >
                     Repaint with Primer
@@ -1739,7 +1822,7 @@ const RoomMeasurementScreen = () => {
                     style={[
                       styles.checkboxLabel,
                       roomDefaultMode === MODE.FRESH &&
-                        styles.checkboxLabelSelected,
+                      styles.checkboxLabelSelected,
                     ]}
                   >
                     Fresh Paint
@@ -1755,14 +1838,14 @@ const RoomMeasurementScreen = () => {
                       {
                         // gross - sum(openings)
                         calculateArea(section.width, section.height) -
-                          (section.windows || [])
-                            .concat(section.doors || [])
-                            .concat(section.cupboards || [])
-                            .reduce(
-                              (sum, o) =>
-                                sum + calculateArea(o.width, o.height),
-                              0,
-                            )
+                        (section.windows || [])
+                          .concat(section.doors || [])
+                          .concat(section.cupboards || [])
+                          .reduce(
+                            (sum, o) =>
+                              sum + calculateArea(o.width, o.height),
+                            0,
+                          )
                       }{' '}
                       sq ft
                     </Text>
@@ -1779,14 +1862,14 @@ const RoomMeasurementScreen = () => {
                         style={[
                           styles.checkbox,
                           section.mode === MODE.REPAINT &&
-                            styles.checkboxSelected,
+                          styles.checkboxSelected,
                         ]}
                       />
                       <Text
                         style={[
                           styles.checkboxLabel,
                           section.mode === MODE.REPAINT &&
-                            styles.checkboxLabelSelected,
+                          styles.checkboxLabelSelected,
                         ]}
                       >
                         Repaint
@@ -1800,14 +1883,14 @@ const RoomMeasurementScreen = () => {
                         style={[
                           styles.checkbox,
                           section.mode === MODE.FRESH &&
-                            styles.checkboxSelected,
+                          styles.checkboxSelected,
                         ]}
                       />
                       <Text
                         style={[
                           styles.checkboxLabel,
                           section.mode === MODE.FRESH &&
-                            styles.checkboxLabelSelected,
+                          styles.checkboxLabelSelected,
                         ]}
                       >
                         Fresh
@@ -1817,11 +1900,22 @@ const RoomMeasurementScreen = () => {
 
                   <View style={styles.inputRow}>
                     <TextInput
+                      ref={r => {
+                        try {
+                          lRefs.current[index] = r;
+                        } catch (e) {
+                          console.log(e);
+                        }
+                      }}
                       placeholder="L"
                       placeholderTextColor="gray"
                       style={styles.input}
-                      keyboardType="numeric"
+                      keyboardType="default"
+                      inputMode="numeric"
                       value={section.width}
+                      returnKeyType="next"
+                      enterKeyHint="next"
+                      blurOnSubmit={false}
                       onChangeText={text => {
                         try {
                           handleWidthChange(index, text);
@@ -1829,19 +1923,62 @@ const RoomMeasurementScreen = () => {
                           console.log('width change error', e);
                         }
                       }}
+                      onSubmitEditing={() => {
+                        try {
+                          focusWidth(index);
+                        } catch (e) {
+                          console.log(e);
+                        }
+                      }}
+                      onKeyPress={({ nativeEvent }) => {
+                        if (nativeEvent.key === 'Enter') {
+                          try {
+                            focusWidth(index);
+                          } catch (e) {
+                            console.log(e);
+                          }
+                        }
+                      }}
                     />
                     <Text style={styles.multiply}>×</Text>
                     <TextInput
+                      ref={r => {
+                        try {
+                          wRefs.current[index] = r;
+                        } catch (e) {
+                          console.log(e);
+                        }
+                      }}
                       placeholder="W"
                       placeholderTextColor="gray"
                       style={styles.input}
-                      keyboardType="numeric"
+                      keyboardType="default"
+                      inputMode="numeric"
                       value={section.height}
                       onChangeText={text => {
                         try {
                           handleHeightChange(index, text);
                         } catch (e) {
                           console.log('height change error', e);
+                        }
+                      }}
+                      returnKeyType={index < sections.length - 1 ? "next" : "done"}
+                      enterKeyHint={index < sections.length - 1 ? "next" : "done"} // ✅ Android
+                      blurOnSubmit={false}
+                      onSubmitEditing={() => {
+                        try {
+                          focusNextRowL(index);
+                        } catch (e) {
+                          console.log(e);
+                        }
+                      }}
+                      onKeyPress={({ nativeEvent }) => {
+                        if (nativeEvent.key === 'Enter') {
+                          try {
+                            focusNextRowL(index);
+                          } catch (e) {
+                            console.log(e);
+                          }
                         }
                       }}
                     />
@@ -2063,21 +2200,75 @@ const RoomMeasurementScreen = () => {
                   <View style={styles.underlineRed} />
                   <View style={styles.inputRow}>
                     <TextInput
+                      ref={r => {
+                        try {
+                          lRefs.current[index] = r;
+                        } catch (e) {
+                          console.log(e);
+                        }
+                      }}
                       placeholder="L"
                       placeholderTextColor="gray"
                       style={styles.input}
-                      keyboardType="numeric"
+                      keyboardType="default"
+                      inputMode="numeric"
                       value={section.width}
                       onChangeText={text => handleWidthChange(index, text)}
+                      returnKeyType="next"
+                      enterKeyHint="next"
+                      blurOnSubmit={false}
+                      onSubmitEditing={() => {
+                        try {
+                          focusWidth(index);
+                        } catch (e) {
+                          console.log(e);
+                        }
+                      }}
+                      onKeyPress={({ nativeEvent }) => {
+                        if (nativeEvent.key === 'Enter') {
+                          try {
+                            focusWidth(index);
+                          } catch (e) {
+                            console.log(e);
+                          }
+                        }
+                      }}
                     />
                     <Text style={styles.multiply}>×</Text>
                     <TextInput
+                      ref={r => {
+                        try {
+                          wRefs.current[index] = r;
+                        } catch (e) {
+                          console.log(e);
+                        }
+                      }}
                       placeholder="W"
                       placeholderTextColor="gray"
                       style={styles.input}
-                      keyboardType="numeric"
+                      keyboardType="default"
+                      inputMode="numeric"
                       value={section.height}
                       onChangeText={text => handleHeightChange(index, text)}
+                      returnKeyType={index < sections.length - 1 ? "next" : "done"}
+                      enterKeyHint={index < sections.length - 1 ? "next" : "done"} // ✅ Android
+                      blurOnSubmit={false}
+                      onSubmitEditing={() => {
+                        try {
+                          focusNextRowL(index);
+                        } catch (e) {
+                          console.log(e);
+                        }
+                      }}
+                      onKeyPress={({ nativeEvent }) => {
+                        if (nativeEvent.key === 'Enter') {
+                          try {
+                            focusNextRowL(index);
+                          } catch (e) {
+                            console.log(e);
+                          }
+                        }
+                      }}
                     />
                     <Text style={styles.equalSign}>=</Text>
                     <Text style={styles.areaText}>

@@ -1195,6 +1195,8 @@ import PageLoader from '../../components/PageLoader';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Entypo from 'react-native-vector-icons/Entypo';
+import { useVendorContext } from '../../Utilities/VendorContext';
+import { getRequest } from '../../ApiService/apiHelper';
 
 const PUTTY_RATE_PER_SQFT = 10;
 const fmtMoney = n => `₹ ${Number(n || 0).toFixed(2)}`;
@@ -1210,6 +1212,8 @@ const SelectPaint = () => {
   const route = useRoute();
   const { deviceTheme } = useThemeColor();
   const [showAlertPopup, setShowAlertPopup] = useState(false);
+  const { vendorDataContext } = useVendorContext();
+  const vendorCity = vendorDataContext.vendor.city
 
   useEffect(() => {
     const backAction = () => {
@@ -1340,9 +1344,12 @@ const SelectPaint = () => {
   const fetchPaintProducts = async () => {
     setLoading(true);
     try {
-      const resp = await axios.get(`${API_BASE_URL}${API_ENDPOINTS.GET_PAINT}`);
+      const resp = await getRequest(`${API_ENDPOINTS.GET_PAINT}?city=${vendorCity}`);
       const fresh = resp?.data?.paints || resp?.paints || [];
-      setPaintOptions(prev => mergeById(prev || [], fresh));
+      console.log("fetchPaintProducts", fresh);
+
+      // setPaintOptions(prev => mergeById(prev || [], fresh));
+      setPaintOptions(fresh);
     } catch (e) {
       console.log('error while fetching data', e);
     } finally {

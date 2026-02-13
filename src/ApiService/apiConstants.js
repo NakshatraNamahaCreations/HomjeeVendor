@@ -49,7 +49,8 @@ export const API_ENDPOINTS = {
   UPDATE_ROOM_PAINT_PRICE: '/measurements/update_Room_painy_pricing',
   GET_MEASUREMENTS_BY_LEADID: '/measurements/get-measurements-by-leadId/',
   GET_PAINT: '/products/get-all-paints',
-  GET_PACKAGES: '/products/get-all-packages',
+  // GET_PACKAGES: '/products/get-all-packages',
+  GET_PACKAGES: 'products/get-products-by-type',
   GET_ALL_FINISHING_PAINTS: '/products/get-all-finishing-paints',
 
   //QUOTATION
@@ -85,8 +86,10 @@ export const API_ENDPOINTS = {
   SEND_PAYMENT_LINK: "/wallet/send-recharge-link/",
   PAYMENT_LINK_STATUS: "/wallet/get-link-status/payment-link/",
 
-  // MONET DASHBOARD
-  GET_MONEY_DASHBOARD: "/bookings/customer-payments/money-dashboard/"
+  // MONET DASHBOARD & NOTIFICATION
+  GET_MONEY_DASHBOARD: "/bookings/customer-payments/money-dashboard/",
+  GET_NOTIFICATION: "/notification/fetch-vendor-notifications/",
+  MARK_AS_READ_NOTIFICATION: "/notification/mark-notification-read/",
 };
 
 

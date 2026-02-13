@@ -30,7 +30,15 @@ const StartMeasurement = () => {
   const navigation = useNavigation();
   const { deviceTheme } = useThemeColor();
   const { leadDataContext } = useLeadContext();
-  const defaultTabParam = route?.params?.defaultTab;
+  // const defaultTabParam = route?.params?.defaultTab;
+  let defaultTabParam;
+  try {
+    defaultTabParam =
+      route?.params?.defaultTab || route?.params?.rename?.defaultTab;
+  } catch (e) {
+    console.log('defaultTabParam read error', e);
+    defaultTabParam = undefined;
+  }
   const leadId = leadDataContext._id;
   const [activeTab, setActiveTab] = useState(defaultTabParam || 'Interior');
   const [roomData, setRoomData] = useState({});
@@ -354,27 +362,27 @@ const StartMeasurement = () => {
   const netCeilingArea = c =>
     Math.max(
       rectArea(c.width, c.height) -
-        openingsArea(c.windows) -
-        openingsArea(c.doors) -
-        openingsArea(c.cupboards),
+      openingsArea(c.windows) -
+      openingsArea(c.doors) -
+      openingsArea(c.cupboards),
       0,
     );
 
   const netWallArea = w =>
     Math.max(
       rectArea(w.width, w.height) -
-        openingsArea(w.windows) -
-        openingsArea(w.doors) -
-        openingsArea(w.cupboards),
+      openingsArea(w.windows) -
+      openingsArea(w.doors) -
+      openingsArea(w.cupboards),
       0,
     );
 
   const netOtherArea = w =>
     Math.max(
       rectArea(w.width, w.height) -
-        openingsArea(w.windows) -
-        openingsArea(w.doors) -
-        openingsArea(w.cupboards),
+      openingsArea(w.windows) -
+      openingsArea(w.doors) -
+      openingsArea(w.cupboards),
       0,
     );
 
@@ -625,7 +633,7 @@ const StartMeasurement = () => {
             style={[
               styles.continueButtonText,
               Object.keys(roomsData || {}).length === 0 &&
-                styles.disabledButtonText,
+              styles.disabledButtonText,
             ]}
           >
             Continue

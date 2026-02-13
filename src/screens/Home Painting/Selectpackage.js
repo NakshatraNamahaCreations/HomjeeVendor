@@ -15,22 +15,28 @@ import PageLoader from '../../components/PageLoader';
 import { useBackHandler } from '@react-native-community/hooks';
 import { useEstimateContext } from '../../Utilities/EstimateContext';
 import { buildPackageProductSummary } from '../../Utilities/packageCalc';
+import { useVendorContext } from '../../Utilities/VendorContext';
 
 const Selectpackage = () => {
   const route = useRoute();
   const navigation = useNavigation();
+  const { vendorDataContext } = useVendorContext();
   const { dupMode, quoteId, leadId, measurementId, vendorId } = route.params;
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [packagesList, setPackagesList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [estimateData] = useEstimateContext();
-  console.log("estimateData", estimateData);
+  // console.log("estimateData", estimateData);
+  // console.log("vendorDataContext", vendorDataContext);
+  const vendorCity = vendorDataContext.vendor.city
+  // console.log('response package', vendorCity);
 
   const fetchPackages = async () => {
     setLoading(true);
     try {
-      const response = await getRequest(`${API_ENDPOINTS.GET_PACKAGES}`);
-      // console.log('response package', response);
+      const response = await getRequest(`${API_ENDPOINTS.GET_PACKAGES}?productType=Packages&city=${vendorCity}`);
+      // const response = await getRequest(`${API_ENDPOINTS.GET_PACKAGES}`); // no city passed no-use
+      console.log('response package', response);
 
       if (response) {
         setPackagesList(response.data);

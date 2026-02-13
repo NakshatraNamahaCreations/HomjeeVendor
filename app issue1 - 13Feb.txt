@@ -1,0 +1,38 @@
+App issues noticed 👇🏻👇🏻👇🏻
+
+>Create quotation - make your own package - app gets stuck on loading
+
+>Extra products which I had added previously and are not there in 
+admin panel now are appearing in additional services **
+
+>Doesn't differentiate repaint with primer or fresh paint in packages therefore ends up showing wrong 
+amount initially in packages
+
+>Testing package is still shown while it is not there in admin panel **
+
+>Cursor not moving to next text box when enter is pressed in measurements is still pending **
+
+>Clicking done button in exterior  or others room measurements brings us back in interior section, 
+it should remain in same section when room closes, it works correctly when back is pressed but
+when done is pressed it works incorrectly **
+
+>After creating quotation, if I press back it is going back to quotation generation screen,
+ product selection room wise and undoing the quote created, 
+ similar problem which was at the login screen, same is happening after quote creation
+
+>I added two deep cleaning leads, none of them were notified to the vendor,
+ still in his performance it counted 2 leads, and avg GSV also it is showing as 5199, 
+ while avg GSV should only be calculated from the responded leads
+
+Good morning team, I have noticed the above issues in app and admin panel 👆🏻 
+
+Major issue is currently when I am creating a new lead it is not getting notified to vendor, 
+even though I have created only one vendor for deep cleaning in pune city, 
+also when vendor didn't even had sufficient coins the lead got placed, 
+maybe due to two vendors having same phone no. 
+as when I created a new vendor I put random phone no.
+but when I logged it with that no. it was showing different vendor details,
+and that vendor was of house painting so lead was not notified to him also.
+So make sure while onboarding any new vendor has a unique phone no. 
+which doesn't match with existing vendor profiles
+
