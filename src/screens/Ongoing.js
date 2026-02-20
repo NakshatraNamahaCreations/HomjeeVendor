@@ -445,193 +445,190 @@ const OngoingLeadsScreen = () => {
   return (
     <GestureDetector gesture={swipeGesture}>
       <View style={{ flex: 1 }}>
-        <SafeAreaView>
-          <StatusBar
-            barStyle={deviceTheme === 'dark' ? 'light-content' : 'dark-content'}
-          />
-          {(loading || navigationLoader) && <PageLoader />}
-          <Header />
 
-          <View style={styles.container}>
-            <View style={styles.titleRow}>
-              <Text style={styles.title}>{activeTab}</Text>
-              <TouchableOpacity
-                onPress={() => setShowSearchBar(!showSearchBar)}
-              >
-                {showSearchBar ? (
-                  <Fontisto name="close-a" color="black" size={15} />
-                ) : (
-                  <Fontisto name="search" color="black" size={17} />
-                )}
-              </TouchableOpacity>
-            </View>
-            {showSearchBar && (
-              <TextInput
-                style={{
-                  backgroundColor: 'white',
-                  fontSize: 14,
-                  color: 'black',
-                  fontFamily: 'Poppins-Regular',
-                  paddingVertical: 10,
-                  paddingHorizontal: 7,
-                  marginTop: 10,
-                  borderRadius: 6,
-                }}
-                value={searchText}
-                onChangeText={text => setSearchText(text)}
-                placeholder="Search by name, location"
-                placeholderTextColor="#969696ff"
-              />
-            )}
-            <View style={styles.tabRow}>
-              <View style={styles.tabs}>
-                {TABS.map(tab => (
-                  <TouchableOpacity
-                    key={tab}
-                    onPress={() => setActiveTab(tab)}
-                    style={[styles.tab, activeTab === tab && styles.activeTab]}
-                  >
-                    <Text
-                      style={[
-                        styles.tabText,
-                        activeTab === tab && styles.activeTabText,
-                      ]}
-                    >
-                      {tab}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-              <TouchableOpacity
-                style={styles.filterBtn}
-                onPress={() => setFilterPopupVisible(true)}
-              >
-                <Image
-                  source={require('../assets/icons/Frame.png')}
-                  style={styles.filterIcon}
-                />
-              </TouchableOpacity>
-            </View>
-            {displayedLeads?.length > 0 ? (
-              <FlatList
-                data={displayedLeads}
-                keyExtractor={item => item?._id.toString()}
-                renderItem={({ item }) => <LeadItem lead={item} />}
-                contentContainerStyle={{ paddingBottom: 100 }}
-                showsVerticalScrollIndicator={false}
-                onEndReachedThreshold={0.5}
-                initialNumToRender={10}
-                maxToRenderPerBatch={10}
-                windowSize={21}
-                removeClippedSubviews={true}
-                refreshControl={
-                  <RefreshControl
-                    refreshing={refreshing}
-                    onRefresh={onRefresh}
-                  />
-                }
-                style={styles.listContainer}
-              />
-            ) : (
-              <View
-                style={{
-                  marginTop: 200,
-                }}
-              >
-                <Text
-                  style={{
-                    color: '#b1b1b1',
-                    fontSize: 14,
-                    fontFamily: 'Poppins-Medium',
-                    textAlign: 'center',
-                  }}
-                >
-                  No leads found
-                </Text>
-              </View>
-            )}
+        {(loading || navigationLoader) && <PageLoader />}
+        <Header />
+
+        <View style={styles.container}>
+          <View style={styles.titleRow}>
+            <Text style={styles.title}>{activeTab}</Text>
+            <TouchableOpacity
+              onPress={() => setShowSearchBar(!showSearchBar)}
+            >
+              {showSearchBar ? (
+                <Fontisto name="close-a" color="black" size={15} />
+              ) : (
+                <Fontisto name="search" color="black" size={17} />
+              )}
+            </TouchableOpacity>
           </View>
-
-          <Modal
-            transparent={true}
-            visible={isFilterPopupVisible}
-            animationType="fade"
-            onRequestClose={() => setFilterPopupVisible(false)}
-          >
-            <View style={styles.popupOverlay}>
-              <View style={styles.popupContainer}>
-                <View style={styles.popupHeader}>
-                  <Text style={styles.popupTitle}>Filter</Text>
-                  <TouchableOpacity
-                    onPress={() => setFilterPopupVisible(false)}
+          {showSearchBar && (
+            <TextInput
+              style={{
+                backgroundColor: 'white',
+                fontSize: 14,
+                color: 'black',
+                fontFamily: 'Poppins-Regular',
+                paddingVertical: 10,
+                paddingHorizontal: 7,
+                marginTop: 10,
+                borderRadius: 6,
+              }}
+              value={searchText}
+              onChangeText={text => setSearchText(text)}
+              placeholder="Search by name, location"
+              placeholderTextColor="#969696ff"
+            />
+          )}
+          <View style={styles.tabRow}>
+            <View style={styles.tabs}>
+              {TABS.map(tab => (
+                <TouchableOpacity
+                  key={tab}
+                  onPress={() => setActiveTab(tab)}
+                  style={[styles.tab, activeTab === tab && styles.activeTab]}
+                >
+                  <Text
+                    style={[
+                      styles.tabText,
+                      activeTab === tab && styles.activeTabText,
+                    ]}
                   >
-                    <Text style={styles.popupClose}>×</Text>
-                  </TouchableOpacity>
-                </View>
-                {vendorDataContext.vendor?.serviceType === 'deep cleaning' ? (
-                  <>
-                    {/* <Text style={styles.sectionHeading}>Deep Cleaning</Text> */}
-                    <View style={styles.popupOptions}>
-                      {[
-                        'Customer Unreachable',
-                        'Customer Cancelled',
-                        'Project Completed',
-                      ].map((option, index) => (
-                        <TouchableOpacity
-                          key={`deep-${index}`}
-                          style={styles.popupOption}
-                          onPress={() => handleFilterSelect(option)}
+                    {tab}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <TouchableOpacity
+              style={styles.filterBtn}
+              onPress={() => setFilterPopupVisible(true)}
+            >
+              <Image
+                source={require('../assets/icons/Frame.png')}
+                style={styles.filterIcon}
+              />
+            </TouchableOpacity>
+          </View>
+          {displayedLeads?.length > 0 ? (
+            <FlatList
+              data={displayedLeads}
+              keyExtractor={item => item?._id.toString()}
+              renderItem={({ item }) => <LeadItem lead={item} />}
+              contentContainerStyle={{ paddingBottom: 100 }}
+              showsVerticalScrollIndicator={false}
+              onEndReachedThreshold={0.5}
+              initialNumToRender={10}
+              maxToRenderPerBatch={10}
+              windowSize={21}
+              removeClippedSubviews={true}
+              refreshControl={
+                <RefreshControl
+                  refreshing={refreshing}
+                  onRefresh={onRefresh}
+                />
+              }
+              style={styles.listContainer}
+            />
+          ) : (
+            <View
+              style={{
+                marginTop: 200,
+              }}
+            >
+              <Text
+                style={{
+                  color: '#b1b1b1',
+                  fontSize: 14,
+                  fontFamily: 'Poppins-Medium',
+                  textAlign: 'center',
+                }}
+              >
+                No leads found
+              </Text>
+            </View>
+          )}
+        </View>
+
+        <Modal
+          transparent={true}
+          visible={isFilterPopupVisible}
+          animationType="fade"
+          onRequestClose={() => setFilterPopupVisible(false)}
+        >
+          <View style={styles.popupOverlay}>
+            <View style={styles.popupContainer}>
+              <View style={styles.popupHeader}>
+                <Text style={styles.popupTitle}>Filter</Text>
+                <TouchableOpacity
+                  onPress={() => setFilterPopupVisible(false)}
+                >
+                  <Text style={styles.popupClose}>×</Text>
+                </TouchableOpacity>
+              </View>
+              {vendorDataContext.vendor?.serviceType === 'deep cleaning' ? (
+                <>
+                  {/* <Text style={styles.sectionHeading}>Deep Cleaning</Text> */}
+                  <View style={styles.popupOptions}>
+                    {[
+                      'Customer Unreachable',
+                      'Customer Cancelled',
+                      'Project Completed',
+                    ].map((option, index) => (
+                      <TouchableOpacity
+                        key={`deep-${index}`}
+                        style={styles.popupOption}
+                        onPress={() => handleFilterSelect(option)}
+                      >
+                        <View
+                          style={[
+                            styles.radioCircle,
+                            selectedStatus === option &&
+                            styles.radioCircleSelected,
+                          ]}
                         >
-                          <View
-                            style={[
-                              styles.radioCircle,
-                              selectedStatus === option &&
-                              styles.radioCircleSelected,
-                            ]}
-                          >
-                            {selectedStatus === option && (
-                              <View style={styles.radioCircleInner} />
-                            )}
-                          </View>
-                          <Text style={styles.popupOptionText}>{option}</Text>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-                  </>
-                ) : (
-                  <>
-                    {/* <Text style={styles.sectionHeading}>House Painting</Text> */}
-                    <View style={styles.popupOptions}>
-                      {[
-                        'Negotiation',
-                        'Confirmed', // Pending Hiring
-                        'Hired',
-                        'Project Ongoing',
-                        'Customer Cancelled',
-                      ].map((option, index) => (
-                        <TouchableOpacity
-                          key={`house-${index}`}
-                          style={styles.popupOption}
-                          onPress={() => handleFilterSelect(option)}
+                          {selectedStatus === option && (
+                            <View style={styles.radioCircleInner} />
+                          )}
+                        </View>
+                        <Text style={styles.popupOptionText}>{option}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </>
+              ) : (
+                <>
+                  {/* <Text style={styles.sectionHeading}>House Painting</Text> */}
+                  <View style={styles.popupOptions}>
+                    {[
+                      'Negotiation',
+                      'Confirmed', // Pending Hiring
+                      'Hired',
+                      'Project Ongoing',
+                      'Customer Cancelled',
+                    ].map((option, index) => (
+                      <TouchableOpacity
+                        key={`house-${index}`}
+                        style={styles.popupOption}
+                        onPress={() => handleFilterSelect(option)}
+                      >
+                        <View
+                          style={[
+                            styles.radioCircle,
+                            selectedStatus === option &&
+                            styles.radioCircleSelected,
+                          ]}
                         >
-                          <View
-                            style={[
-                              styles.radioCircle,
-                              selectedStatus === option &&
-                              styles.radioCircleSelected,
-                            ]}
-                          >
-                            {selectedStatus === option && (
-                              <View style={styles.radioCircleInner} />
-                            )}
-                          </View>
-                          <Text style={styles.popupOptionText}>{option}</Text>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-                  </>
-                )}
-                {/* <View
+                          {selectedStatus === option && (
+                            <View style={styles.radioCircleInner} />
+                          )}
+                        </View>
+                        <Text style={styles.popupOptionText}>{option}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </>
+              )}
+              {/* <View
                   style={{
                     flexDirection: 'row',
                     justifyContent: 'space-between',
@@ -639,30 +636,29 @@ const OngoingLeadsScreen = () => {
                     marginTop: 10,
                   }}
                 > */}
-                <TouchableOpacity
-                  onPress={() => {
-                    setSelectedStatus(null);
-                    setFilterPopupVisible(false);
-                  }}
+              <TouchableOpacity
+                onPress={() => {
+                  setSelectedStatus(null);
+                  setFilterPopupVisible(false);
+                }}
+                style={{
+                  marginTop: 10,
+                }}
+              >
+                <Text
                   style={{
-                    marginTop: 10,
+                    fontFamily: 'Poppins-SemiBold',
+                    color: '#ED1F24',
+                    textAlign: 'center',
                   }}
                 >
-                  <Text
-                    style={{
-                      fontFamily: 'Poppins-SemiBold',
-                      color: '#ED1F24',
-                      textAlign: 'center',
-                    }}
-                  >
-                    Clear Filter
-                  </Text>
-                </TouchableOpacity>
-                {/* </View> */}
-              </View>
+                  Clear Filter
+                </Text>
+              </TouchableOpacity>
+              {/* </View> */}
             </View>
-          </Modal>
-        </SafeAreaView>
+          </View>
+        </Modal>
       </View>
     </GestureDetector>
   );

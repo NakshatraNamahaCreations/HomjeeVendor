@@ -60,23 +60,19 @@ const Quotes = () => {
 
   useFocusEffect(
     React.useCallback(() => {
-      const onBackPress = () => {
-        // go to JobOngoing without stacking
-        // Option A: replace current screen
-        navigation.replace('JobOngoing');
+      const unsubscribe = navigation.addListener("beforeRemove", (e) => {
+        // if it's a back action, stop it and go where you want
+        if (e.data.action.type === "GO_BACK") {
+          e.preventDefault();
+          navigation.reset({
+            index: 0,
+            routes: [{ name: "JobOngoing" }],
+          });
+        }
+      });
 
-        // Option B: reset to JobOngoing as root
-        // navigation.reset({ index: 0, routes: [{ name: 'JobOngoing' }] });
-
-        return true; // consume so nothing else runs
-      };
-
-      const sub = BackHandler.addEventListener(
-        'hardwareBackPress',
-        onBackPress,
-      );
-      return () => sub.remove();
-    }, [navigation]),
+      return unsubscribe;
+    }, [navigation])
   );
 
   const openModal = item => {
@@ -84,7 +80,9 @@ const Quotes = () => {
     setSelectedData(item);
   };
 
-  console.log('quotes', quotes);
+  // console.log('quotes', quotes);
+  // console.log('leadDataContext', leadDataContext);
+  // console.log('estimateData', estimateData);
 
   const fetchMeasurements = async () => {
     setLoading(true);
@@ -261,10 +259,7 @@ const Quotes = () => {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <StatusBar
-        barStyle={deviceTheme === 'dark' ? 'light-content' : 'dark-content'}
-      />
+    <View style={{ flex: 1 }}>
       <View
         style={{
           backgroundColor: 'white',
@@ -359,7 +354,9 @@ const Quotes = () => {
                   <View style={styles.buttonsLine}>
                     <TouchableOpacity
                       style={styles.viewQuoteButton}
-                      onPress={() => navigation.navigate('QuotesView')}
+                      onPress={() => navigation.navigate('QuotesView', {
+                        quoteId: quote.id
+                      })}
                     >
                       <Text style={styles.viewQuoteText}>View Quote</Text>
                     </TouchableOpacity>
@@ -377,7 +374,10 @@ const Quotes = () => {
 
                 {quote.finalized && (
                   <View style={styles.buttonsLine}>
-                    <TouchableOpacity style={styles.viewQuoteButton}>
+                    <TouchableOpacity style={styles.viewQuoteButton}
+                      onPress={() => navigation.navigate('QuotesView', {
+                        quoteId: quote.id
+                      })}>
                       <Text style={styles.viewQuoteText}>View Quote</Text>
                     </TouchableOpacity>
 
@@ -445,7 +445,7 @@ const Quotes = () => {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 };
 

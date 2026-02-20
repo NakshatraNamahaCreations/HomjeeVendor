@@ -1,4 +1,4 @@
-export const API_BASE_URL = 'http://192.168.1.86:9000/api'; // development
+export const API_BASE_URL = 'http://192.168.1.78:9000/api'; // development
 // export const API_BASE_URL = 'https://homjee-backend.onrender.com/api'; // production
 
 export const API_ENDPOINTS = {
@@ -62,6 +62,7 @@ export const API_ENDPOINTS = {
   DELETE_ADDITIONAL_SERVICE: '/quotations/delete-finishing-paints/',
   GET_QUOTATION: '/quotations/get-quotes/',
   GET_QUOTATION_BY_ID: '/quotations/quotes-list-by-id',
+  GET_QUOTATION_BY_QUOTE_ID: '/quotations/get-quotation-by/quotationId/',
   DUPLICATE_QUOTE: '/quotations/create-duplicate/',
   FINALIZE_QUOTE: '/quotations/quote/',
   UPDATE_QUOTATION: '/quotations/update-quote/',

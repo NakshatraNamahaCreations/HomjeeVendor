@@ -135,7 +135,6 @@ const FinancialDetails = () => {
         }}>
         {vendorDataContext.bankDetails?.ifscCode}
       </Text>
-      <View style={styles.downborder} />
     </View>
   );
 };

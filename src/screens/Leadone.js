@@ -246,13 +246,9 @@ const Leadone = () => {
   // console.log('error', error);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar
-        barStyle={deviceTheme === 'dark' ? 'light-content' : 'dark-content'}
-      />
+    <View style={styles.safeArea}>
       {loading && <PageLoader />}
       <Header />
-      {/* <View style={{ padding: 15 }}> */}
       <View style={{ padding: 15 }}>
         <Text style={styles.title}>Discover today’s new leads!</Text>
         <View style={styles.headertwo}>
@@ -271,7 +267,6 @@ const Leadone = () => {
         </Text>
       </View>
 
-      {/* <View style={styles.discoverleads}> */}
       {nearByBookings?.length > 0 ? (
         <FlatList
           data={nearByBookings}
@@ -307,9 +302,7 @@ const Leadone = () => {
           </Text>
         </View>
       )}
-      {/* </View> */}
-      {/* </View> */}
-    </SafeAreaView>
+    </View>
   );
 };
 

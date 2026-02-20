@@ -77,9 +77,6 @@ const RoomMeasurementScreen = () => {
   // console.log('nameOfTheRoom', nameOfTheRoom);
   // console.log('localRoomName', localRoomName);
 
-  const lRefs = useRef({}); // L refs per row
-  const wRefs = useRef({}); // W refs per row
-
   const [isDirty, setIsDirty] = useState(false);
 
   const markDirty = () => {
@@ -125,6 +122,19 @@ const RoomMeasurementScreen = () => {
     }, [showConfirmPopup, isDirty, navigation, activeTab]),
   );
 
+
+  const lRefs = useRef({}); // L refs per row
+  const wRefs = useRef({}); // W refs per row
+
+  const winLRefs = useRef({});
+  const winWRefs = useRef({});
+
+  const doorLRefs = useRef({});
+  const doorWRefs = useRef({});
+
+  const cupLRefs = useRef({});
+  const cupWRefs = useRef({});
+
   const focusWidth = rowIndex => {
     try {
       wRefs.current[rowIndex]?.focus();
@@ -146,8 +156,75 @@ const RoomMeasurementScreen = () => {
     }
   };
 
-  const setLRef = (el, i) => (lRefs.current[i] = el);
-  const setWRef = (el, i) => (wRefs.current[i] = el);
+  const setNestedRef = (storeRef, sectionIndex, itemIndex, el) => {
+    try {
+      if (!storeRef.current[sectionIndex]) storeRef.current[sectionIndex] = {};
+      storeRef.current[sectionIndex][itemIndex] = el;
+    } catch (e) {
+      console.log("setNestedRef err", e);
+    }
+  };
+
+  const focusNested = (storeRef, sectionIndex, itemIndex) => {
+    try {
+      storeRef.current?.[sectionIndex]?.[itemIndex]?.focus?.();
+    } catch (e) {
+      console.log("focusNested err", e);
+    }
+  };
+
+  /**
+   * ✅ Flow:
+   * Window L -> Window W -> next Window L -> first Door L -> ...
+   * Door L -> Door W -> next Door L -> first Cupboard L -> ...
+   * Cupboard L -> Cupboard W -> next Cupboard L -> next section L (ceiling/wall)
+   */
+  const focusAfterWindowW = (sectionIndex, winIndex) => {
+    try {
+      const s = sections?.[sectionIndex];
+      const winCount = s?.windows?.length || 0;
+      const doorCount = s?.doors?.length || 0;
+      const cupCount = s?.cupboards?.length || 0;
+
+      if (winIndex + 1 < winCount) return focusNested(winLRefs, sectionIndex, winIndex + 1);
+      if (doorCount > 0) return focusNested(doorLRefs, sectionIndex, 0);
+      if (cupCount > 0) return focusNested(cupLRefs, sectionIndex, 0);
+
+      // fallback: go to next section
+      focusNextRowL(sectionIndex);
+    } catch (e) {
+      console.log("focusAfterWindowW err", e);
+    }
+  };
+
+  const focusAfterDoorW = (sectionIndex, doorIndex) => {
+    try {
+      const s = sections?.[sectionIndex];
+      const doorCount = s?.doors?.length || 0;
+      const cupCount = s?.cupboards?.length || 0;
+
+      if (doorIndex + 1 < doorCount) return focusNested(doorLRefs, sectionIndex, doorIndex + 1);
+      if (cupCount > 0) return focusNested(cupLRefs, sectionIndex, 0);
+
+      focusNextRowL(sectionIndex);
+    } catch (e) {
+      console.log("focusAfterDoorW err", e);
+    }
+  };
+
+  const focusAfterCupboardW = (sectionIndex, cupIndex) => {
+    try {
+      const s = sections?.[sectionIndex];
+      const cupCount = s?.cupboards?.length || 0;
+
+      if (cupIndex + 1 < cupCount) return focusNested(cupLRefs, sectionIndex, cupIndex + 1);
+
+      focusNextRowL(sectionIndex);
+    } catch (e) {
+      console.log("focusAfterCupboardW err", e);
+    }
+  };
+
 
   const existingRoomNames = Object.keys(etstimateData?.rooms || {}).filter(
     n => n !== localRoomName,
@@ -1081,10 +1158,7 @@ const RoomMeasurementScreen = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar
-        barStyle={deviceTheme === 'dark' ? 'light-content' : 'dark-content'}
-      />
+    <View style={styles.container}>
       {loading && <PageLoader />}
       <View style={styles.header}>
         <View style={styles.headerRow}>
@@ -1331,13 +1405,7 @@ const RoomMeasurementScreen = () => {
                         </Text>
                         <View style={styles.inputRow}>
                           <TextInput
-                            ref={r => {
-                              try {
-                                lRefs.current[index] = r;
-                              } catch (e) {
-                                console.log(e);
-                              }
-                            }}
+                            ref={(r) => setNestedRef(winLRefs, index, winIndex, r)}
                             placeholder="L"
                             placeholderTextColor="gray"
                             style={styles.input}
@@ -1351,24 +1419,22 @@ const RoomMeasurementScreen = () => {
                             enterKeyHint="next"
                             blurOnSubmit={false}
                             onSubmitEditing={() => {
-                              try {
-                                focusWidth(index);
-                              } catch (e) {
-                                console.log(e);
-                              }
+                              try { focusNested(winWRefs, index, winIndex); }
+                              catch (e) { console.log(e); }
                             }}
                             onKeyPress={({ nativeEvent }) => {
-                              if (nativeEvent.key === 'Enter') {
-                                try {
-                                  focusWidth(index);
-                                } catch (e) {
-                                  console.log(e);
-                                }
+                              if (nativeEvent.key === "Enter") {
+                                try { focusNested(winWRefs, index, winIndex); }
+                                catch (e) { console.log(e); }
                               }
-                            }}
+                            }
+                            }
                           />
                           <Text style={styles.multiply}>×</Text>
                           <TextInput
+                            ref={(r) => setNestedRef(winWRefs, index, winIndex, r)}
+                            returnKeyType="next"
+                            enterKeyHint="next"
                             placeholder="W"
                             placeholderTextColor="gray"
                             style={styles.input}
@@ -1377,6 +1443,15 @@ const RoomMeasurementScreen = () => {
                             onChangeText={text =>
                               handleWindowHeightChange(index, winIndex, text)
                             }
+                            blurOnSubmit={false}
+                            onSubmitEditing={() => {
+                              try { focusAfterWindowW(index, winIndex); } catch (e) { console.log(e); }
+                            }}
+                            onKeyPress={({ nativeEvent }) => {
+                              if (nativeEvent.key === "Enter") {
+                                try { focusAfterWindowW(index, winIndex); } catch (e) { console.log(e); }
+                              }
+                            }}
                           />
                           <Text style={styles.equalSign}>=</Text>
                           <Text style={styles.areaText}>
@@ -1396,6 +1471,18 @@ const RoomMeasurementScreen = () => {
                         </Text>
                         <View style={styles.inputRow}>
                           <TextInput
+                            ref={(r) => setNestedRef(doorLRefs, index, doorIndex, r)}
+                            returnKeyType="next"
+                            enterKeyHint="next"
+                            blurOnSubmit={false}
+                            onSubmitEditing={() => {
+                              try { focusNested(doorWRefs, index, doorIndex); } catch (e) { console.log(e); }
+                            }}
+                            onKeyPress={({ nativeEvent }) => {
+                              if (nativeEvent.key === "Enter") {
+                                try { focusNested(doorWRefs, index, doorIndex); } catch (e) { console.log(e); }
+                              }
+                            }}
                             placeholder="L"
                             placeholderTextColor="gray"
                             style={styles.input}
@@ -1407,6 +1494,18 @@ const RoomMeasurementScreen = () => {
                           />
                           <Text style={styles.multiply}>×</Text>
                           <TextInput
+                            ref={(r) => setNestedRef(doorWRefs, index, doorIndex, r)}
+                            returnKeyType="next"
+                            enterKeyHint="next"
+                            blurOnSubmit={false}
+                            onSubmitEditing={() => {
+                              try { focusAfterDoorW(index, doorIndex); } catch (e) { console.log(e); }
+                            }}
+                            onKeyPress={({ nativeEvent }) => {
+                              if (nativeEvent.key === "Enter") {
+                                try { focusAfterDoorW(index, doorIndex); } catch (e) { console.log(e); }
+                              }
+                            }}
                             placeholder="W"
                             placeholderTextColor="gray"
                             style={styles.input}
@@ -1434,6 +1533,18 @@ const RoomMeasurementScreen = () => {
                         </Text>
                         <View style={styles.inputRow}>
                           <TextInput
+                            ref={(r) => setNestedRef(cupLRefs, index, cupIndex, r)}
+                            returnKeyType="next"
+                            enterKeyHint="next"
+                            blurOnSubmit={false}
+                            onSubmitEditing={() => {
+                              try { focusNested(cupWRefs, index, cupIndex); } catch (e) { console.log(e); }
+                            }}
+                            onKeyPress={({ nativeEvent }) => {
+                              if (nativeEvent.key === "Enter") {
+                                try { focusNested(cupWRefs, index, cupIndex); } catch (e) { console.log(e); }
+                              }
+                            }}
                             placeholder="L"
                             placeholderTextColor="gray"
                             style={styles.input}
@@ -1445,6 +1556,18 @@ const RoomMeasurementScreen = () => {
                           />
                           <Text style={styles.multiply}>×</Text>
                           <TextInput
+                            ref={(r) => setNestedRef(cupWRefs, index, cupIndex, r)}
+                            returnKeyType="next"
+                            enterKeyHint="next"
+                            blurOnSubmit={false}
+                            onSubmitEditing={() => {
+                              try { focusAfterCupboardW(index, cupIndex); } catch (e) { console.log(e); }
+                            }}
+                            onKeyPress={({ nativeEvent }) => {
+                              if (nativeEvent.key === "Enter") {
+                                try { focusAfterCupboardW(index, cupIndex); } catch (e) { console.log(e); }
+                              }
+                            }}
                             placeholder="W"
                             placeholderTextColor="gray"
                             style={styles.input}
@@ -1636,6 +1759,7 @@ const RoomMeasurementScreen = () => {
                         </Text>
                         <View style={styles.inputRow}>
                           <TextInput
+                            ref={(r) => setNestedRef(winLRefs, index, winIndex, r)}
                             placeholder="L"
                             placeholderTextColor="gray"
                             style={styles.input}
@@ -1644,9 +1768,24 @@ const RoomMeasurementScreen = () => {
                             onChangeText={text =>
                               handleWindowWidthChange(index, winIndex, text)
                             }
+                            returnKeyType="next"
+                            enterKeyHint="next"
+                            blurOnSubmit={false}
+                            onSubmitEditing={() => {
+                              try { focusNested(winWRefs, index, winIndex); }
+                              catch (e) { console.log(e); }
+                            }}
+                            onKeyPress={({ nativeEvent }) => {
+                              if (nativeEvent.key === "Enter") {
+                                try { focusNested(winWRefs, index, winIndex); }
+                                catch (e) { console.log(e); }
+                              }
+                            }
+                            }
                           />
                           <Text style={styles.multiply}>×</Text>
                           <TextInput
+                            ref={(r) => setNestedRef(winWRefs, index, winIndex, r)}
                             placeholder="W"
                             placeholderTextColor="gray"
                             style={styles.input}
@@ -1655,6 +1794,17 @@ const RoomMeasurementScreen = () => {
                             onChangeText={text =>
                               handleWindowHeightChange(index, winIndex, text)
                             }
+                            returnKeyType="next"
+                            enterKeyHint="next"
+                            blurOnSubmit={false}
+                            onSubmitEditing={() => {
+                              try { focusAfterWindowW(index, winIndex); } catch (e) { console.log(e); }
+                            }}
+                            onKeyPress={({ nativeEvent }) => {
+                              if (nativeEvent.key === "Enter") {
+                                try { focusAfterWindowW(index, winIndex); } catch (e) { console.log(e); }
+                              }
+                            }}
                           />
                           <Text style={styles.equalSign}>=</Text>
                           <Text style={styles.areaText}>
@@ -1674,17 +1824,41 @@ const RoomMeasurementScreen = () => {
                         </Text>
                         <View style={styles.inputRow}>
                           <TextInput
+                            ref={(r) => setNestedRef(doorLRefs, index, doorIndex, r)}
                             placeholder="L"
                             placeholderTextColor="gray"
                             style={styles.input}
                             keyboardType="numeric"
                             value={dr.width}
+                            returnKeyType="next"
+                            enterKeyHint="next"
+                            blurOnSubmit={false}
                             onChangeText={text =>
                               handleDoorWidthChange(index, doorIndex, text)
                             }
+                            onSubmitEditing={() => {
+                              try { focusNested(doorWRefs, index, doorIndex); } catch (e) { console.log(e); }
+                            }}
+                            onKeyPress={({ nativeEvent }) => {
+                              if (nativeEvent.key === "Enter") {
+                                try { focusNested(doorWRefs, index, doorIndex); } catch (e) { console.log(e); }
+                              }
+                            }}
                           />
                           <Text style={styles.multiply}>×</Text>
                           <TextInput
+                            ref={(r) => setNestedRef(doorWRefs, index, doorIndex, r)}
+                            returnKeyType="next"
+                            enterKeyHint="next"
+                            blurOnSubmit={false}
+                            onSubmitEditing={() => {
+                              try { focusAfterDoorW(index, doorIndex); } catch (e) { console.log(e); }
+                            }}
+                            onKeyPress={({ nativeEvent }) => {
+                              if (nativeEvent.key === "Enter") {
+                                try { focusAfterDoorW(index, doorIndex); } catch (e) { console.log(e); }
+                              }
+                            }}
                             placeholder="W"
                             placeholderTextColor="gray"
                             style={styles.input}
@@ -1712,6 +1886,18 @@ const RoomMeasurementScreen = () => {
                         </Text>
                         <View style={styles.inputRow}>
                           <TextInput
+                            ref={(r) => setNestedRef(cupLRefs, index, cupIndex, r)}
+                            returnKeyType="next"
+                            enterKeyHint="next"
+                            blurOnSubmit={false}
+                            onSubmitEditing={() => {
+                              try { focusNested(cupWRefs, index, cupIndex); } catch (e) { console.log(e); }
+                            }}
+                            onKeyPress={({ nativeEvent }) => {
+                              if (nativeEvent.key === "Enter") {
+                                try { focusNested(cupWRefs, index, cupIndex); } catch (e) { console.log(e); }
+                              }
+                            }}
                             placeholder="L"
                             placeholderTextColor="gray"
                             style={styles.input}
@@ -1723,6 +1909,18 @@ const RoomMeasurementScreen = () => {
                           />
                           <Text style={styles.multiply}>×</Text>
                           <TextInput
+                            ref={(r) => setNestedRef(cupWRefs, index, cupIndex, r)}
+                            returnKeyType="next"
+                            enterKeyHint="next"
+                            blurOnSubmit={false}
+                            onSubmitEditing={() => {
+                              try { focusAfterCupboardW(index, cupIndex); } catch (e) { console.log(e); }
+                            }}
+                            onKeyPress={({ nativeEvent }) => {
+                              if (nativeEvent.key === "Enter") {
+                                try { focusAfterCupboardW(index, cupIndex); } catch (e) { console.log(e); }
+                              }
+                            }}
                             placeholder="W"
                             placeholderTextColor="gray"
                             style={styles.input}
@@ -2390,7 +2588,7 @@ const RoomMeasurementScreen = () => {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 };
 

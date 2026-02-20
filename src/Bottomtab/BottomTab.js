@@ -7,10 +7,14 @@ import Menu from '../screens/Menu/Menu';
 import Leadone from '../screens/Leadone';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import { useVendorContext } from '../Utilities/VendorContext';
 
 const Tab = createBottomTabNavigator();
 
 const BottomTab = () => {
+  const { vendorDataContext } = useVendorContext();
+  const vendorId = vendorDataContext?._id;
+  console.log(`vendor Id>>> ${vendorId}`, vendorDataContext);
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({

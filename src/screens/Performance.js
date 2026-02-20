@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   Dimensions,
   TouchableOpacity,
   ScrollView,
+  RefreshControl,
 } from 'react-native';
 import { AnimatedCircularProgress } from 'react-native-circular-progress';
 import Header from '../components/Header';
@@ -21,6 +22,9 @@ const Performance = () => {
   const [performanceData, setPerformanceData] = useState(null);
   const [kpiData, setKpiData] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const [refreshing, setRefreshing] = useState(false);
+
   const vendorLat = vendorDataContext.address.latitude;
   const vendorLong = vendorDataContext.address.longitude;
   const vendorId = vendorDataContext?._id;
@@ -44,46 +48,74 @@ const Performance = () => {
 
   console.log("isHousePainting", isHousePainting)
 
-  useEffect(() => {
-    const fetchPerformanceData = async () => {
-      setLoading(true);
+  // ---------------------------
+  // Fetchers
+  // ---------------------------
+  const fetchPerformanceData = useCallback(
+    async (opts = { showLoader: true }) => {
       try {
-        const response = await axios.get(
-          `${API_BASE_URL}${METRICS_ENDPOINT}${vendorId}/${vendorLat}/${vendorLong}/${activeTab}`,
-        );
-        console.log(
-          'performance API Url:',
-          `${API_BASE_URL}${METRICS_ENDPOINT}${vendorId}/${vendorLat}/${vendorLong}/${activeTab}`,
-        );
+        if (!vendorId || !vendorLat || !vendorLong) return;
+
+        if (opts.showLoader) setLoading(true);
+
+        const url = `${API_BASE_URL}${METRICS_ENDPOINT}${vendorId}/${vendorLat}/${vendorLong}/${activeTab}`;
+        const response = await axios.get(url);
+
         setPerformanceData(response.data);
       } catch (error) {
         console.error('Failed to fetch performance data:', error);
       } finally {
-        setLoading(false);
+        if (opts.showLoader) setLoading(false);
       }
-    };
+    },
+    [vendorId, vendorLat, vendorLong, activeTab, METRICS_ENDPOINT],
+  );
 
-    fetchPerformanceData();
-  }, [activeTab, vendorLat, vendorLong]);
+  const fetchKPIParameters = useCallback(async () => {
+    try {
+      if (!renamedServiceType) return;
 
-  useEffect(() => {
-    const fetchKPIParameters = async () => {
       setLoading(true);
-      try {
-        const response = await axios.get(
-          `${API_BASE_URL}${API_ENDPOINTS.KPI_PARAMETERS}${renamedServiceType}`,
-        );
-        // console.log("fetch KPI Parameters data:", `${API_BASE_URL}${API_ENDPOINTS.KPI_PARAMETERS}${renamedServiceType}`,)
-        setKpiData(response.data.data.ranges);
-      } catch (error) {
-        console.error('Failed to fetch KPI Parameters data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
 
+      const url = `${API_BASE_URL}${API_ENDPOINTS.KPI_PARAMETERS}${renamedServiceType}`;
+      const response = await axios.get(url);
+
+      setKpiData(response?.data?.data?.ranges || null);
+    } catch (error) {
+      console.error('Failed to fetch KPI Parameters data:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [renamedServiceType]);
+
+  // initial KPI load / when service type changes
+  useEffect(() => {
     fetchKPIParameters();
-  }, []);
+  }, [fetchKPIParameters]);
+
+  // performance load when tab/location changes
+  useEffect(() => {
+    fetchPerformanceData({ showLoader: true });
+  }, [fetchPerformanceData]);
+
+  // Pull to refresh handler
+  const onRefresh = useCallback(async () => {
+    try {
+      setRefreshing(true);
+
+      // refresh both so UI stays consistent if KPI ranges changed
+      await Promise.all([
+        fetchPerformanceData({ showLoader: false }),
+        fetchKPIParameters(),
+      ]);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [fetchPerformanceData, fetchKPIParameters]);
+
+  // ---------------------------
+  // KPI color helpers (same as your code)
+  // ---------------------------
 
   // console.log('performanceData', performanceData);
   console.log('kpiData', kpiData);
@@ -258,12 +290,15 @@ const Performance = () => {
 
   return (
     <View style={styles.container}>
-      {loading && <PageLoader />}
+      {loading && !refreshing && <PageLoader />}
       <Header />
       <Text style={styles.title}>Performance Dashboard</Text>
 
       {/* Tabs */}
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }>
         <View style={styles.tabContainer}>
           <TouchableOpacity
             style={[

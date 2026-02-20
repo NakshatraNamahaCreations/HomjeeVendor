@@ -742,7 +742,7 @@ export default function AdditionalServices() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       {loading && <PageLoader />}
 
       <FlatList
@@ -799,7 +799,7 @@ export default function AdditionalServices() {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
 

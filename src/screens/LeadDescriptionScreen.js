@@ -469,9 +469,10 @@ const LeadDescriptionScreen = () => {
       const formData = {
         bookingId: leadDataContext._id,
         status:
-          vendorDataContext?.vendor?.serviceType === 'deep cleaning'
-            ? 'Job Ongoing'
-            : 'Survey Ongoing',
+          vendorDataContext?.vendor?.serviceType === 'house-painter' ||
+            vendorDataContext?.vendor?.serviceType === 'House Painting'
+            ? 'Survey Ongoing'
+            : 'Job Ongoing',
         otp: joinedOtp,
         startDate, // ← now used in backend
         daysRequired: days, // ← aligned name
@@ -553,11 +554,8 @@ const LeadDescriptionScreen = () => {
     // }
     else if (
       leadDataContext.bookingDetails?.status === 'Customer Cancelled' ||
-      leadDataContext.bookingDetails?.status === 'Rescheduled'
-    ) {
-      return '#ff0000';
-    } else if (
-      leadDataContext.bookingDetails?.status === 'Customer Unreachable'
+      leadDataContext.bookingDetails?.status === 'Rescheduled' ||
+      leadDataContext.bookingDetails?.status === 'Customer Denied'
     ) {
       return '#ff0000';
     }
@@ -648,10 +646,8 @@ const LeadDescriptionScreen = () => {
   console.log('requiredTime', requiredTime);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar
-        barStyle={deviceTheme === 'dark' ? 'light-content' : 'dark-content'}
-      />
+    <View style={styles.container}>
+
       {loading && <PageLoader />}
 
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -907,9 +903,10 @@ const LeadDescriptionScreen = () => {
             <TouchableOpacity
               style={styles.confirmButton}
               onPress={
-                vendorDataContext.vendor?.serviceType === 'deep cleaning'
-                  ? handleStartJob // start,team,otp/deep cleaning
-                  : handleOpenOtp // start,otp/house painting
+                vendorDataContext?.vendor?.serviceType === 'house-painter' ||
+                  vendorDataContext?.vendor?.serviceType === 'House Painting'
+                  ? handleOpenOtp // start,otp/house painting 
+                  : handleStartJob // start,team,otp/deep cleaning
               }
             >
               <Text style={styles.confirmButtonText}>Confirm</Text>
@@ -1599,7 +1596,7 @@ const LeadDescriptionScreen = () => {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 };
 

@@ -1,5 +1,5 @@
 // PaintDropdownModal.js
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -12,25 +12,77 @@ import {
 export default function PaintDropdownModal({
   value,
   onChange,
-  options,
+  options = [],
   placeholder = 'Type of Paint',
 }) {
   const [visible, setVisible] = useState(false);
   const [selected, setSelected] = useState(value);
 
+  // ✅ 1) DEDUPE OPTIONS (fix duplicates in package flow)
+  const uniqueOptions = useMemo(() => {
+    try {
+      const list = Array.isArray(options) ? options : [];
+
+      const normName = (s) =>
+        String(s || "").trim().replace(/\s+/g, " ").toLowerCase();
+
+      const map = new Map(); // key -> chosen item
+
+      for (const it of list) {
+        if (!it) continue;
+
+        const key = `${normName(it?.name || it?.label)}__${normName(it?.city)}`;
+
+        if (!map.has(key)) {
+          map.set(key, it);
+          continue;
+        }
+
+        // If duplicate name exists, keep the one with smaller `order` (priority),
+        // else fallback to the first one.
+        const prev = map.get(key);
+        const prevOrder = Number(prev?.order ?? 999999);
+        const currOrder = Number(it?.order ?? 999999);
+
+        if (currOrder < prevOrder) map.set(key, it);
+      }
+
+      const out = Array.from(map.values());
+
+      // Optional sort: specials on top, then by `order`, then by name
+      out.sort((a, b) => {
+        const as = a?.isSpecial ? 1 : 0;
+        const bs = b?.isSpecial ? 1 : 0;
+        if (bs !== as) return bs - as;
+
+        const ao = Number(a?.order ?? 999999);
+        const bo = Number(b?.order ?? 999999);
+        if (ao !== bo) return ao - bo;
+
+        return String(a?.name || "").localeCompare(String(b?.name || ""));
+      });
+
+      return out;
+    } catch (e) {
+      console.log("dedupe error:", e);
+      return Array.isArray(options) ? options : [];
+    }
+  }, [options]);
+
   const handleSelect = item => {
-    setSelected(item);
-    onChange?.(item); // pass selected value to parent
+    try {
+      setSelected(item);
+      onChange?.(item); // pass selected value to parent
+    } catch (e) {
+      console.log('handleSelect error:', e);
+    }
   };
 
   const label = value ? value.name || value.label : placeholder;
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity
-        style={styles.selector}
-        onPress={() => setVisible(true)}
-      >
+      <TouchableOpacity style={styles.selector} onPress={() => setVisible(true)}>
         <Text style={styles.selectorText}>{label}</Text>
       </TouchableOpacity>
 
@@ -45,36 +97,34 @@ export default function PaintDropdownModal({
             </View>
 
             <FlatList
-              data={options}
-              keyExtractor={item => item._id}
+              data={uniqueOptions} // ✅ use deduped list
+              keyExtractor={(item, index) => String(item?._id || item?.name || index)}
               renderItem={({ item }) => (
                 <TouchableOpacity
                   style={[
                     styles.item,
-                    selected?._id === item._id && styles.selectedItem,
+                    selected?._id === item?._id && styles.selectedItem,
                   ]}
                   onPress={() => {
-                    handleSelect(item); // update selected value
-                    setVisible(false); // close modal immediately
+                    try {
+                      handleSelect(item);
+                      setVisible(false);
+                    } catch (e) {
+                      console.log('select press error:', e);
+                    }
                   }}
                 >
-                  <View style={{
-                    justifyContent: 'flex-start',
-                    flex: 0.7
-                  }}>
-                    {item.isSpecial && <Text style={styles.star}>⭐ </Text>}
-                    <Text style={styles.itemText}>{item.name}</Text>
+                  <View style={{ justifyContent: 'flex-start', flex: 0.7 }}>
+                    {item?.isSpecial && <Text style={styles.star}>⭐ </Text>}
+                    <Text style={styles.itemText}>{item?.name}</Text>
                   </View>
+
                   <Text style={styles.price}>
-                    (Rs. {item.price.toFixed(2)})
+                    (Rs. {Number(item?.price || 0).toFixed(2)})
                   </Text>
                 </TouchableOpacity>
               )}
             />
-
-            {/* <TouchableOpacity style={styles.doneBtn} onPress={handleDone}>
-              <Text style={styles.doneText}>Done</Text>
-            </TouchableOpacity> */}
           </View>
         </View>
       </Modal>
@@ -100,7 +150,6 @@ const styles = StyleSheet.create({
   modalBox: {
     backgroundColor: 'white',
     maxHeight: '80%',
-    // width: '100%',
     margin: 2,
   },
   header: {
@@ -114,15 +163,22 @@ const styles = StyleSheet.create({
   close: { fontSize: 18, color: 'red', fontFamily: 'Poppins-Bold' },
   item: {
     flexDirection: 'row',
-    flex: 1, alignItems: "center",
-    // justifyContent: 'space-between',
+    flex: 1,
+    alignItems: 'center',
     padding: 15,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
   selectedItem: { backgroundColor: '#f0f8ff' },
   itemText: { fontSize: 13, fontFamily: 'Poppins-Medium' },
-  price: { flex: 0.3, flexDirection: "row", justifyContent: "flex-end", fontSize: 13, color: '#555', fontFamily: 'Poppins-Medium' },
+  price: {
+    flex: 0.3,
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    fontSize: 13,
+    color: '#555',
+    fontFamily: 'Poppins-Medium',
+  },
   star: {
     fontSize: 16,
     color: 'gold',

@@ -19,6 +19,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import ResponseLoader from '../components/ResponseLoader';
 import { useVendorContext } from '../Utilities/VendorContext';
 import { useThemeColor } from '../Utilities/ThemeContext';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 const OTP = () => {
   const { deviceTheme } = useThemeColor();
@@ -144,114 +145,120 @@ const OTP = () => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar
-        barStyle={deviceTheme === 'dark' ? 'light-content' : 'dark-content'}
-      />
-      {isLoading && <ResponseLoader />}
-      <View style={styles.container}>
-        {/* Logo */}
-        <Image
-          source={require('../assets/images/logo.png.png')}
-          style={styles.logo}
-          resizeMode="contain"
+    <SafeAreaProvider>
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar
+          animated
+          translucent={false}
+          backgroundColor="#ffffff" // Android
+          barStyle="dark-content"
+          showHideTransition="fade"
         />
-        {/* Title */}
-        <Text style={styles.title}>OTP</Text>
-        {/* Subtitle */}
-        <Text style={styles.subtitle}>
-          Enter OTP received on your Phone Number
-        </Text>
-        <Text
-          style={{
-            fontSize: 14,
-            color: 'red',
-            fontFamily: 'Poppins-Regular',
-            textAlign: 'center',
-          }}
-        >
-          {otpValue}
-        </Text>
+        {isLoading && <ResponseLoader />}
+        <View style={styles.container}>
+          {/* Logo */}
+          <Image
+            source={require('../assets/images/logo.png.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          {/* Title */}
+          <Text style={styles.title}>OTP - </Text>
+          {/* Subtitle */}
+          <Text style={styles.subtitle}>
+            Enter OTP received on your Phone Number
+          </Text>
+          <Text
+            style={{
+              fontSize: 14,
+              color: 'red',
+              fontFamily: 'Poppins-Regular',
+              textAlign: 'center',
+            }}
+          >
+            {otpValue}
+          </Text>
 
-        {/* OTP Inputs */}
-        <View style={styles.otpBoxContainer}>
-          {otp.map((value, index) => (
-            <TextInput
-              key={index}
-              ref={el => (inputs.current[index] = el)} // <-- correct ref usage
-              style={styles.otpInput}
-              keyboardType="number-pad"
-              maxLength={1}
-              value={value}
-              onChangeText={text => handleChange(text, index)}
-              onKeyPress={({ nativeEvent }) => {
-                if (nativeEvent.key === 'Backspace' && !value && index > 0) {
-                  inputs.current[index - 1]?.focus();
-                }
-              }}
-            />
-          ))}
-        </View>
-        {/* Resend OTP */}
-        {/* <View style={styles.resendContainer}>
+          {/* OTP Inputs */}
+          <View style={styles.otpBoxContainer}>
+            {otp.map((value, index) => (
+              <TextInput
+                key={index}
+                ref={el => (inputs.current[index] = el)} // <-- correct ref usage
+                style={styles.otpInput}
+                keyboardType="number-pad"
+                maxLength={1}
+                value={value}
+                onChangeText={text => handleChange(text, index)}
+                onKeyPress={({ nativeEvent }) => {
+                  if (nativeEvent.key === 'Backspace' && !value && index > 0) {
+                    inputs.current[index - 1]?.focus();
+                  }
+                }}
+              />
+            ))}
+          </View>
+          {/* Resend OTP */}
+          {/* <View style={styles.resendContainer}>
           <TouchableOpacity
             onPress={() => Alert.alert('Resend OTP', 'OTP resent!')}
           >
             <Text style={styles.resendText}>Resend OTP</Text>
           </TouchableOpacity>
         </View> */}
-        <View style={styles.resendContainer}>
-          <TouchableOpacity onPress={timer > 0 ? null : ResendOTP}>
-            <Text style={styles.resendText}>
-              {timer > 0
-                ? `Resend OTP in 0:${timer < 10 ? `0${timer}` : timer}`
-                : 'Resend OTP'}
-            </Text>
-          </TouchableOpacity>
-          {/* <TouchableOpacity onPress={ResendOTP}>
+          <View style={styles.resendContainer}>
+            <TouchableOpacity onPress={timer > 0 ? null : ResendOTP}>
+              <Text style={styles.resendText}>
+                {timer > 0
+                  ? `Resend OTP in 0:${timer < 10 ? `0${timer}` : timer}`
+                  : 'Resend OTP'}
+              </Text>
+            </TouchableOpacity>
+            {/* <TouchableOpacity onPress={ResendOTP}>
             <Text style={styles.resendText}>Resend OTP</Text>
           </TouchableOpacity> */}
-        </View>
-        {/* Submit Button */}
-        <TouchableOpacity style={styles.submitButton} onPress={handleVerifyOtp}>
-          <Text style={styles.submitButtonText}>Submit</Text>
-        </TouchableOpacity>
-        {/* <View style={styles.downborder} /> */}
-        {/* Back to Login Button */}
-        {/* Error Modal */}
-      </View>
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={isModalVisible}
-        onRequestClose={() => setIsModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <Image
-              style={styles.errorImage}
-              source={require('../assets/images/error.png.png')} // Fixed double extension
-              resizeMode="contain"
-            />
-
-            <Text style={styles.modalTitle}>Oops!</Text>
-
-            <Text style={styles.modalSubtitle}>
-              {/* {errorMessage} */}
-              Looks like this OTP in Invalid! Please try again. Kindly enter the
-              correct OTP to continue.
-            </Text>
-
-            <TouchableOpacity
-              style={styles.modalCloseButton}
-              onPress={() => setIsModalVisible(false)}
-            >
-              <Text style={styles.modalCloseButtonText}>Try Again</Text>
-            </TouchableOpacity>
           </View>
+          {/* Submit Button */}
+          <TouchableOpacity style={styles.submitButton} onPress={handleVerifyOtp}>
+            <Text style={styles.submitButtonText}>Submit</Text>
+          </TouchableOpacity>
+          {/* <View style={styles.downborder} /> */}
+          {/* Back to Login Button */}
+          {/* Error Modal */}
         </View>
-      </Modal>
-    </SafeAreaView>
+        <Modal
+          animationType="fade"
+          transparent={true}
+          visible={isModalVisible}
+          onRequestClose={() => setIsModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContainer}>
+              <Image
+                style={styles.errorImage}
+                source={require('../assets/images/error.png.png')} // Fixed double extension
+                resizeMode="contain"
+              />
+
+              <Text style={styles.modalTitle}>Oops!</Text>
+
+              <Text style={styles.modalSubtitle}>
+                {/* {errorMessage} */}
+                Looks like this OTP in Invalid! Please try again. Kindly enter the
+                correct OTP to continue.
+              </Text>
+
+              <TouchableOpacity
+                style={styles.modalCloseButton}
+                onPress={() => setIsModalVisible(false)}
+              >
+                <Text style={styles.modalCloseButtonText}>Try Again</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 };
 

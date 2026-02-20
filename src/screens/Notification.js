@@ -219,10 +219,7 @@ const Notification = () => {
   );
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar
-        barStyle={deviceTheme === 'dark' ? 'light-content' : 'dark-content'}
-      />
+    <View style={styles.safeArea}>
       {loading && <PageLoader />}
       <View style={{ marginTop: .5 }} />
       <FlatList
@@ -248,7 +245,7 @@ const Notification = () => {
           </View>
         }
       />
-    </SafeAreaView>
+    </View>
   );
 };
 

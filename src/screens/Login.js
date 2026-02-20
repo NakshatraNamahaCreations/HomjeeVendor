@@ -9,18 +9,20 @@ import {
   ToastAndroid,
   Modal,
   StatusBar,
+  useColorScheme,
 } from 'react-native';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import CountryPicker, { CountryCode } from 'react-native-country-picker-modal';
 import { API_ENDPOINTS } from '../ApiService/apiConstants';
 import { postRequest } from '../ApiService/apiHelper';
 import { useNavigation } from '@react-navigation/native';
 import ResponseLoader from '../components/ResponseLoader';
-import { useThemeColor } from '../Utilities/ThemeContext';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+
 
 const Login = () => {
-  const { deviceTheme } = useThemeColor();
+  // const { deviceTheme } = useThemeColor();
+  const scheme = useColorScheme();
   const navigation = useNavigation();
   const [isLoading, setIsLoading] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -28,6 +30,14 @@ const Login = () => {
   const [callingCode, setCallingCode] = useState('91');
   const [showCountryPicker, setShowCountryPicker] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
+
+  // const statusBarStyle = useMemo(() => {
+  //   return scheme === "dark-content";
+  // }, [scheme]);
+
+  // const statusBarBg = useMemo(() => {
+  //   return scheme === "dark" ? "#ffffff" : "#FFFFFF";
+  // }, [scheme]);
 
   const validatePhoneNumber = () => {
     const cleanedNumber = phoneNumber.replace(/\D/g, '');
@@ -94,104 +104,103 @@ const Login = () => {
     setShowCountryPicker(false);
   };
 
-  console.log("deviceTheme", deviceTheme);
+  // console.log("deviceTheme", deviceTheme);
 
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar
-        barStyle={deviceTheme === 'dark' ? 'yellow' : 'red'}
-      />
-      {isLoading && <ResponseLoader />}
-      <View style={styles.container}>
-        <View style={styles.imageContainer}>
-          <Image
-            style={styles.image}
-            source={require('../assets/images/logo.png.png')}
-            resizeMode="contain"
-          />
-        </View>
-
-        <Text style={styles.title}>LOGIN</Text>
-        <Text style={styles.subtitle}>Enter your phone number to proceed</Text>
-
-        <View style={styles.phoneInputContainer}>
-          <TouchableOpacity
-            style={styles.countryPickerButton}
-            onPress={() => setShowCountryPicker(true)}
-          >
-            <CountryPicker
-              countryCode={countryCode}
-              withFlag
-              withCallingCode
-              withFilter
-              onSelect={onSelectCountry}
-              visible={showCountryPicker}
-              containerButtonStyle={styles.flagButton}
-            />
-            <View style={styles.dropdownDot} />
-            <Text style={styles.codeText}>+{callingCode}</Text>
-          </TouchableOpacity>
-          <View style={styles.dropdownDot} />
-          <TextInput
-            style={styles.textInput}
-            placeholder="Phone Number"
-            placeholderTextColor="#cdcdcd"
-            value={phoneNumber}
-            onChangeText={text => {
-              const cleaned = text.replace(/[^0-9]/g, '');
-              if (cleaned.length <= 10) {
-                setPhoneNumber(cleaned);
-              }
-            }}
-            keyboardType="phone-pad"
-            maxLength={10}
-          />
-        </View>
-
-        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-          <Text style={styles.loginButtonText}>Login</Text>
-        </TouchableOpacity>
-      </View>
-      {/* <View style={styles.downborder} /> */}
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={isModalVisible}
-        onRequestClose={() => setIsModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
+    <SafeAreaProvider>
+      <SafeAreaView style={{
+        flex: 1,
+        paddingHorizontal: 20,
+        justifyContent: 'center',
+      }}>
+        <StatusBar
+          animated
+          translucent={false}
+          backgroundColor="#ffffff" // Android
+          barStyle="dark-content"
+          showHideTransition="fade"
+        />
+        {isLoading && <ResponseLoader />}
+        <View >
+          <View style={styles.imageContainer}>
             <Image
-              style={styles.errorImage}
-              source={require('../assets/images/error.png.png')} // Fixed double extension
+              style={styles.image}
+              source={require('../assets/images/logo.png.png')}
               resizeMode="contain"
             />
-
-            <Text style={styles.modalTitle}>Oops!</Text>
-
-            <Text style={styles.modalSubtitle}>
-              Looks like this user NOT registered!
-            </Text>
-
-            <TouchableOpacity
-              style={styles.modalCloseButton}
-              onPress={() => setIsModalVisible(false)}
-            >
-              <Text style={styles.modalCloseButtonText}>Close</Text>
-            </TouchableOpacity>
           </View>
+
+          <Text style={styles.title}>LOGIN</Text>
+          <Text style={styles.subtitle}>Enter your phone number to proceed</Text>
+
+          <View style={styles.phoneInputContainer}>
+            <View
+              style={styles.countryPickerButton}>
+              <Image
+                style={{ width: 30, height: 30 }}
+                source={require("../assets/images/world.png")} />
+              <View style={styles.dropdownDot} />
+              <Text style={styles.codeText}>+91</Text>
+            </View>
+            <View style={styles.dropdownDot} />
+            <TextInput
+              style={styles.textInput}
+              placeholder="Phone Number"
+              placeholderTextColor="#cdcdcd"
+              value={phoneNumber}
+              onChangeText={text => {
+                const cleaned = text.replace(/[^0-9]/g, '');
+                if (cleaned.length <= 10) {
+                  setPhoneNumber(cleaned);
+                }
+              }}
+              keyboardType="phone-pad"
+              maxLength={10}
+            />
+          </View>
+
+          <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+            <Text style={styles.loginButtonText}>Login</Text>
+          </TouchableOpacity>
         </View>
-      </Modal>
-    </SafeAreaView>
+        {/* <View style={styles.downborder} /> */}
+        <Modal
+          animationType="fade"
+          transparent={true}
+          visible={isModalVisible}
+          onRequestClose={() => setIsModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContainer}>
+              <Image
+                style={styles.errorImage}
+                source={require('../assets/images/error.png.png')} // Fixed double extension
+                resizeMode="contain"
+              />
+
+              <Text style={styles.modalTitle}>Oops!</Text>
+
+              <Text style={styles.modalSubtitle}>
+                Looks like this user NOT registered!
+              </Text>
+
+              <TouchableOpacity
+                style={styles.modalCloseButton}
+                onPress={() => setIsModalVisible(false)}
+              >
+                <Text style={styles.modalCloseButtonText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
+
   container: {
     flex: 1,
     paddingHorizontal: 20,

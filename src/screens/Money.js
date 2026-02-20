@@ -105,10 +105,7 @@ const Money = () => {
 
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar
-        barStyle={deviceTheme === 'dark' ? 'light-content' : 'dark-content'}
-      />
+    <View style={styles.safeArea}>
       {loading && <PageLoader />}
       <Header />
       <View style={{ padding: 10 }}>
@@ -142,7 +139,7 @@ const Money = () => {
         />
         <View style={{ marginBottom: 20 }} />
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 const styles = StyleSheet.create({

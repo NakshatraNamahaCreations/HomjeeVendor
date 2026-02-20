@@ -25,10 +25,12 @@ const Selectpackage = () => {
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [packagesList, setPackagesList] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [puttyPrice, setPuttyPrice] = useState(0);
+
   const [estimateData] = useEstimateContext();
-  // console.log("estimateData", estimateData);
+  console.log("estimateData", estimateData);
   // console.log("vendorDataContext", vendorDataContext);
-  const vendorCity = vendorDataContext.vendor.city
+  const vendorCity = vendorDataContext?.vendor?.city
   // console.log('response package', vendorCity);
 
   const fetchPackages = async () => {
@@ -52,6 +54,27 @@ const Selectpackage = () => {
     fetchPackages();
   }, []);
 
+  const fetchPuttyPrice = async () => {
+    setLoading(true);
+    try {
+      const response = await getRequest(`${API_ENDPOINTS.GET_SERVICE_PRICE_CONFIG}`);
+      console.log('response package', response);
+
+      if (response) {
+        setPuttyPrice(response.data.puttyPrice || 0);
+      }
+    } catch (err) {
+      console.log('Error fetching paint:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPuttyPrice();
+  }, []);
+
+  console.log('response puttyPrice Rs.', puttyPrice);
 
   const deleteQuote = async id => {
     console.log('calling funtion');
@@ -102,6 +125,7 @@ const Selectpackage = () => {
   }, [navigation, quoteId]);
 
 
+  console.log("packagesList", packagesList);
 
   return (
     <View style={styles.container}>
@@ -117,6 +141,7 @@ const Selectpackage = () => {
                 dupMode,
                 quoteId,
                 leadId,
+                puttyPrice,
                 measurementId,
                 vendorId,
                 predefPackage: null,
@@ -155,7 +180,8 @@ const Selectpackage = () => {
           let summary = { products: [], totalCost: 0 };
 
           try {
-            summary = buildPackageProductSummary(estimateData, pkg);
+            summary = buildPackageProductSummary(estimateData, pkg, puttyPrice);
+
           } catch (e) {
             console.log('summary calc error:', e);
           }
@@ -170,21 +196,23 @@ const Selectpackage = () => {
               onPress={() => setSelectedPackage(pkg)}
             >
               <View style={styles.cardHeader}>
-                <Text style={styles.packageTitle}>{pkg.packageName}</Text>
-
-                <TouchableOpacity
-                  onPress={() => setSelectedPackage(pkg)}
-                  style={[
-                    styles.checkbox,
-                    selectedPackage?._id === pkg._id && styles.checkedCheckbox,
-                  ]}
-                >
-                  {selectedPackage?._id === pkg._id && (
-                    <Icon name="check" size={16} color="#fff" />
-                  )}
-                </TouchableOpacity>
+                <View style={{ flex: .9 }}>
+                  <Text style={styles.packageTitle}>{pkg.packageName}</Text>
+                </View>
+                <View style={{ flex: .1, alignItems: "flex-end", justifyContent: "center" }}>
+                  <TouchableOpacity
+                    onPress={() => setSelectedPackage(pkg)}
+                    style={[
+                      styles.checkbox,
+                      selectedPackage?._id === pkg._id && styles.checkedCheckbox,
+                    ]}
+                  >
+                    {selectedPackage?._id === pkg._id && (
+                      <Icon name="check" size={16} color="#fff" />
+                    )}
+                  </TouchableOpacity>
+                </View>
               </View>
-
               <View style={styles.dottedLine} />
 
               {/* ✅ Product-wise rows (paintName + sqft + cost) */}
@@ -220,6 +248,7 @@ const Selectpackage = () => {
               dupMode,
               quoteId,
               leadId,
+              puttyPrice,
               measurementId,
               vendorId,
               predefPackage: selectedPackage,
@@ -281,8 +310,7 @@ const styles = StyleSheet.create({
   },
   cardHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flex: 1,
   },
   packageTitle: {
     fontSize: 16,
@@ -296,8 +324,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#ED1F24',
     backgroundColor: '#fff',
-    justifyContent: 'center',
-    alignItems: 'center',
+
   },
   checkedCheckbox: {
     backgroundColor: '#ED1F24',

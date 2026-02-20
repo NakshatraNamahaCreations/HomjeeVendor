@@ -24,16 +24,20 @@ import PageLoader from '../../components/PageLoader';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useIsFocused } from '@react-navigation/native';
 import { useBackHandler } from '@react-native-community/hooks';
+import { useVendorContext } from '../../Utilities/VendorContext';
 
 const SelectRoom = () => {
+
   const route = useRoute();
   const navigation = useNavigation();
   const {
     quoteId,
+    puttyPrice,
     quote: initialQuote,
     dupMode = false,
     sourceQuoteId = null,
   } = route.params || {};
+  const { vendorDataContext } = useVendorContext();
   const { predefPackage } = route.params || {};
   const {
     autoApplyOnMount = true,
@@ -49,7 +53,8 @@ const SelectRoom = () => {
   const [activeQuote, setActiveQuote] = useState(
     hasInitial ? initialQuote : null,
   );
-  console.log('applyMode', applyMode);
+  // console.log('applyMode', applyMode);
+  console.log('activeQuote', activeQuote);
 
   const [loadingQuote, setLoadingQuote] = useState(!hasInitial);
   const [isLoading, setIsLoading] = useState(!hasInitial);
@@ -59,6 +64,13 @@ const SelectRoom = () => {
   const [isDiscarding, setIsDiscarding] = useState(false);
   const confirmActionRef = useRef(null);
 
+  const vendorCity = vendorDataContext.vendor.city || "";
+
+  const http = axios.create({
+    baseURL: API_BASE_URL,
+    timeout: 15000, // ✅ prevents infinite hang in release
+  });
+
   const saveRoomLine = async (quoteId, line) => {
     try {
       const url = `${API_BASE_URL}${API_ENDPOINTS.UPDATE_QUOTE_PRICING
@@ -66,7 +78,7 @@ const SelectRoom = () => {
           line.roomName,
         )}/pricing`;
       console.log('➡️ POST pricing payload', JSON.stringify(line, null, 2));
-      const { data } = await axios.post(url, line);
+      const { data } = await http.post(url, line);
       return data?.data?.line || line;
     } catch (e) {
       console.warn('❌ pricing failed', e?.response?.status, e?.response?.data);
@@ -79,13 +91,14 @@ const SelectRoom = () => {
       throw e;
     }
   };
+  // console.log('estimateData', estimateData);
 
   const clearQuoteServices = async (quoteId, line) => {
     setResponseLoader(true);
     console.log('line', line);
 
     try {
-      const response = await axios.delete(
+      const response = await http.delete(
         `${API_BASE_URL}${API_ENDPOINTS.CLEAR_ROOM_VALUES}${encodeURIComponent(
           quoteId,
         )}/clear`,
@@ -235,8 +248,8 @@ const SelectRoom = () => {
     (async () => {
       if (paintsCache) return;
       try {
-        const { data } = await axios.get(
-          `${API_BASE_URL}${API_ENDPOINTS.GET_PAINT}`,
+        const { data } = await http.get(
+          `${API_BASE_URL}${API_ENDPOINTS.GET_PAINT}?city=${vendorCity}`,
         );
         if (alive) setPaintsCache(data?.paints || data?.data?.paints || []);
       } catch (e) { }
@@ -249,16 +262,22 @@ const SelectRoom = () => {
   useEffect(() => {
     let alive = true;
 
-    const shouldSkipInitialFetch = false;
+    const shouldSkipInitialFetch = autoApplyOnMount && (applyMode === "clear" || applyMode === "replace") && !hasInitial;
+    // false;
 
     const fetchFromId = async idToFetch => {
-      if (shouldSkipInitialFetch) return;
+      // if (shouldSkipInitialFetch) return;
+      if (shouldSkipInitialFetch) {
+        setLoadingQuote(false);
+        setIsLoading(false);
+        return () => { alive = false; };
+      }
       setIsLoading(true);
       try {
         setLoadingQuote(true);
         const url = `${API_BASE_URL}${API_ENDPOINTS.GET_QUOTATION
           }${encodeURIComponent(idToFetch)}`;
-        const { data } = await axios.get(url);
+        const { data } = await http.get(url);
         if (!alive) return;
         if (applyStage === 'applying') return;
         const q = data?.data?.quote || data?.data || null;
@@ -298,16 +317,28 @@ const SelectRoom = () => {
     };
   }, [dupMode, sourceQuoteId, quoteId, hasInitial, applyMode, applyStage]); // Correct dependencies
 
-  useEffect(() => {
-    if (!autoApplyOnMount) return;
-    if (didAutoApplyRef.current) return;
-    if (!quoteId) return;
-
-    const allRooms = [
+  const allRooms = useMemo(() => {
+    return [
       ...(groupedRooms?.Interior || []),
       ...(groupedRooms?.Exterior || []),
       ...(groupedRooms?.Others || []),
     ];
+  }, [
+    groupedRooms?.Interior?.length,
+    groupedRooms?.Exterior?.length,
+    groupedRooms?.Others?.length,
+  ]);
+
+  const roomsKey = useMemo(() => {
+    return (allRooms || [])
+      .map(r => String(r?.roomName || r?.name || r?._id || ""))
+      .join("|");
+  }, [allRooms]);
+
+  useEffect(() => {
+    if (!autoApplyOnMount) return;
+    if (didAutoApplyRef.current) return;
+    if (!quoteId) return;
     if (!allRooms.length) return;
 
     const hasExistingWork = (activeQuote?.lines || []).some(l => {
@@ -321,6 +352,8 @@ const SelectRoom = () => {
       return subtotal > 0 || hasBreakdown || !!hasPaints;
     });
 
+    didAutoApplyRef.current = true;
+
     const run = async () => {
       try {
         setIsLoading(true);
@@ -328,7 +361,6 @@ const SelectRoom = () => {
           (applyMode === 'clear' || applyMode === 'replace') &&
           hasExistingWork
         ) {
-          didAutoApplyRef.current = true;
           setApplyStage('done');
           return;
         }
@@ -340,8 +372,6 @@ const SelectRoom = () => {
           for (const r of allRooms) {
             await saveRoomLine(quoteId, emptyLineForRoom(r));
           }
-
-          didAutoApplyRef.current = true;
           setApplyStage('done');
           return;
         }
@@ -372,9 +402,9 @@ const SelectRoom = () => {
         }
 
         // --- MERGE or nothing to apply
-        didAutoApplyRef.current = true;
         setApplyStage('done');
       } catch (e) {
+        didAutoApplyRef.current = false;
         Alert.alert(
           'Error',
           e?.response?.data?.message || 'Failed to apply package',
@@ -392,6 +422,7 @@ const SelectRoom = () => {
     quoteId,
     groupedRooms,
     applyKey,
+    roomsKey
     // activeQuote, // include this so the guard sees latest data; run is idempotent
   ]);
 
@@ -458,7 +489,7 @@ const SelectRoom = () => {
     Object.keys(groupedRooms)[0] || 'Interior',
   );
 
-  const PUTTY_RATE = 10;
+  const PUTTY_RATE = puttyPrice;
 
   const fmtMoney = n => `₹ ${Number(n || 0).toLocaleString('en-IN')}`;
   const fmtSqft = n => `${Number(n || 0)} sq ft`;
@@ -859,11 +890,11 @@ const SelectRoom = () => {
           }}
         >
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <TouchableOpacity
+            {/* <TouchableOpacity
               onPress={() => confirmDiscardAndLeave(() => navigation.goBack())}
             >
               <Ionicons name="arrow-back" color="black" size={23} />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
             <Text
               style={{
                 paddingHorizontal: 33,

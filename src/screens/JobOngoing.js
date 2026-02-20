@@ -1113,10 +1113,10 @@ const JobOngoing = () => {
   const hasQuotes = Array.isArray(quotes) && quotes.length > 0;
 
   const INR = n => `₹ ${Number(n || 0).toLocaleString('en-IN')}`;
+  const toNum = v => (Number.isFinite(+v) ? +v : 0);
   const area2 = (w, h) => Math.max(toNum(w) * toNum(h), 0);
   const getNet = it =>
     toNum(it?.totalSqt ?? it?.area ?? area2(it?.width, it?.height));
-  const toNum = v => (Number.isFinite(+v) ? +v : 0);
   const quoteTitle = (q, idx) => q?.title || 'Quote';
   const quoteAmount = q =>
     toNum(q?.amount ?? q?.totals?.final ?? q?.final ?? 0);
@@ -1382,10 +1382,7 @@ const JobOngoing = () => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar
-        barStyle={deviceTheme === 'dark' ? 'light-content' : 'black'}
-      />
+    <View style={styles.safeArea}>
       {loading && <PageLoader />}
       {isLoading && <ResponseLoader />}
       <View
@@ -1801,7 +1798,8 @@ const JobOngoing = () => {
               leadDataContext?.bookingDetails?.status ===
               'Waiting for final payment' ||
               // leadDataContext?.bookingDetails?.status === 'Survey Completed' ||
-              vendorDataContext?.vendor?.serviceType === 'deep cleaning' || // deep cleaing
+              (vendorDataContext?.vendor?.serviceType === 'deep cleaning' ||
+                vendorDataContext?.vendor?.serviceType === 'Deep Cleaning') || // deep cleaing
               leadDataContext?.bookingDetails?.status === 'Project Completed' ? (
               <View
                 style={{
@@ -3395,7 +3393,7 @@ const JobOngoing = () => {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 };
 

@@ -428,10 +428,7 @@ const StartMeasurement = () => {
 
   return (
     <GestureDetector gesture={swipeGesture}>
-      <SafeAreaView style={{ flex: 1 }}>
-        <StatusBar
-          barStyle={deviceTheme === 'dark' ? 'light-content' : 'dark-content'}
-        />
+      <View style={{ flex: 1 }}>
 
         {loading && <PageLoader />}
         <View style={styles.tabsContainer}>
@@ -639,7 +636,7 @@ const StartMeasurement = () => {
             Continue
           </Text>
         </TouchableOpacity>
-      </SafeAreaView>
+      </View>
     </GestureDetector>
   );
 };

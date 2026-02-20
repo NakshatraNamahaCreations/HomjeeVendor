@@ -153,10 +153,7 @@ const Leaddetails = () => {
   console.log("overallCoinDeduction", overallCoinDeduction);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar
-        barStyle={deviceTheme === 'dark' ? 'light-content' : 'dark-content'}
-      />
+    <View style={styles.safeArea}>
       {loading && <PageLoader />}
       {error && (
         <Text
@@ -275,7 +272,7 @@ const Leaddetails = () => {
                 fontSize: 13,
                 fontFamily: 'Poppins-SemiBold',
                 textAlign: 'center',
-                marginTop: 30,
+                marginTop: -30,
               }}
             >
               ✅ Responded
@@ -365,7 +362,7 @@ const Leaddetails = () => {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 };
 

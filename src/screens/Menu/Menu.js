@@ -58,10 +58,7 @@ const Menu = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar
-        barStyle={deviceTheme === 'dark' ? 'light-content' : 'dark-content'}
-      />
+    <View style={styles.container}>
       <Header />
       <ScrollView>
         <View style={{ alignSelf: 'flex-end' }}>
@@ -243,7 +240,7 @@ const Menu = () => {
           </View>
         </Modal>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
