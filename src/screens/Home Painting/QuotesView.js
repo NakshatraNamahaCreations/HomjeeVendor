@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -8,14 +8,18 @@ import {
   TouchableOpacity,
   Linking,
   BackHandler,
-} from "react-native";
-import { useLeadContext } from "../../Utilities/LeadContext";
-import { useNavigation, useRoute } from "@react-navigation/native";
-import { getRequest } from "../../ApiService/apiHelper";
-import { API_ENDPOINTS } from "../../ApiService/apiConstants";
+  Pressable,
+} from 'react-native';
+import { useLeadContext } from '../../Utilities/LeadContext';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { getRequest } from '../../ApiService/apiHelper';
+import { API_ENDPOINTS } from '../../ApiService/apiConstants';
+import Entypo from 'react-native-vector-icons/Entypo';
+import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 // ✅ optional: replace with your logo
-const LOGO_URI = "../../logo.png.png";
+const LOGO_URI = '../../logo.png.png';
 
 export default function QuotesView() {
   const { leadDataContext } = useLeadContext();
@@ -51,7 +55,7 @@ export default function QuotesView() {
         `${API_ENDPOINTS.GET_QUOTATION_BY_QUOTE_ID}${quoteId}`,
       );
       if (response) {
-        setQuotes(response.quote)
+        setQuotes(response.quote);
       } else {
         setQuotes({});
       }
@@ -93,32 +97,32 @@ export default function QuotesView() {
   // =========================
   // ✅ Safe formatters
   // =========================
-  const rupee = (val) => {
+  const rupee = val => {
     try {
       const num = Number(val);
-      if (!Number.isFinite(num)) return "—";
-      return `₹ ${num.toLocaleString("en-IN")}`;
+      if (!Number.isFinite(num)) return '—';
+      return `₹ ${num.toLocaleString('en-IN')}`;
     } catch (e) {
-      return "—";
+      return '—';
     }
   };
 
-  const safeText = (v, fallback = "—") => {
+  const safeText = (v, fallback = '—') => {
     try {
-      const s = String(v ?? "").trim();
+      const s = String(v ?? '').trim();
       return s.length ? s : fallback;
     } catch (e) {
       return fallback;
     }
   };
 
-  const getDayLabel = (days) => {
+  const getDayLabel = days => {
     try {
       const d = Number(days ?? 0);
-      if (!Number.isFinite(d) || d <= 0) return "—";
-      return `${d} ${d === 1 ? "Day" : "Days"}`;
+      if (!Number.isFinite(d) || d <= 0) return '—';
+      return `${d} ${d === 1 ? 'Day' : 'Days'}`;
     } catch (e) {
-      return "—";
+      return '—';
     }
   };
 
@@ -136,7 +140,7 @@ export default function QuotesView() {
           leadDataContext?.address?.city,
         ]
           .filter(Boolean)
-          .join(", ") || "—";
+          .join(', ') || '—';
 
       const vendorName = leadDataContext?.assignedProfessional?.name;
       const vendorPhone = leadDataContext?.assignedProfessional?.phone;
@@ -157,7 +161,7 @@ export default function QuotesView() {
         subtotal: Number(t?.subtotal ?? 0),
         discountAmount: Number(t?.discountAmount ?? 0),
         grandTotal: Number(t?.grandTotal ?? 0),
-        discount: quotes.discount
+        discount: quotes.discount,
       };
     } catch (e) {
       return {
@@ -171,79 +175,149 @@ export default function QuotesView() {
     }
   }, [quotes]);
 
-  console.log("totals", totals);
-  console.log(" totals.discount", totals.discount?.amount);
+  console.log('totals', totals);
+  console.log(' totals.discount', totals.discount?.amount);
 
+  const modeLabel = mode => {
+    try {
+      const m = String(mode || '').toUpperCase();
+      if (m === 'REPAINT') return 'Repaint With Primer';
+      if (m === 'FRESH') return 'Fresh Paint';
+      if (m === 'WHITEWASH') return 'Whitewash';
+      return m || '—';
+    } catch (e) {
+      return '—';
+    }
+  };
 
-  // Room-wise structure like reference
+  const getCountFromMeasurement = (measurementData, roomName, type, mode) => {
+    try {
+      const room = measurementData?.rooms?.[roomName];
+      if (!room) return 0;
+
+      const m = String(mode || '').toUpperCase();
+      const t = String(type || '').toLowerCase();
+
+      if (t.includes('ceiling')) {
+        const arr = Array.isArray(room?.ceilings) ? room.ceilings : [];
+        return arr.filter(x => String(x?.mode || '').toUpperCase() === m)
+          .length;
+      }
+
+      if (t.includes('wall')) {
+        const arr = Array.isArray(room?.walls) ? room.walls : [];
+        return arr.filter(x => String(x?.mode || '').toUpperCase() === m)
+          .length;
+      }
+
+      // for Doors/Grills etc
+      if (t.includes('measurement')) {
+        const arr = Array.isArray(room?.measurements) ? room.measurements : [];
+        return arr.filter(x => String(x?.mode || '').toUpperCase() === m)
+          .length;
+      }
+
+      return 0;
+    } catch (e) {
+      return 0;
+    }
+  };
+
   const roomWise = useMemo(() => {
     try {
       const lines = Array.isArray(quotes?.lines) ? quotes.lines : [];
       const bySection = { Interior: [], Exterior: [], Others: [] };
 
-      const weightType = (t) => {
-        const x = String(t || "").toLowerCase();
-        if (x.includes("ceiling")) return 1;
-        if (x.includes("wall")) return 2;
-        if (x.includes("measurement")) return 3; // for Doors/Grills
+      // ordering: Ceiling first, then Wall, then Measurement
+      const weightType = t => {
+        const x = String(t || '').toLowerCase();
+        if (x.includes('ceiling')) return 1;
+        if (x.includes('wall')) return 2;
+        if (x.includes('measurement')) return 3;
         return 9;
       };
 
       for (const ln of lines) {
-        const sectionType = ln?.sectionType || "Others";
+        const sectionType = ln?.sectionType || 'Others';
+        const roomName = ln?.roomName || 'Room';
 
-        // ✅ Merge breakdown duplicates (same paint + type + mode)
+        // ✅ MERGE like reference: paintName + type + mode
         const bd = Array.isArray(ln?.breakdown) ? ln.breakdown : [];
         const map = new Map();
 
         for (const b of bd) {
-          // Skip zero sqft rows if you don’t want them (Ceiling sqft 0 in your data)
-          // if (Number(b?.sqft ?? 0) <= 0) continue;
-
-          const key = `${b?.paintName || "Paint"}__${b?.type || ""}__${b?.mode || ""}`;
-          const prev = map.get(key);
           const sqft = Number(b?.sqft ?? 0);
           const price = Number(b?.price ?? 0);
 
+          // optional: hide zero sqft rows (your Entrance Passage ceiling had 0)
+          // if (sqft <= 0) continue;
+
+          const paintName = b?.paintName || 'Paint';
+          const type = b?.type || '';
+          const mode = b?.mode || '';
+
+          const key = `${paintName}__${type}__${mode}`;
+          const prev = map.get(key);
+
           if (!prev) {
             map.set(key, {
-              type: b?.type,
-              mode: b?.mode,
-              paintName: b?.paintName,
+              paintName,
+              type,
+              mode,
               sqft,
               price,
               unitPrice: Number(b?.unitPrice ?? 0),
+              count: getCountFromMeasurement(
+                measurementData,
+                roomName,
+                type,
+                mode,
+              ),
             });
           } else {
             prev.sqft += sqft;
             prev.price += price;
+            prev.sub = `${prev.type} (${Math.round(prev.sqft)} sqft)`;
+            // keep count from measurement (does not change)
             map.set(key, prev);
           }
         }
 
-        const mergedBreakdown = Array.from(map.values()).sort((a, b) => {
+        const paintRows = Array.from(map.values()).sort((a, b) => {
           const wa = weightType(a.type);
           const wb = weightType(b.type);
           if (wa !== wb) return wa - wb;
-          return String(a.paintName || "").localeCompare(String(b.paintName || ""));
+
+          // repaint rows first or fresh rows first? (reference shows repaint first sometimes)
+          const ma = String(a.mode || '').toUpperCase();
+          const mb = String(b.mode || '').toUpperCase();
+          if (ma !== mb) return ma.localeCompare(mb);
+
+          return String(a.paintName || '').localeCompare(
+            String(b.paintName || ''),
+          );
         });
 
-        // ✅ Additional services
-        const add = Array.isArray(ln?.additionalServices) ? ln.additionalServices : [];
-        const additionalItems = add.map((x) => ({
-          serviceType: x?.serviceType || "Additional Service",
+        // ✅ additional services (Waterproofing/Textures) AFTER paints in same room
+        const add = Array.isArray(ln?.additionalServices)
+          ? ln.additionalServices
+          : [];
+        const additionalItems = add.map(x => ({
+          serviceType: x?.serviceType || 'Additional Service',
           materialName: x?.customName?.trim() ? x.customName : x?.materialName,
-          surfaceType: x?.surfaceType || "",
+          surfaceType: x?.surfaceType || '',
           areaSqft: Number(x?.areaSqft ?? 0),
           unitPrice: Number(x?.unitPrice ?? 0),
           total: Number(x?.total ?? 0),
-          withPaint: !!x?.withPaint,
         }));
 
+        const paintSubtotal = Number(ln?.subtotal ?? 0);
+        const additionalTotal = Number(ln?.additionalTotal ?? 0);
+
         const roomRow = {
-          roomName: ln?.roomName || "Room",
-          subtotal: Number(ln?.subtotal ?? 0),
-          mergedBreakdown,
+          roomName,
+          subtotal: paintSubtotal + additionalTotal,
+          paintRows,
           additionalItems,
           additionalTotal: Number(ln?.additionalTotal ?? 0),
         };
@@ -256,7 +330,7 @@ export default function QuotesView() {
     } catch (e) {
       return { Interior: [], Exterior: [], Others: [] };
     }
-  }, [quotes]);
+  }, [quotes, measurementData]);
 
   // Service-wise table (flat merged list)
   const serviceWise = useMemo(() => {
@@ -269,19 +343,20 @@ export default function QuotesView() {
       for (const ln of lines) {
         const bd = Array.isArray(ln?.breakdown) ? ln.breakdown : [];
         for (const b of bd) {
-          const key = `${b?.paintName || "Paint"}__${b?.type || ""}`;
+          const key = `${b?.paintName || 'Paint'}__${b?.type || ''}`;
           const prev = paintMap.get(key);
           const sqft = Number(b?.sqft ?? 0);
           const price = Number(b?.price ?? 0);
 
           if (!prev) {
             paintMap.set(key, {
-              kind: "paint",
-              title: b?.paintName || "Paint",
-              sub: `${b?.type || ""} (${Math.round(sqft)} sqft)`,
+              kind: 'paint',
+              title: b?.paintName || 'Paint',
+              // sub: `${b?.type || ''} (${Math.round(sqft)} sqft)`,
+              sub: `${b?.type || ''}`,
               sqft,
               amount: price,
-              type: b?.type || "",
+              type: b?.type || '',
             });
           } else {
             prev.sqft += sqft;
@@ -292,11 +367,13 @@ export default function QuotesView() {
         }
 
         // ✅ merge additional services
-        const add = Array.isArray(ln?.additionalServices) ? ln.additionalServices : [];
+        const add = Array.isArray(ln?.additionalServices)
+          ? ln.additionalServices
+          : [];
         for (const a of add) {
-          const title = a?.serviceType || "Additional Service";
+          const title = a?.serviceType || 'Additional Service';
           const name = a?.customName?.trim() ? a.customName : a?.materialName;
-          const key = `${title}__${name}__${a?.surfaceType || ""}`;
+          const key = `${title}__${name}__${a?.surfaceType || ''}`;
 
           const prev = addMap.get(key);
           const area = Number(a?.areaSqft ?? 0);
@@ -304,9 +381,10 @@ export default function QuotesView() {
 
           if (!prev) {
             addMap.set(key, {
-              kind: "additional",
+              kind: 'additional',
               title: `${title}`,
-              sub: `${name || ""}${a?.surfaceType ? ` • ${a.surfaceType}` : ""} (${Math.round(area)} sqft)`,
+              sub: `${name || ''}${a?.surfaceType ? ` • ${a.surfaceType}` : ''
+                } (${Math.round(area)} sqft)`,
               amount: total,
             });
           } else {
@@ -318,13 +396,13 @@ export default function QuotesView() {
 
       const out = [...paintMap.values(), ...addMap.values()];
 
-      const weight = (item) => {
+      const weight = item => {
         // paints first like reference, then additional services
-        if (item.kind === "additional") return 9;
-        const t = String(item.type || "").toLowerCase();
-        if (t.includes("ceiling")) return 1;
-        if (t.includes("wall")) return 2;
-        if (t.includes("measurement")) return 3;
+        if (item.kind === 'additional') return 9;
+        const t = String(item.type || '').toLowerCase();
+        if (t.includes('ceiling')) return 1;
+        if (t.includes('wall')) return 2;
+        if (t.includes('measurement')) return 3;
         return 5;
       };
 
@@ -341,9 +419,9 @@ export default function QuotesView() {
     }
   }, [quotes]);
 
-  const openCall = (phone) => {
+  const openCall = phone => {
     try {
-      const p = String(phone || "").trim();
+      const p = String(phone || '').trim();
       if (!p) return;
       Linking.openURL(`tel:${p}`);
     } catch (e) { }
@@ -360,11 +438,14 @@ export default function QuotesView() {
     <ScrollView style={styles.page} contentContainerStyle={styles.pageInner}>
       {/* Header */}
       <View style={styles.header}>
-        <Image source={require("../../assets/images/logo.png.png")} style={styles.logo} />
+        <Image
+          source={require('../../assets/images/logo.png.png')}
+          style={styles.logo}
+        />
       </View>
 
       <Text style={styles.hi}>
-        Hi {safeText(header.customerName, "Customer")}
+        Hi {safeText(header.customerName, 'Customer')}
       </Text>
 
       <Text style={styles.subText}>
@@ -379,15 +460,15 @@ export default function QuotesView() {
           <View style={styles.quotePill}>
             <Text style={styles.quotePillText}>Quote</Text>
           </View>
-          {totals.discount?.amount > 0 &&
+          {totals.discount?.amount > 0 && (
             <Text style={styles.smallMuted}>{rupee(totals.subtotal)}</Text>
-          }
+          )}
           <Text style={styles.bigTotal}>
-            {rupee(totals.grandTotal)}{" "}
+            {rupee(totals.grandTotal)}{' '}
             <Text style={styles.plusTaxes}>+ Taxes</Text>
           </Text>
 
-          <View style={styles.sep} />
+          {/* <View style={styles.sep} /> */}
 
           <RowLine label="Interior" value={rupee(totals.interior)} />
           <RowLine label="Exterior" value={rupee(totals.exterior)} />
@@ -397,7 +478,8 @@ export default function QuotesView() {
 
           <View style={styles.durationPill}>
             <Text style={styles.durationText}>
-              Project Duration: {getDayLabel(quotes?.days)}
+              <Text style={{ fontSize: 15, color: '#2B6CB0', marginTop: 4 }}>⏱</Text>
+              {' '} Project Duration: {getDayLabel(quotes?.days)}
             </Text>
           </View>
         </View>
@@ -417,7 +499,7 @@ export default function QuotesView() {
       </View>
 
       <Text style={styles.scrollHint}>
-        Scroll down to see detailed price breakup
+        *Scroll down to see detailed price breakup
       </Text>
 
       {/* Room-wise Painting Cost */}
@@ -429,6 +511,7 @@ export default function QuotesView() {
           title="For Interior"
           rooms={roomWise.Interior}
           rupee={rupee}
+          modeLabel={modeLabel}
         />
       ) : null}
 
@@ -438,97 +521,141 @@ export default function QuotesView() {
           title="For Exterior"
           rooms={roomWise.Exterior}
           rupee={rupee}
+          modeLabel={modeLabel}
         />
       ) : null}
 
       {/* Others */}
       {roomWise?.Others?.length ? (
-        <CostTable title="For Others" rooms={roomWise.Others} rupee={rupee} />
+        <CostTable
+          title="For Others"
+          rooms={roomWise.Others}
+          rupee={rupee}
+          modeLabel={modeLabel}
+        />
       ) : null}
 
       {/* Why Choose */}
       <SectionTitle title="Why Choose Homjee" />
       <View style={styles.whyRow}>
-        <WhyChip title="Dedicated Project Manager" />
-        <WhyChip title="Genuine Product Used" />
-        <WhyChip title="100% Transparency" />
-        <WhyChip title="6 months service warranty" />
+        <WhyChip
+          title="Dedicated Project Manager"
+          icon={
+            <Image
+              source={{ uri: "https://img.icons8.com/dotty/80/20618d/user.png" }}
+              style={styles.whyIconUser}
+            />
+          }
+        />
+        <WhyChip
+          title="Genuine Product Used"
+          icon={
+            <Image
+              source={{ uri: "https://img.icons8.com/ios/50/20618d/roller-brush--v1.png" }}
+              style={styles.whyIcon}
+            />
+          }
+        />
+        <WhyChip
+          title="100% Transparency"
+          icon={
+            <Image
+              source={{ uri: "https://img.icons8.com/ios/50/20618d/diamond--v1.png" }}
+              style={styles.whyIcon}
+            />
+          }
+        />
+        <WhyChip
+          title="6 months service warranty"
+          icon={
+            <Image
+              source={{ uri: "https://img.icons8.com/ios/50/20618d/approval--v1.png" }}
+              style={styles.whyIcon}
+            />
+          }
+        />
       </View>
 
       {/* Service-wise */}
-      <SectionTitle title="Service-wise Cost" />
+
       <View style={styles.tableBox}>
+        <View style={styles.tableHeader}>
+          <Text style={styles.tableHeaderText}>Service-wise Cost </Text>
+        </View>
+        {/* <SectionTitle title="Service-wise Cost"  /> */}
         {serviceWise.map((it, idx) => (
-          <View key={`${it.paintName}-${it.type}-${idx}`} style={styles.tableRow}>
+          <View key={`${it.kind}-${it.title}-${idx}`} style={styles.tableRow}>
             <View style={{ flex: 1, paddingRight: 10 }}>
-              <Text style={styles.tableRowTitle}>{safeText(it.paintName)}</Text>
-              <Text style={styles.tableRowSub}>
-                {safeText(it.type)} ({Math.round(Number(it.sqft ?? 0))} sqft)
-              </Text>
+              <Text style={styles.tableRowTitle}>{safeText(it.title)}</Text>
+              <Text style={styles.tableRowSub}>{safeText(it.sub)}</Text>
             </View>
-            <Text style={styles.tableRowAmt}>{rupee(it.price)}</Text>
+            <Text style={styles.tableRowAmt}>{rupee(it.amount)}</Text>
           </View>
         ))}
 
         <View style={styles.tableLine} />
         <MiniTotal label="Original Cost" value={rupee(totals.subtotal)} />
         <MiniTotal label="Discount" value={rupee(totals.discountAmount)} />
-        <MiniTotal
-          label="Final Cost"
-          value={rupee(totals.grandTotal)}
-          bold
-        />
+        <MiniTotal label="Final Cost" value={rupee(totals.grandTotal)} bold />
 
         <Text style={styles.note}>
-          All measurements are taken by laser device.
+          *All measurements are taken by laser device.
         </Text>
       </View>
 
       {/* Paint Process */}
-      <SectionTitle title="Paint Process" />
-      <View style={styles.processBox}>
-        <ProcessCol
-          title="Whitewash Process"
-          items={[
-            "Packaging & masking",
-            "Sanding",
-            "2 coats of putty",
-            "Basic cleanup",
-          ]}
-        />
-        <ProcessCol
-          title="Repaint Process"
-          items={[
-            "Packaging & masking",
-            "Sanding",
-            "Minor damage repair",
-            "1 coat primer",
-            "2 coats of paint",
-            "Basic cleanup",
-          ]}
-        />
-        <ProcessCol
-          title="Fresh Paint Process"
-          items={[
-            "Packaging & masking",
-            "Damage repair",
-            "2 coats of putty",
-            "Hand sanding",
-            "1 coat primer",
-            "2 coats of paint",
-            "Basic cleanup",
-          ]}
-        />
+      {/* <SectionTitle title="Paint Process" /> */}
+      <View style={[styles.tableBox, { marginTop: 10 }]}>
+        <View style={styles.tableHeader}>
+          <Text style={styles.tableHeaderText}>Paint Process</Text>
+        </View>
+        <View style={styles.processBox}>
+          <ProcessCol
+            title="Whitewash Process"
+            items={[
+              'Packaging & masking',
+              'Sanding',
+              '2 coats of putty',
+              'Basic cleanup',
+            ]}
+          />
+          <ProcessCol
+            title="Repaint Process"
+            items={[
+              'Packaging & masking',
+              'Sanding',
+              'Minor damage repair',
+              '1 coat primer',
+              '2 coats of paint',
+              'Basic cleanup',
+            ]}
+          />
+          <ProcessCol
+            title="Fresh Paint Process"
+            items={[
+              'Packaging & masking',
+              'Damage repair',
+              '2 coats of putty',
+              'Hand sanding',
+              '1 coat primer',
+              '2 coats of paint',
+              'Basic cleanup',
+            ]}
+          />
+        </View>
       </View>
 
       {/* Paint Details */}
-      <SectionTitle title="Paint Details" />
-      <BlockBox>
-        <Bullet text="Tractor Emulsion is a basic emulsion with smooth finish." />
-        <Bullet text="Royale Luxury is a premium washable finish for interior walls." />
-        <Bullet text="Oil enamel is durable and glossy for wood and metal surfaces." />
-      </BlockBox>
-
+      <View style={[styles.tableBox, { marginTop: 10 }]}>
+        <View style={styles.tableHeader}>
+          <Text style={styles.tableHeaderText}>Paint Details</Text>
+        </View>
+        <BlockBox>
+          <Bullet text="Tractor Emulsion is a basic emulsion with smooth finish." />
+          <Bullet text="Royale Luxury is a premium washable finish for interior walls." />
+          <Bullet text="Oil enamel is durable and glossy for wood and metal surfaces." />
+        </BlockBox>
+      </View>
       {/* Scope of Work */}
       <SectionTitle title="Scope of Work T&C" />
       <BlockBox>
@@ -560,21 +687,29 @@ export default function QuotesView() {
 
       {/* Footer contact */}
       <View style={styles.footer}>
-        <Text style={styles.footerText}>
-          Need assistance? Contact us at{" "}
-          <Text style={styles.linkText}>
-            {safeText(header.vendorPhone, "—")}
-          </Text>
-        </Text>
+        <Text style={styles.footerText}>In case you need any assistance,</Text>
+        <View style={{ flexDirection: 'row' }}>
+          <Text style={styles.footerText}>Please free to contact us on</Text>
+          <Pressable onPress={() => openCall(header.vendorPhone)}>
+            <Text style={styles.linkText}>
+              {' '}
+              +91 {safeText(header.vendorPhone, '—')}
+            </Text>
+          </Pressable>
+        </View>
 
-        {header.vendorPhone ? (
+        <Text style={styles.footerText}>
+          or write to us on{' '}
+          <Text style={styles.linkText}>info@homjee.com </Text>
+        </Text>
+        {/* {header.vendorPhone ? (
           <TouchableOpacity
             style={styles.callBtn}
             onPress={() => openCall(header.vendorPhone)}
           >
             <Text style={styles.callBtnText}>Call Now</Text>
           </TouchableOpacity>
-        ) : null}
+        ) : null} */}
 
         <Text style={styles.thank}>❤️ Thank you ❤️</Text>
       </View>
@@ -611,10 +746,13 @@ function GuaranteeItem({ text }) {
   );
 }
 
-function WhyChip({ title }) {
+function WhyChip({ title, icon }) {
   return (
     <View style={styles.whyChip}>
-      <Text style={styles.whyChipText}>{title}</Text>
+      <View style={styles.whyIconWrap}>{icon}</View>
+      <Text style={styles.whyChipText} numberOfLines={2}>
+        {title}
+      </Text>
     </View>
   );
 }
@@ -622,10 +760,14 @@ function WhyChip({ title }) {
 function MiniTotal({ label, value, bold }) {
   return (
     <View style={styles.miniTotalRow}>
-      <Text style={[styles.miniLabel, bold && { fontFamily: 'Poppins-SemiBold' }]}>
+      <Text
+        style={[styles.miniLabel, bold && { fontFamily: 'Poppins-SemiBold' }]}
+      >
         {label}
       </Text>
-      <Text style={[styles.miniValue, bold && { fontFamily: 'Poppins-SemiBold' }]}>
+      <Text
+        style={[styles.miniValue, bold && { fontFamily: 'Poppins-SemiBold' }]}
+      >
         {value}
       </Text>
     </View>
@@ -639,7 +781,7 @@ function BlockBox({ children }) {
 function Bullet({ text }) {
   return (
     <View style={styles.bulletRow}>
-      <Text style={styles.bulletDot}>•</Text>
+      <Text style={styles.bulletDot}>-</Text>
       <Text style={styles.bulletText}>{text}</Text>
     </View>
   );
@@ -653,7 +795,7 @@ function ProcessCol({ title, items }) {
       </View>
       {items.map((t, i) => (
         <View key={`${title}-${i}`} style={styles.bulletRow}>
-          <Text style={styles.bulletDot}>•</Text>
+          <Text style={styles.bulletDot}>+</Text>
           <Text style={styles.processItem}>{t}</Text>
         </View>
       ))}
@@ -661,25 +803,33 @@ function ProcessCol({ title, items }) {
   );
 }
 
-function CostTable({ title, rooms, rupee }) {
-  const safeText = (v, fb = "—") => {
+function CostTable({ title, rooms, rupee, modeLabel }) {
+  const safeText = (v, fb = '—') => {
     try {
-      const s = String(v ?? "").trim();
+      const s = String(v ?? '').trim();
       return s.length ? s : fb;
     } catch (e) {
       return fb;
     }
   };
 
-  const labelType = (t) => {
-    const x = String(t || "");
-    return x; // Ceiling / Wall / Measurement
+  const labelType = (t, roomName) => {
+    const x = String(t || '').toLowerCase();
+
+    if (x.includes('measurement')) {
+      return roomName; // Door / Grills
+    }
+
+    if (x.includes('ceiling')) return 'Ceiling';
+    if (x.includes('wall')) return 'Wall';
+
+    return t;
   };
 
   return (
     <View style={styles.tableBox}>
       <View style={styles.tableHeader}>
-        <Text style={styles.tableHeaderText}>{title}</Text>
+        <Text style={styles.tableHeaderText}>{title} </Text>
       </View>
 
       {rooms.map((r, idx) => (
@@ -691,40 +841,63 @@ function CostTable({ title, rooms, rupee }) {
           </View>
 
           {/* Paint breakdown */}
-          {r.mergedBreakdown.map((b, bi) => (
-            <View key={`${r.roomName}-${b.paintName}-${bi}`} style={styles.roomRow}>
-              <View style={{ flex: 1, paddingRight: 10 }}>
-                <Text style={styles.roomPaint}>{safeText(b.paintName)}</Text>
-                <Text style={styles.roomMeta}>
-                  {labelType(b.type)} {b.mode ? `• ${b.mode}` : ""} ({Math.round(Number(b.sqft ?? 0))} sqft)
-                </Text>
+          {r.paintRows
+            .filter(p => Number(p?.price ?? 0) > 0) // ✅ hide ₹0 rows
+            .map((p, pi) => (
+              <View key={`${r.roomName}-p-${pi}`} style={styles.roomRow}>
+                <View style={{ flex: 1, paddingRight: 10 }}>
+                  {/* ✅ Title: "Oil Luster Fresh Paint" / "Tractor Emulsion Repaint With Primer" */}
+                  <Text style={styles.roomPaint}>
+                    {safeText(p.paintName)} {modeLabel(p.mode)}
+                  </Text>
+
+                  {/* ✅ Sub: "4 Wall (355sqft)" */}
+                  <Text style={styles.roomMeta}>
+                    {Number(p.count || 0)} {labelType(p.type, r.roomName)} (
+                    {Math.round(Number(p.sqft ?? 0))}sqft)
+                  </Text>
+                </View>
+
+                <Text style={styles.roomRowAmt}>{rupee(p.price)}</Text>
               </View>
-              <Text style={styles.roomRowAmt}>{rupee(b.price)}</Text>
-            </View>
-          ))}
+            ))}
 
           {/* ✅ Additional services under the same room */}
           {Array.isArray(r.additionalItems) && r.additionalItems.length ? (
             <>
-              <View style={styles.tableLine} />
-              <View style={[styles.roomRow, { backgroundColor: "#F8FBFF" }]}>
-                <Text style={[styles.roomPaint, { fontFamily: 'Poppins-SemiBold' }]}>
+              {/* <View style={styles.tableLine} /> */}
+              {/* <View style={[styles.roomRow,
+                {
+                  backgroundColor: '#ddecff', borderTopWidth: 1,
+                  borderTopColor: '#155f8a',
+                }
+              ]}>
+                <Text
+                  style={[styles.roomPaint, { fontFamily: 'Poppins-SemiBold' }]}
+                >
                   Additional Services
                 </Text>
-                <Text style={[styles.roomRowAmt, { fontFamily: 'Poppins-SemiBold' }]}>
+                <Text
+                  style={[
+                    styles.roomRowAmt,
+                    { fontFamily: 'Poppins-SemiBold' },
+                  ]}
+                >
                   {rupee(r.additionalTotal || 0)}
                 </Text>
-              </View>
+              </View> */}
 
               {r.additionalItems.map((a, ai) => (
                 <View key={`${r.roomName}-add-${ai}`} style={styles.roomRow}>
                   <View style={{ flex: 1, paddingRight: 10 }}>
                     <Text style={styles.roomPaint}>
-                      {safeText(a.serviceType)} {a.materialName ? `• ${a.materialName}` : ""}
+                      {safeText(a.serviceType)}{' '}
+                      {a.materialName ? `• ${a.materialName}` : ''}
                     </Text>
                     <Text style={styles.roomMeta}>
-                      {a.surfaceType ? `${a.surfaceType} • ` : ""}
-                      ({Math.round(Number(a.areaSqft ?? 0))} sqft) • ₹ {Number(a.unitPrice ?? 0)}/sqft
+                      {a.surfaceType ? `${a.surfaceType} • ` : ''}(
+                      {Math.round(Number(a.areaSqft ?? 0))} sqft) • ₹{' '}
+                      {Number(a.unitPrice ?? 0)}/sqft
                     </Text>
                   </View>
                   <Text style={styles.roomRowAmt}>{rupee(a.total)}</Text>
@@ -740,245 +913,411 @@ function CostTable({ title, rooms, rupee }) {
   );
 }
 
-
 // =========================
 // Styles
 // =========================
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: "#FFFFFF" },
+  page: { flex: 1, backgroundColor: '#FFFFFF' },
   pageInner: { padding: 14, paddingBottom: 30 },
 
-  header: { alignItems: "center", marginTop: 6, marginBottom: 6 },
-  logo: { width: 140, height: 46, resizeMode: "contain" },
+  header: { alignItems: 'center', marginTop: 6, marginBottom: 6 },
+  logo: { width: 100, height: 26, resizeMode: 'contain' },
 
-  hi: { fontSize: 18, fontFamily: 'Poppins-SemiBold', color: "#1B1B1B", marginTop: 6 },
+  hi: {
+    fontSize: 13,
+    fontFamily: 'Poppins-SemiBold',
+    color: '#1B1B1B',
+    marginTop: 6,
+  },
   subText: {
     marginTop: 6,
-    color: "#4B5563",
-    fontSize: 12.5,
+    color: '#4B5563',
+    fontSize: 11,
     lineHeight: 18,
     fontFamily: 'Poppins-Medium',
   },
 
-  topRow: { flexDirection: "row", gap: 10, marginTop: 14 },
+  topRow: { flexDirection: 'row', gap: 10, marginTop: 14 },
 
   quoteCard: {
     flex: 1.05,
-    backgroundColor: "#EAF3FF",
+    backgroundColor: '#ddecff',
     borderRadius: 14,
     padding: 12,
-    borderWidth: 1,
-    borderColor: "#CFE3FF",
+    // borderWidth: 1,
+    // borderColor: "#CFE3FF",
   },
   quotePill: {
-    alignSelf: "flex-start",
-    backgroundColor: "#2B6CB0",
+    alignSelf: 'flex-start',
+    backgroundColor: '#2B6CB0',
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 999,
+    borderRadius: 10,
     marginBottom: 8,
   },
-  quotePillText: { color: "#fff", fontFamily: 'Poppins-SemiBold', fontSize: 12 },
+  quotePillText: {
+    color: '#fff',
+    fontFamily: 'Poppins-SemiBold',
+    fontSize: 11,
+  },
 
   smallMuted: {
-    color: "#2B6CB0", fontSize: 12, textDecorationLine: "line-through",
-    fontFamily: 'Poppins-SemiBold'
+    color: '#2B6CB0',
+    fontSize: 11,
+    textDecorationLine: 'line-through',
+    fontFamily: 'Poppins-SemiBold',
   },
-  bigTotal: { marginTop: 2, fontSize: 22, fontFamily: 'Poppins-SemiBold', color: "#111827" },
-  plusTaxes: { fontSize: 11, fontFamily: 'Poppins-SemiBold', color: "#6B7280" },
+  bigTotal: {
+    marginTop: 2,
+    fontSize: 18,
+    fontFamily: 'Poppins-SemiBold',
+    color: '#111827',
+  },
+  plusTaxes: { fontSize: 10, fontFamily: 'Poppins-SemiBold', color: '#3279a7' },
 
-  sep: { height: 1, backgroundColor: "#CFE3FF", marginVertical: 10 },
+  sep: { height: 1, backgroundColor: '#46748f', marginVertical: 10 },
 
-  rowLine: { flexDirection: "row", justifyContent: "space-between", marginVertical: 3 },
-  rowLabel: { color: "#334155", fontSize: 12, fontFamily: 'Poppins-SemiBold' },
-  rowValue: { color: "#111827", fontSize: 12, fontFamily: 'Poppins-SemiBold' },
+  rowLine: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginVertical: 3,
+  },
+  rowLabel: { color: '#1F2937', fontSize: 10, fontFamily: 'Poppins-SemiBold' },
+  rowValue: { color: '#1F2937', fontSize: 10, fontFamily: 'Poppins-SemiBold' },
 
   durationPill: {
     marginTop: 8,
-    alignSelf: "flex-start",
-    backgroundColor: "#D6ECFF",
-    paddingHorizontal: 10,
+    alignSelf: 'flex-start',
+    // backgroundColor: '#D6ECFF',
+    // paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 999,
+    // borderRadius: 999,
   },
-  durationText: { color: "#1F2937", fontSize: 11.5, fontFamily: 'Poppins-SemiBold' },
+  durationText: {
+    color: '#1F2937',
+    fontSize: 10,
+    fontFamily: 'Poppins-SemiBold',
+  },
 
   guaranteeCard: {
     flex: 0.95,
-    backgroundColor: "#F3F8FF",
+    backgroundColor: '#ddecff',
     borderRadius: 14,
     padding: 12,
-    borderWidth: 1,
-    borderColor: "#DDEBFF",
+    // borderWidth: 1,
+    // borderColor: "#DDEBFF",
   },
   guaranteePill: {
-    alignSelf: "flex-start",
-    backgroundColor: "#2B6CB0",
+    alignSelf: 'flex-start',
+    backgroundColor: '#2B6CB0',
     paddingHorizontal: 10,
     paddingVertical: 5,
-    borderRadius: 999,
+    borderRadius: 10,
     marginBottom: 8,
   },
-  guaranteePillText: { color: "#fff", fontFamily: 'Poppins-SemiBold', fontSize: 12 },
 
-  gItem: { flexDirection: "row", gap: 8, marginVertical: 4, alignItems: "flex-start" },
-  gTick: { color: "#2B6CB0", fontFamily: 'Poppins-SemiBold', marginTop: 1 },
-  gText: { flex: 1, color: "#1F2937", fontSize: 12, lineHeight: 16 },
+  guaranteePillText: {
+    color: '#fff',
+    fontFamily: 'Poppins-SemiBold',
+    fontSize: 11,
+  },
+
+  gItem: {
+    flexDirection: 'row',
+    gap: 8,
+    marginVertical: 4,
+    alignItems: 'flex-start',
+  },
+
+  gTick: { color: '#2B6CB0', fontFamily: 'Poppins-SemiBold', marginTop: 1 },
+  gText: {
+    flex: 1, color: '#1F2937',
+    fontFamily: 'Poppins-Regular', fontSize: 10, lineHeight: 16
+  },
 
   scrollHint: {
     marginTop: 12,
-    textAlign: "center",
-    fontSize: 11,
-    color: "#6B7280",
-    fontFamily: 'Poppins-Regular'
+    textAlign: 'center',
+    fontSize: 9,
+    color: '#6B7280',
+    fontFamily: 'Poppins-Regular',
   },
 
   sectionTitle: {
-    textAlign: "center",
-    fontSize: 14,
+    textAlign: 'center',
+    fontSize: 13,
     fontFamily: 'Poppins-SemiBold',
-    color: "#111827",
+    color: '#111827',
   },
 
   tableBox: {
-    backgroundColor: "#F8FBFF",
+    // backgroundColor: "#F8FBFF",
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#D6E7FF",
-    overflow: "hidden",
+    borderColor: '#98c7e4', // whole box
+    overflow: 'hidden',
     marginBottom: 12,
   },
   tableHeader: {
-    backgroundColor: "#EAF3FF",
+    // backgroundColor: "#EAF3FF",
     paddingVertical: 10,
     paddingHorizontal: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#D6E7FF",
+    borderBottomColor: '#155f8a', // dark border blue
   },
-  tableHeaderText: { textAlign: "center", fontFamily: 'Poppins-SemiBold', color: "#1F2937" },
+  tableHeaderText: {
+    textAlign: 'center',
+    fontFamily: 'Poppins-SemiBold',
+    fontSize: 12,
+    color: '#1F2937',
+  },
 
   roomHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     paddingHorizontal: 12,
     paddingVertical: 10,
-    backgroundColor: "#EAF3FF",
+    backgroundColor: '#ddecff', // light blue
     borderTopWidth: 1,
-    borderTopColor: "#D6E7FF",
+    borderTopColor: '#155f8a', // dark border blue
   },
-  roomTitle: { fontFamily: 'Poppins-SemiBold', color: "#111827" },
-  roomAmt: { fontFamily: 'Poppins-SemiBold', color: "#111827" },
+  roomTitle: {
+    fontFamily: 'Poppins-SemiBold',
+    fontSize: 11, color: '#111827'
+  },
+  roomAmt: {
+    fontFamily: 'Poppins-SemiBold', fontSize: 11,
+    color: '#111827'
+  },
 
   roomRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     paddingHorizontal: 12,
     paddingVertical: 10,
-    backgroundColor: "#FFFFFF",
-    borderTopWidth: 1,
-    borderTopColor: "#EEF4FF",
+    backgroundColor: '#FFFFFF',
+    // borderTopWidth: 1,
+    // borderTopColor: "#EEF4FF",
   },
-  roomPaint: { fontFamily: 'Poppins-SemiBold', color: "#111827", fontSize: 12.5 },
-  roomMeta: { color: "#6B7280", fontSize: 11, marginTop: 2 },
-  roomRowAmt: { fontFamily: 'Poppins-SemiBold', color: "#111827" },
+  roomPaint: {
+    fontFamily: 'Poppins-SemiBold',
+    color: '#111827',
+    fontSize: 11,
+  },
+  roomMeta: {
+    color: '#6B7280',
+    fontFamily: 'Poppins-Regular', fontSize: 10, marginTop: 2
+  },
+  roomRowAmt: {
+    fontFamily: 'Poppins-Medium',
+    color: '#111827', fontSize: 11,
+  },
 
   tableRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     paddingHorizontal: 12,
-    paddingVertical: 10,
-    backgroundColor: "#FFFFFF",
-    borderTopWidth: 1,
-    borderTopColor: "#EEF4FF",
+    paddingVertical: 7,
+    // backgroundColor: '#FFFFFF',
+    // borderTopWidth: 1,
+    // borderTopColor: '#EEF4FF',
   },
-  tableRowTitle: { fontFamily: 'Poppins-SemiBold', color: "#111827", fontSize: 12.5 },
-  tableRowSub: { color: "#6B7280", fontSize: 11, marginTop: 2 },
-  tableRowAmt: { fontFamily: 'Poppins-SemiBold', color: "#111827" },
+  tableRowTitle: {
+    fontFamily: 'Poppins-SemiBold',
+    color: '#111827',
+    fontSize: 11,
+  },
+  tableRowSub: {
+    color: '#6B7280',
+    fontSize: 10,
+    marginTop: 2,
+    fontFamily: 'Poppins-Regular',
+  },
+  tableRowAmt: {
+    fontFamily: 'Poppins-SemiBold',
+    color: '#111827', fontSize: 11,
+  },
 
-  tableLine: { height: 1, backgroundColor: "#D6E7FF" },
+  tableLine: {
+    borderTopWidth: 1,
+    borderTopColor: '#155f8a',
+  }, //additional service
 
   miniTotalRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     paddingHorizontal: 12,
     paddingVertical: 8,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
-    borderTopColor: "#EEF4FF",
+    borderTopColor: '#EEF4FF',
   },
-  miniLabel: { color: "#374151", fontFamily: 'Poppins-SemiBold' },
-  miniValue: { color: "#111827", fontFamily: 'Poppins-SemiBold' },
+
+  miniLabel: {
+    color: '#374151',
+    fontSize: 11, fontFamily: 'Poppins-SemiBold'
+  },
+  miniValue: {
+    color: '#111827',
+    fontSize: 11, fontFamily: 'Poppins-SemiBold'
+  },
 
   note: {
     paddingHorizontal: 12,
     paddingVertical: 10,
-    color: "#6B7280",
-    fontSize: 10.5,
-    textAlign: "center",
-    backgroundColor: "#FFFFFF",
+    color: 'white',
+    fontSize: 9,
+    fontFamily: 'Poppins-Medium',
+    textAlign: 'center',
+    backgroundColor: '#277cb3',
     borderTopWidth: 1,
-    borderTopColor: "#EEF4FF",
+    borderTopColor: '#EEF4FF',
   },
 
-  whyRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, justifyContent: "center" },
-  whyChip: {
-    backgroundColor: "#F1F5F9",
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderRadius: 12,
-    minWidth: "45%",
+  whyRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 30,
   },
-  whyChipText: { textAlign: "center", fontSize: 11.5, fontFamily: 'Poppins-SemiBold', color: "#111827" },
+
+  whyChip: {
+    width: '48%',          // ✅ 2 columns
+    alignItems: 'center',  // ✅ center icon + text
+    justifyContent: 'center',
+    // backgroundColor: '#F1F5F9',
+    // borderWidth: 1,
+    // borderColor: '#E2E8F0',
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    borderRadius: 14,
+    marginBottom: 10,      // ✅ row gap
+  },
+
+  whyIconWrap: {
+    width: 32,
+    height: 32,
+    // borderRadius: 10,
+    // backgroundColor: '#EAF3FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 6,
+  },
+
+  whyIcon: {
+    width: 40,
+    height: 40,
+    resizeMode: 'contain',
+  },
+  whyIconUser: {
+    width: 50,
+    height: 50,
+    resizeMode: 'contain',
+  },
+  whyChipText: {
+    textAlign: 'center',
+    fontSize: 10,
+    fontFamily: 'Poppins-Medium',
+    color: '#0b3769',
+    lineHeight: 15, marginTop: 10
+  },
 
   processBox: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: 10,
-    justifyContent: "space-between",
+    justifyContent: 'space-between',
   },
   processCol: {
     flex: 1,
-    backgroundColor: "#F8FBFF",
-    borderWidth: 1,
-    borderColor: "#D6E7FF",
-    borderRadius: 14,
+    // backgroundColor: '#F8FBFF',
+    // borderWidth: 1,
+    // borderColor: '#D6E7FF',
+    // borderRadius: 14,
     padding: 10,
   },
   processTitlePill: {
-    backgroundColor: "#2B6CB0",
+    backgroundColor: '#277cb3',
     paddingVertical: 6,
     paddingHorizontal: 8,
-    borderRadius: 999,
+    borderRadius: 10,
     marginBottom: 8,
   },
-  processTitle: { color: "#fff", fontFamily: 'Poppins-SemiBold', fontSize: 11, textAlign: "center" },
-  processItem: { flex: 1, color: "#1F2937", fontSize: 10.8, lineHeight: 15 },
+  processTitle: {
+    color: '#fff',
+    fontFamily: 'Poppins-SemiBold',
+    fontSize: 11,
+    // textAlign: 'center',
+  },
+  processItem: {
+    flex: 1,
+    color: '#000000',
+    fontSize: 10.8,
+    lineHeight: 14,
+    fontFamily: 'Poppins-Regular',
+  },
 
   blockBox: {
-    backgroundColor: "#F8FBFF",
-    borderWidth: 1,
-    borderColor: "#D6E7FF",
-    borderRadius: 14,
+    // backgroundColor: '#F8FBFF',
+    // borderWidth: 1,
+    // borderColor: '#D6E7FF',
+    // borderRadius: 14,
     padding: 12,
   },
-  bulletRow: { flexDirection: "row", gap: 8, marginTop: 6 },
-  bulletDot: { fontFamily: 'Poppins-SemiBold', color: "#2B6CB0" },
-  bulletText: { flex: 1, color: "#1F2937", fontSize: 12, lineHeight: 17 },
-  para: { color: "#1F2937", fontSize: 12, lineHeight: 17 },
+  bulletRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 6,
+  },
+  bulletDot: {
+    fontFamily: 'Poppins-Medium',
+    color: 'black',
+  },
+  bulletText: {
+    flex: 1,
+    fontFamily: 'Poppins-Medium',
+    color: '#707274',
+    fontSize: 11,
+    lineHeight: 17,
+  },
+  para: {
+    color: '#707274',
+    fontSize: 12,
+    lineHeight: 17,
+    fontFamily: 'Poppins-Medium',
+    marginBottom: 5,
+  },
 
-  footer: { marginTop: 18, alignItems: "center" },
-  footerText: { color: "#374151", fontFamily: 'Poppins-SemiBold', textAlign: "center" },
-  linkText: { color: "#2563EB", fontFamily: 'Poppins-SemiBold', },
+  footer: {
+    marginTop: 18,
+    alignItems: 'center',
+  },
+  footerText: {
+    color: '#707274',
+    fontFamily: 'Poppins-Medium',
+    textAlign: 'center',
+    fontSize: 12,
+  },
+  linkText: {
+    color: '#2563EB',
+    fontSize: 12,
+    fontFamily: 'Poppins-SemiBold',
+  },
 
   callBtn: {
     marginTop: 10,
-    backgroundColor: "#2B6CB0",
+    backgroundColor: '#2B6CB0',
     paddingHorizontal: 18,
     paddingVertical: 10,
     borderRadius: 999,
   },
-  callBtnText: { color: "#fff", fontFamily: 'Poppins-SemiBold', },
+  callBtnText: {
+    color: '#fff',
+    fontFamily: 'Poppins-SemiBold',
+  },
 
-  thank: { marginTop: 14, fontFamily: 'Poppins-SemiBold', color: "#111827" },
+  thank: {
+    marginTop: 14,
+    fontFamily: 'Poppins-SemiBold',
+    color: '#111827',
+  },
 });
