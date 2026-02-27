@@ -301,7 +301,10 @@ const Quotes = () => {
           You have not created any quote yet
         </Text>
       ) : (
-        <ScrollView style={{ padding: 10 }}>
+        <ScrollView style={{ padding: 10 }}
+          showsVerticalScrollIndicator={false}
+          showsHorizontalScrollIndicator={false}
+        >
           {quotes.map((quote, idx) => (
             <View
               key={quote.id}

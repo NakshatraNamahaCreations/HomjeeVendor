@@ -130,7 +130,10 @@ const Selectpackage = () => {
   return (
     <View style={styles.container}>
       {loading && <PageLoader />}
-      <ScrollView>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        showsHorizontalScrollIndicator={false}
+      >
         {/* Custom Package */}
         <TouchableOpacity
           style={styles.customPackageButton}

@@ -729,7 +729,10 @@ const SelectPaint = () => {
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 100 }}
+        showsVerticalScrollIndicator={false}
+        showsHorizontalScrollIndicator={false}>
         {!!ceilings.length && (
           <>
             <Text style={styles.sectionTitle}>Ceiling</Text>

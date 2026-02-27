@@ -1415,6 +1415,8 @@ const JobOngoing = () => {
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
+          showsVerticalScrollIndicator={false}
+          showsHorizontalScrollIndicator={false}
         >
           <Text
             style={{
@@ -1464,13 +1466,10 @@ const JobOngoing = () => {
               </View>
             </View>
             <View style={{ flexDirection: 'row' }}>
-              <Image
-                source={require('../assets/icons/location.png')}
-                style={{ marginTop: 9, marginRight: 5, width: 20, height: 20 }}
-              />
               <Text style={styles.descriptionText}>
-                {leadDataContext?.address?.houseFlatNumber},{' '}
-                {leadDataContext?.address?.streetArea}
+                <Ionicons name="location" color="red" size={17} />{' '}
+                {leadDataContext?.address.houseFlatNumber + ','}
+                {leadDataContext?.address.streetArea}
               </Text>
             </View>
             {/* {(leadDataContext?.bookingDetails.status === 'Completed' ||
@@ -1809,253 +1808,253 @@ const JobOngoing = () => {
                   marginTop: 10,
                 }}
               >
-                <View
+                {/* <View
                   style={{
                     backgroundColor: 'white',
                     // padding: 10,
-                    marginTop: 10,
+                    // marginTop: 10,
+                  }}
+                > */}
+                <Text
+                  style={{
+                    fontFamily: 'Poppins-SemiBold',
+                    paddingVertical: 10,
                   }}
                 >
-                  <Text
-                    style={{
-                      fontFamily: 'Poppins-SemiBold',
-                      paddingVertical: 10,
-                    }}
-                  >
-                    Payment Details
-                  </Text>
-                  <View>
-                    {isPending && hasApprovedChange ? (
-                      <>
-                        {/* Show last approved edit info */}
-                        <View style={styles.rowBetween}>
-                          <Text style={styles.amountLabel}>
-                            Old Total Amount
-                          </Text>
-                          <Text style={styles.amountDue}>
-                            {currency(originalTotal)}
-                          </Text>
-                        </View>
-                        <View style={styles.rowBetween}>
-                          <Text style={styles.amountLabel}>Change</Text>
-                          <Text
-                            style={[
-                              styles.amountDue,
-                              {
-                                color: totalApprovedDelta < 0 ? 'red' : 'green',
-                              },
-                            ]}
-                          >
-                            {totalApprovedDelta < 0 ? '-' : '+'}{' '}
-                            {currency(Math.abs(totalApprovedDelta))}
-                          </Text>
-                        </View>
-                        <View style={styles.rowBetween}>
-                          <Text style={styles.amountLabel}>
-                            New Total Amount
-                          </Text>
-                          <Text style={styles.amountDue}>
-                            {currency(approvedTotal)}
-                          </Text>
-                        </View>
-                        <View style={styles.dottedLine2} />
+                  Payment Details
+                </Text>
+                <View>
+                  {isPending && hasApprovedChange ? (
+                    <>
+                      {/* Show last approved edit info */}
+                      <View style={styles.rowBetween}>
+                        <Text style={styles.amountLabel}>
+                          Old Total Amount
+                        </Text>
+                        <Text style={styles.amountDue}>
+                          {currency(originalTotal)}
+                        </Text>
+                      </View>
+                      <View style={styles.rowBetween}>
+                        <Text style={styles.amountLabel}>Change</Text>
+                        <Text
+                          style={[
+                            styles.amountDue,
+                            {
+                              color: totalApprovedDelta < 0 ? 'red' : 'green',
+                            },
+                          ]}
+                        >
+                          {totalApprovedDelta < 0 ? '-' : '+'}{' '}
+                          {currency(Math.abs(totalApprovedDelta))}
+                        </Text>
+                      </View>
+                      <View style={styles.rowBetween}>
+                        <Text style={styles.amountLabel}>
+                          New Total Amount
+                        </Text>
+                        <Text style={styles.amountDue}>
+                          {currency(approvedTotal)}
+                        </Text>
+                      </View>
+                      <View style={styles.dottedLine2} />
 
-                        {/* Payment summary as per last approved */}
-                        <View style={styles.rowBetween}>
-                          <Text style={styles.amountLabel}>Amount Paid</Text>
-                          <Text style={styles.amountPaid}>
-                            {currency(paid)}
-                          </Text>
-                        </View>
-                        <View style={styles.rowBetween}>
-                          <Text style={styles.amountLabel}>
-                            Amount Yet to be Paid
-                          </Text>
-                          <Text style={styles.amountDue}>
-                            {currency(approvedTotal - paid)}
-                          </Text>
-                        </View>
-                        {/* Show pending proposal */}
-                        <View style={styles.rowBetween}>
-                          <Text style={styles.amountLabel}>Change</Text>
-                          <Text
-                            style={[
-                              styles.amountDue,
-                              { color: pendingDelta < 0 ? 'red' : 'green' },
-                            ]}
-                          >
-                            {pendingDelta < 0 ? '-' : '+'}{' '}
-                            {currency(Math.abs(pendingDelta))}
-                          </Text>
-                        </View>
-                        <View style={styles.rowBetween}>
-                          <Text style={styles.amountLabel}>
-                            New Total Amount
-                          </Text>
-                          <Text style={styles.amountDue}>
-                            {currency(pendingTotal)}
-                          </Text>
-                        </View>
-                      </>
-                    ) : isFirstPending ? (
-                      // FIRST TIME PENDING EDIT UI
-                      <>
-                        <View style={styles.rowBetween}>
-                          <Text style={styles.amountLabel}>Total Amount</Text>
-                          <Text style={styles.amountBold}>
-                            {currency(originalTotal)}
-                          </Text>
-                        </View>
-                        <View style={styles.dottedLine2} />
-                        <View style={styles.rowBetween}>
-                          <Text style={styles.amountLabel}>Amount Paid</Text>
-                          <Text style={styles.amountPaid}>
-                            {currency(paid)}
-                          </Text>
-                        </View>
-                        <View style={styles.rowBetween}>
-                          <Text style={styles.amountLabel}>
-                            Amount Yet to be Paid
-                          </Text>
-                          <Text style={styles.amountDue}>
-                            {currency(originalTotal - paid)}
-                          </Text>
-                        </View>
-                        <View style={styles.rowBetween}>
-                          <Text style={styles.amountLabel}>Change</Text>
-                          <Text
-                            style={[
-                              styles.amountDue,
-                              { color: pendingDelta < 0 ? 'red' : 'green' },
-                            ]}
-                          >
-                            {pendingDelta < 0 ? '-' : '+'}{' '}
-                            {currency(Math.abs(pendingDelta))}
-                          </Text>
-                        </View>
-                        <View style={styles.rowBetween}>
-                          <Text style={styles.amountLabel}>New Total</Text>
-                          <Text style={styles.amountDue}>
-                            {currency(pendingTotal)}
-                          </Text>
-                        </View>
-                      </>
-                    ) : showOldTotal ? (
-                      // SUBSEQUENT EDIT/APPROVAL OR REJECTED BLOCK
-                      <>
-                        <View style={styles.rowBetween}>
-                          <Text style={styles.amountLabel}>
-                            Old Total Amount
-                          </Text>
-                          <Text style={styles.amountDue}>
-                            {currency(oldTotal)}
-                          </Text>
-                        </View>
-                        <View style={styles.rowBetween}>
-                          <Text style={styles.amountLabel}>Change</Text>
-                          <Text
-                            style={[
-                              styles.amountDue,
-                              { color: changeDelta < 0 ? 'red' : 'green' },
-                            ]}
-                          >
-                            {changeDelta < 0 ? '-' : '+'}{' '}
-                            {currency(Math.abs(changeDelta))}
-                          </Text>
-                        </View>
-                        <View style={styles.rowBetween}>
-                          <Text style={styles.amountLabel}>
-                            New Total Amount
-                          </Text>
-                          <Text style={styles.amountDue}>
-                            {currency(newTotal)}{' '}
-                            {(leadDataContext?.bookingDetails?.status ===
-                              'Project Ongoing' ||
-                              leadDataContext?.bookingDetails?.status ===
-                              'Job Ongoing') &&
-                              !iconDisabled && (
-                                <TouchableOpacity
-                                  onPress={() => setSecondModalVisible(true)}
-                                  style={{ marginRight: 8 }}
-                                  accessibilityRole="button"
-                                  accessibilityLabel="Edit price"
-                                  disabled={iconDisabled}
-                                >
-                                  <MaterialIcons
-                                    name="edit"
-                                    color={iconDisabled ? 'gray' : 'black'}
-                                    size={20}
-                                  />
-                                </TouchableOpacity>
-                              )}
-                          </Text>
-                        </View>
-                        <View style={styles.dottedLine2} />
-                        <View style={styles.rowBetween}>
-                          <Text style={styles.amountLabel}>Amount Paid</Text>
-                          <Text style={styles.amountPaid}>
-                            {currency(paid)}
-                          </Text>
-                        </View>
-                        <View style={styles.rowBetween}>
-                          <Text style={styles.amountLabel}>
-                            Amount Yet to be Paid
-                          </Text>
-                          <Text style={styles.amountDue}>
-                            {currency(currentVisibleTotal - paid)}
-                          </Text>
-                        </View>
-                      </>
-                    ) : (
-                      // DEFAULT (NO EDIT)
-                      <>
-                        <View style={styles.rowBetween}>
-                          <Text style={styles.amountLabel}>Total Amount</Text>
-                          <Text style={styles.amountBold}>
-                            {currency(originalTotal)}{' '}
-                            {(leadDataContext?.bookingDetails?.status ===
-                              'Project Ongoing' ||
-                              leadDataContext?.bookingDetails?.status ===
-                              'Job Ongoing') &&
-                              !leadDataContext?.bookingDetails?.paymentLink
-                                ?.isActive && (
-                                <TouchableOpacity
-                                  onPress={() => setSecondModalVisible(true)}
-                                  style={{ marginRight: 8 }}
-                                  accessibilityRole="button"
-                                  accessibilityLabel="Edit price"
-                                >
-                                  <MaterialIcons
-                                    name="edit"
-                                    color="black"
-                                    size={20}
-                                  />
-                                </TouchableOpacity>
-                              )}
-                          </Text>
-                        </View>
-                        <View style={styles.dottedLine2} />
-                        <View style={styles.rowBetween}>
-                          <Text style={styles.amountLabel}>Amount Paid</Text>
-                          <Text style={styles.amountPaid}>
-                            {currency(paid)}
-                          </Text>
-                        </View>
-                        <View style={styles.rowBetween}>
-                          <Text style={styles.amountLabel}>
-                            Amount Yet to be Paid
-                          </Text>
-                          <Text style={styles.amountDue}>
-                            {firstPaid && secondPending && finalPending
-                              ? currency(bd.amountYetToPay)
-                              : // either bd.finalPayment.remaining
-                              currency(originalTotal - paid)}
-                          </Text>
-                        </View>
-                      </>
-                    )}
-                  </View>
+                      {/* Payment summary as per last approved */}
+                      <View style={styles.rowBetween}>
+                        <Text style={styles.amountLabel}>Amount Paid</Text>
+                        <Text style={styles.amountPaid}>
+                          {currency(paid)}
+                        </Text>
+                      </View>
+                      <View style={styles.rowBetween}>
+                        <Text style={styles.amountLabel}>
+                          Amount Yet to be Paid
+                        </Text>
+                        <Text style={styles.amountDue}>
+                          {currency(approvedTotal - paid)}
+                        </Text>
+                      </View>
+                      {/* Show pending proposal */}
+                      <View style={styles.rowBetween}>
+                        <Text style={styles.amountLabel}>Change</Text>
+                        <Text
+                          style={[
+                            styles.amountDue,
+                            { color: pendingDelta < 0 ? 'red' : 'green' },
+                          ]}
+                        >
+                          {pendingDelta < 0 ? '-' : '+'}{' '}
+                          {currency(Math.abs(pendingDelta))}
+                        </Text>
+                      </View>
+                      <View style={styles.rowBetween}>
+                        <Text style={styles.amountLabel}>
+                          New Total Amount
+                        </Text>
+                        <Text style={styles.amountDue}>
+                          {currency(pendingTotal)}
+                        </Text>
+                      </View>
+                    </>
+                  ) : isFirstPending ? (
+                    // FIRST TIME PENDING EDIT UI
+                    <>
+                      <View style={styles.rowBetween}>
+                        <Text style={styles.amountLabel}>Total Amount</Text>
+                        <Text style={styles.amountBold}>
+                          {currency(originalTotal)}
+                        </Text>
+                      </View>
+                      <View style={styles.dottedLine2} />
+                      <View style={styles.rowBetween}>
+                        <Text style={styles.amountLabel}>Amount Paid</Text>
+                        <Text style={styles.amountPaid}>
+                          {currency(paid)}
+                        </Text>
+                      </View>
+                      <View style={styles.rowBetween}>
+                        <Text style={styles.amountLabel}>
+                          Amount Yet to be Paid
+                        </Text>
+                        <Text style={styles.amountDue}>
+                          {currency(originalTotal - paid)}
+                        </Text>
+                      </View>
+                      <View style={styles.rowBetween}>
+                        <Text style={styles.amountLabel}>Change</Text>
+                        <Text
+                          style={[
+                            styles.amountDue,
+                            { color: pendingDelta < 0 ? 'red' : 'green' },
+                          ]}
+                        >
+                          {pendingDelta < 0 ? '-' : '+'}{' '}
+                          {currency(Math.abs(pendingDelta))}
+                        </Text>
+                      </View>
+                      <View style={styles.rowBetween}>
+                        <Text style={styles.amountLabel}>New Total</Text>
+                        <Text style={styles.amountDue}>
+                          {currency(pendingTotal)}
+                        </Text>
+                      </View>
+                    </>
+                  ) : showOldTotal ? (
+                    // SUBSEQUENT EDIT/APPROVAL OR REJECTED BLOCK
+                    <>
+                      <View style={styles.rowBetween}>
+                        <Text style={styles.amountLabel}>
+                          Old Total Amount
+                        </Text>
+                        <Text style={styles.amountDue}>
+                          {currency(oldTotal)}
+                        </Text>
+                      </View>
+                      <View style={styles.rowBetween}>
+                        <Text style={styles.amountLabel}>Change</Text>
+                        <Text
+                          style={[
+                            styles.amountDue,
+                            { color: changeDelta < 0 ? 'red' : 'green' },
+                          ]}
+                        >
+                          {changeDelta < 0 ? '-' : '+'}{' '}
+                          {currency(Math.abs(changeDelta))}
+                        </Text>
+                      </View>
+                      <View style={styles.rowBetween}>
+                        <Text style={styles.amountLabel}>
+                          New Total Amount
+                        </Text>
+                        <Text style={styles.amountDue}>
+                          {currency(newTotal)}{' '}
+                          {(leadDataContext?.bookingDetails?.status ===
+                            'Project Ongoing' ||
+                            leadDataContext?.bookingDetails?.status ===
+                            'Job Ongoing') &&
+                            !iconDisabled && (
+                              <TouchableOpacity
+                                onPress={() => setSecondModalVisible(true)}
+                                style={{ marginRight: 8 }}
+                                accessibilityRole="button"
+                                accessibilityLabel="Edit price"
+                                disabled={iconDisabled}
+                              >
+                                <MaterialIcons
+                                  name="edit"
+                                  color={iconDisabled ? 'gray' : 'black'}
+                                  size={20}
+                                />
+                              </TouchableOpacity>
+                            )}
+                        </Text>
+                      </View>
+                      <View style={styles.dottedLine2} />
+                      <View style={styles.rowBetween}>
+                        <Text style={styles.amountLabel}>Amount Paid</Text>
+                        <Text style={styles.amountPaid}>
+                          {currency(paid)}
+                        </Text>
+                      </View>
+                      <View style={styles.rowBetween}>
+                        <Text style={styles.amountLabel}>
+                          Amount Yet to be Paid
+                        </Text>
+                        <Text style={styles.amountDue}>
+                          {currency(currentVisibleTotal - paid)}
+                        </Text>
+                      </View>
+                    </>
+                  ) : (
+                    // DEFAULT (NO EDIT)
+                    <>
+                      <View style={styles.rowBetween}>
+                        <Text style={styles.amountLabel}>Total Amount</Text>
+                        <Text style={styles.amountBold}>
+                          {currency(originalTotal)}{' '}
+                          {(leadDataContext?.bookingDetails?.status ===
+                            'Project Ongoing' ||
+                            leadDataContext?.bookingDetails?.status ===
+                            'Job Ongoing') &&
+                            !leadDataContext?.bookingDetails?.paymentLink
+                              ?.isActive && (
+                              <TouchableOpacity
+                                onPress={() => setSecondModalVisible(true)}
+                                style={{ marginRight: 8 }}
+                                accessibilityRole="button"
+                                accessibilityLabel="Edit price"
+                              >
+                                <MaterialIcons
+                                  name="edit"
+                                  color="black"
+                                  size={20}
+                                />
+                              </TouchableOpacity>
+                            )}
+                        </Text>
+                      </View>
+                      <View style={styles.dottedLine2} />
+                      <View style={styles.rowBetween}>
+                        <Text style={styles.amountLabel}>Amount Paid</Text>
+                        <Text style={styles.amountPaid}>
+                          {currency(paid)}
+                        </Text>
+                      </View>
+                      <View style={styles.rowBetween}>
+                        <Text style={styles.amountLabel}>
+                          Amount Yet to be Paid
+                        </Text>
+                        <Text style={styles.amountDue}>
+                          {firstPaid && secondPending && finalPending
+                            ? currency(bd.amountYetToPay)
+                            : // either bd.finalPayment.remaining
+                            currency(originalTotal - paid)}
+                        </Text>
+                      </View>
+                    </>
+                  )}
                 </View>
+                {/* </View> */}
               </View>
             ) : null
           }
@@ -2806,7 +2805,10 @@ const JobOngoing = () => {
             </Text>
             {isSlotLoaded && <PageLoader />}
             {availableSlots?.length > 0 ? (
-              <ScrollView>
+              <ScrollView
+                showsVerticalScrollIndicator={false}
+                showsHorizontalScrollIndicator={false}
+              >
                 <View style={styles.slotWrapper}>
                   {availableSlots.map((slot, idx) => (
                     <TouchableOpacity
@@ -3076,7 +3078,10 @@ const JobOngoing = () => {
                 <AntDesign name="close" color="black" size={20} />
               </TouchableOpacity>
             </View>
-            <ScrollView style={styles.memberList}>
+            <ScrollView style={styles.memberList}
+              showsVerticalScrollIndicator={false}
+              showsHorizontalScrollIndicator={false}
+            >
               {availableTeam.length > 0 ? (
                 availableTeam.map(member => {
                   const isSelected = selectedMembers.includes(member._id);
@@ -3190,7 +3195,9 @@ const JobOngoing = () => {
             </View>
             {packageList?.length > 0 ? (
               <View style={{ marginTop: 10 }}>
-                <ScrollView>
+                <ScrollView
+                  showsVerticalScrollIndicator={false}
+                  showsHorizontalScrollIndicator={false}>
                   {packageList.map(item => (
                     <View key={item._id}>
                       <Text

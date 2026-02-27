@@ -1,4 +1,4 @@
-// export const API_BASE_URL = 'http://192.168.1.70:9000/api'; // development
+// export const API_BASE_URL = 'http://192.168.1.73:9000/api'; // development
 export const API_BASE_URL = 'https://homjee-backend.onrender.com/api'; // production
 
 export const API_ENDPOINTS = {
@@ -92,8 +92,6 @@ export const API_ENDPOINTS = {
   GET_NOTIFICATION: "/notification/fetch-vendor-notifications/",
   MARK_AS_READ_NOTIFICATION: "/notification/mark-notification-read/",
 };
-
-
 
 
 // status stage - house painting

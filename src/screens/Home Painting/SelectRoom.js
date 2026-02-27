@@ -927,7 +927,10 @@ const SelectRoom = () => {
             </TouchableOpacity>
           ))}
         </View>
-        <ScrollView contentContainerStyle={styles.roomList}>
+        <ScrollView contentContainerStyle={styles.roomList}
+          showsVerticalScrollIndicator={false}
+          showsHorizontalScrollIndicator={false}
+        >
           {groupedRooms[activeTab]?.map((room, index) => {
             const line = linesByRoom[norm(room.name)];
             const hasPricing = !!line;

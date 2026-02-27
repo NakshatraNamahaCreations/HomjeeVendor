@@ -435,7 +435,10 @@ export default function QuotesView() {
   // ✅ UI
   // =========================
   return (
-    <ScrollView style={styles.page} contentContainerStyle={styles.pageInner}>
+    <ScrollView style={styles.page}
+      showsVerticalScrollIndicator={false}
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.pageInner}>
       {/* Header */}
       <View style={styles.header}>
         <Image

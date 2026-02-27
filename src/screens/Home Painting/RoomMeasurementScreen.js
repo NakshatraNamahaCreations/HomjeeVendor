@@ -1206,6 +1206,8 @@ const RoomMeasurementScreen = () => {
         ref={scrollViewRef}
         contentContainerStyle={styles.scrollContent}
         key={nameOfTheRoom || type}
+        showsVerticalScrollIndicator={false}
+        showsHorizontalScrollIndicator={false}
       >
         <View style={{ marginBottom: 80 }}>
           {/* Interior & Room-Like */}

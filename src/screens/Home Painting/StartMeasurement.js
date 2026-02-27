@@ -449,7 +449,10 @@ const StartMeasurement = () => {
             </TouchableOpacity>
           ))}
         </View>
-        <ScrollView contentContainerStyle={{ padding: 16, marginBottom: 100 }}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ padding: 16, marginBottom: 100 }}>
           {displayList.length === 0 ? (
             <Text style={{ color: 'black' }}>
               No items (should never see this)
