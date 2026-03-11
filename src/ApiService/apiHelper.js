@@ -5,7 +5,7 @@ export const postRequest = async (url, data) => {
     const response = await api.post(url, data);
     return response.data;
   } catch (error) {
-    console.error('POST error:', error.response || error);
+    // console.error('POST error:', error.response || error);
     throw error.response ? error.response.data : error;
   }
 };

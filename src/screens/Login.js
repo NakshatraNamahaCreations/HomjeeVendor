@@ -86,7 +86,7 @@ const Login = () => {
         otp: result.otp,
       });
     } catch (error) {
-      console.log('Login failed:', error?.message);
+      // console.log('Login failed:', error?.message);
       setIsModalVisible(true);
       // ToastAndroid.showWithGravity(
       //   error?.message || 'Failed to send OTP',

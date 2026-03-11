@@ -23,9 +23,27 @@ export default function WalletCard({
           <View
             style={{ flexDirection: 'row', justifyContent: 'space-between' }}
           >
+            {/* <View style={{ flex: 0.5 }}> */}
             <Text style={styles.title}>Your Coin Balance</Text>
-            <Text style={[styles.title, { color: '#d3d3d3' }]}>
-              Perfomance:{' '}
+            {/* </View> */}
+            {/* <View style={{ flex: 0.5 }}> */}
+
+            {/* </View> */}
+          </View>
+          <View style={{ flexDirection: 'row' }}>
+            <View style={{ flex: 0.5 }}>
+              <Text style={styles.coins}>{coinText}</Text>
+            </View>
+            <View
+              style={{
+                alignItems: 'flex-end',
+                justifyContent: 'center',
+                flex: 0.5,
+              }}
+            >
+              <Text style={[styles.title, { color: '#d3d3d3' }]}>
+                Perfomance{' '}
+              </Text>
               <Text
                 style={[
                   styles.title,
@@ -39,9 +57,8 @@ export default function WalletCard({
                 )}{' '}
                 {isPerformanceLow ? 'Low' : 'Good'}
               </Text>
-            </Text>
+            </View>
           </View>
-          <Text style={styles.coins}>{coinText}</Text>
         </View>
       </View>
 
@@ -133,7 +150,7 @@ const styles = StyleSheet.create({
   coins: {
     marginTop: 4,
     color: '#f1f1f1',
-    fontSize: 28,
+    fontSize: 18,
     fontFamily: 'Poppins-SemiBold',
   },
 
