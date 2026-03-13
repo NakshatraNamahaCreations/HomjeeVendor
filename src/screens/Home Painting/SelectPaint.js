@@ -194,20 +194,60 @@ const SelectPaint = () => {
     return Array.from(map.values());
   };
 
+  // const fetchPaintProducts = async () => {
+  //   setLoading(true);
+  //   try {
+  //     const resp = await getRequest(`${API_ENDPOINTS.GET_PAINT}?city=${vendorCity}`);
+  //     const fresh = resp?.paints || resp?.data?.paints || [];
+  //     console.log("PAINT OPTIONS COUNT:", fresh.length);
+  //     const byName = {};
+  //     fresh.forEach(p => {
+  //       const k = String(p?.name || "").trim().toLowerCase();
+  //       byName[k] = (byName[k] || 0) + 1;
+  //     });
+  //     console.log("DUPLICATE NAMES:", Object.entries(byName).filter(([, c]) => c > 1)); 
+  //     setPaintOptions(fresh);
+  //   } catch (e) {
+  //     console.log('error while fetching data', e);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
   const fetchPaintProducts = async () => {
     setLoading(true);
     try {
       const resp = await getRequest(`${API_ENDPOINTS.GET_PAINT}?city=${vendorCity}`);
       const fresh = resp?.paints || resp?.data?.paints || [];
-      console.log("PAINT OPTIONS COUNT:", fresh.length);
+
+      console.log('PAINT OPTIONS COUNT:', fresh.length);
+
       const byName = {};
       fresh.forEach(p => {
-        const k = String(p?.name || "").trim().toLowerCase();
+        const k = String(p?.name || '').trim().toLowerCase();
         byName[k] = (byName[k] || 0) + 1;
       });
-      console.log("DUPLICATE NAMES:", Object.entries(byName).filter(([, c]) => c > 1));
-      // setPaintOptions(prev => mergeById(prev || [], fresh));
-      setPaintOptions(fresh);
+
+      console.log(
+        'DUPLICATE NAMES:',
+        Object.entries(byName).filter(([, c]) => c > 1),
+      );
+
+      const sorted = [...fresh].sort((a, b) => {
+        try {
+          const ao = Number(a?.order ?? 999999);
+          const bo = Number(b?.order ?? 999999);
+
+          if (ao !== bo) return ao - bo;
+
+          return String(a?.name || '').localeCompare(String(b?.name || ''));
+        } catch (e) {
+          console.log('fetch sort error:', e);
+          return 0;
+        }
+      });
+
+      setPaintOptions(sorted);
     } catch (e) {
       console.log('error while fetching data', e);
     } finally {

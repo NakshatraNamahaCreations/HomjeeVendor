@@ -543,19 +543,15 @@ const LeadDescriptionScreen = () => {
   };
 
   const backgroundColorStatus = () => {
-    if (
-      leadDataContext.bookingDetails?.status === 'Survey Ongoing' ||
-      leadDataContext.bookingDetails?.status === 'Job Ongoing'
-    ) {
+    const status = leadDataContext?.bookingDetails?.status;
+
+    if (status === 'Survey Ongoing' || status === 'Job Ongoing') {
       return '#FF7F00';
-    }
-    // else if (leadDataContext.bookingDetails?.status === 'Confirmed') {
-    //   return 'green';
-    // }
-    else if (
-      leadDataContext.bookingDetails?.status === 'Customer Cancelled' ||
-      leadDataContext.bookingDetails?.status === 'Rescheduled' ||
-      leadDataContext.bookingDetails?.status === 'Customer Denied'
+    } else if (
+      status === 'Customer Cancelled' ||
+      status === 'Rescheduled' ||
+      status === 'Customer Denied' ||
+      status === 'Customer Unreachable'
     ) {
       return '#ff0000';
     }
@@ -647,7 +643,6 @@ const LeadDescriptionScreen = () => {
 
   return (
     <View style={styles.container}>
-
       {loading && <PageLoader />}
 
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -905,7 +900,7 @@ const LeadDescriptionScreen = () => {
               onPress={
                 vendorDataContext?.vendor?.serviceType === 'house-painter' ||
                   vendorDataContext?.vendor?.serviceType === 'House Painting'
-                  ? handleOpenOtp // start,otp/house painting 
+                  ? handleOpenOtp // start,otp/house painting
                   : handleStartJob // start,team,otp/deep cleaning
               }
             >
@@ -1100,7 +1095,7 @@ const LeadDescriptionScreen = () => {
               style={styles.statusOption}
               onPress={() => {
                 setShowRescheduleModal(true);
-                setStatusModalVisible(false)
+                setStatusModalVisible(false);
                 //  handleUpdateStatus('Customer Reschedule')
               }}
             >

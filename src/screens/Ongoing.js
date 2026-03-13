@@ -19,6 +19,7 @@ import {
   Animated,
   StatusBar,
   TextInput,
+  Pressable,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Header from '../components/Header';
@@ -361,7 +362,7 @@ const OngoingLeadsScreen = () => {
       lead.selectedSlot?.slotTime,
     );
     return (
-      <TouchableOpacity
+      <Pressable
         style={{
           backgroundColor: 'white',
           marginBottom: 10,
@@ -439,7 +440,7 @@ const OngoingLeadsScreen = () => {
             {showStatus(lead)}
           </Text>
         </View>
-      </TouchableOpacity>
+      </Pressable>
     );
   });
   return (
@@ -775,7 +776,7 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     paddingTop: 10,
-    marginBottom: 200,
+    marginBottom: 50,
   },
   radioCircleInner: {
     width: 12,

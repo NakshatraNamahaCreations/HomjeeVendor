@@ -53,7 +53,7 @@ const SelectRoom = () => {
   const [activeQuote, setActiveQuote] = useState(
     hasInitial ? initialQuote : null,
   );
-  // console.log('applyMode', applyMode);
+  console.log('roomsData', roomsData);
   console.log('activeQuote', activeQuote);
 
   const [loadingQuote, setLoadingQuote] = useState(!hasInitial);
@@ -91,7 +91,7 @@ const SelectRoom = () => {
       throw e;
     }
   };
-  // console.log('estimateData', estimateData);
+  console.log('predefPackage', predefPackage);
 
   const clearQuoteServices = async (quoteId, line) => {
     setResponseLoader(true);
@@ -127,34 +127,6 @@ const SelectRoom = () => {
     subtotal: 0,
   });
 
-  // REPLACE confirmDiscardAndGoBack with:
-  // const confirmDiscardAndLeave = goBackCallback => {
-  //   Alert.alert(
-  //     'Discard changes?',
-  //     'Are you sure you want to exit without saving the changes?',
-  //     [
-  //       { text: 'No', style: 'cancel' },
-  //       {
-  //         text: 'Yes',
-  //         style: 'destructive',
-  //         onPress: async () => {
-  //           try {
-  //             // Call zeroizeQuote to clear data
-  //             await zeroizeQuote();
-
-  //             // After clearing the quote, navigate back
-  //             goBackCallback(); // Now go back to the previous screen
-  //           } catch (error) {
-  //             console.log(
-  //               'Something went wrong while discarding changes:',
-  //               error,
-  //             );
-  //           }
-  //         },
-  //       },
-  //     ],
-  //   );
-  // };
 
   const confirmDiscardAndLeave = goBackCallback => {
     confirmActionRef.current = goBackCallback;
@@ -514,7 +486,8 @@ const SelectRoom = () => {
     return {
       id: String(d._id?.$oid || d._id || d.id || `pkg-${d.paintName}`),
       name: d.paintName,
-      isSpecial: /special/i.test(d.paintType || ''),
+      // isSpecial: /special/i.test(d.paintType || ''),
+      isSpecial: !!d.isSpecial,
       price: Number(d.paintPrice || 0),
       includePuttyOnFresh: !!d.includePuttyOnFresh,
       includePuttyOnRepaint: !!d.includePuttyOnRepaint,
@@ -612,8 +585,17 @@ const SelectRoom = () => {
     !(Array.isArray(room?.ceilings) && room.ceilings.length) &&
     !(Array.isArray(room?.walls) && room.walls.length);
 
-  const isSpecialPaint = paint =>
-    !!paint?.isSpecial || /spl|special/i.test(paint?.name || '');
+  // const isSpecialPaint = paint =>
+  //   !!paint?.isSpecial || /sp|special/i.test(paint?.name || '');l
+
+  const isSpecialPaint = paint => {
+    try {
+      return !!paint?.isSpecial;
+    } catch (e) {
+      console.log('isSpecialPaint error', e);
+      return false;
+    }
+  };
 
   const specialBadge = (
     <Text style={{ color: '#ED1F24', fontWeight: '700' }}>S </Text>
@@ -829,50 +811,6 @@ const SelectRoom = () => {
         </View>
       </View>
     );
-    // return (
-    //   <View style={{ marginTop: 8 }}>
-    //     {room.sectionType !== 'Others' ? (
-    //       <>
-    //         {!!cSum.length && (
-    //           <>
-    //             <Text style={styles.detailTitle}>Ceilings</Text>
-    //             {cSum.map((r, i) => (
-    //               <Row key={`c-${i}`} r={r} />
-    //             ))}
-    //             {!!wSum.length && <View style={styles.underlineRed} />}
-    //           </>
-    //         )}
-
-    //         {!!wSum.length && (
-    //           <>
-    //             <Text style={styles.detailTitle}>Walls</Text>
-    //             {wSum.map((r, i) => (
-    //               <Row key={`w-${i}`} r={r} />
-    //             ))}
-    //             <View style={styles.underlineRed} />
-    //           </>
-    //         )}
-    //       </>
-    //     ) : (
-    //       !!mSum.length && (
-    //         <>
-    //           <Text style={styles.detailTitle}>{room.name}</Text>
-    //           {mSum.map((r, i) => (
-    //             <Row key={`m-${i}`} r={r} />
-    //           ))}
-    //           <View style={styles.underlineRed} />
-    //         </>
-    //       )
-    //     )}
-    //     {renderAdditionalBlock(room, line)}
-    //     <View style={styles.detailRow}>
-    //       <Text style={styles.totalCostLabel}>Total Cost</Text>
-    //       <Text style={styles.totalCostValue}>
-    //         {fmtMoney(paintSubtotal + additionalTotal)}
-    //       </Text>
-    //     </View>
-    //   </View>
-    // );
   };
 
   return (

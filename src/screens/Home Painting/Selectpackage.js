@@ -75,6 +75,8 @@ const Selectpackage = () => {
   }, []);
 
   console.log('response puttyPrice Rs.', puttyPrice);
+  console.log('selectedPackage', selectedPackage);
+
 
   const deleteQuote = async id => {
     console.log('calling funtion');

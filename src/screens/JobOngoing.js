@@ -43,7 +43,7 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import ResponseLoader from '../components/ResponseLoader';
 import DynamicImage from '../Utilities/DynamicImage';
-import DateTimePickerModal from "react-native-modal-datetime-picker";
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
 
 const JobOngoing = () => {
   useBackHandler();
@@ -98,7 +98,8 @@ const JobOngoing = () => {
 
   const todayISO = new Date().toISOString().split('T')[0];
   const [isSlotLoaded, setIsSlotLoaded] = useState(false);
-  const [selectedRescheduleDate, setSelectedRescheduleDate] = useState(todayISO);
+  const [selectedRescheduleDate, setSelectedRescheduleDate] =
+    useState(todayISO);
   const [markedDates, setMarkedDates] = useState({});
   const [availability, setAvailability] = useState({});
   const [isStored, setIsStored] = useState(false);
@@ -116,14 +117,13 @@ const JobOngoing = () => {
   const [joinedOtp, setJoinedOTP] = useState(null);
   const [showOTP, setShowOTP] = useState(null);
 
-  const [starJob, setStarJob] = useState(false); //reschedule
+  const [messageType, setMessageType] = useState(0); //reschedule
   const [showRescheduleModal, setShowRescheduleModal] = useState(false);
   const [openStatusModal, setOpenStatusModal] = useState(false);
   const [availableSlots, setAvailableSlots] = useState([]);
   const [isSlotSelected, setIsSlotSelected] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState('');
   const [requiredTime, setRequiredTime] = useState(null);
-
 
   useEffect(() => {
     if (!vendorDataContext?._id || !leadId || !selectedRescheduleDate) return;
@@ -152,7 +152,7 @@ const JobOngoing = () => {
     }
   };
 
-  console.log("availableSlots in JOB ONGONG", availableSlots);
+  console.log('availableSlots in JOB ONGONG', availableSlots);
 
   const handleResetSlotndClose = () => {
     setShowRescheduleModal(false);
@@ -227,31 +227,37 @@ const JobOngoing = () => {
     }
   }
 
-
   const handleCloseRemainderPopup = () => {
     setOpenRemainderCalendar(false);
     setSelectedRemainderDate(null);
     setSelectedRemainderTime(null);
-  }
+  };
 
   const existingReminderAt = leadDataContext?.leadReminder?.reminderAt; // ISO from DB
-  const existingDate = existingReminderAt ? moment(existingReminderAt).format("YYYY-MM-DD") : null;
-  const existingTimeText = existingReminderAt ? moment(existingReminderAt).format("hh:mm A") : null;
+  const existingDate = existingReminderAt
+    ? moment(existingReminderAt).format('YYYY-MM-DD')
+    : null;
+  const existingTimeText = existingReminderAt
+    ? moment(existingReminderAt).format('hh:mm A')
+    : null;
   const markedDateKey = selectedRemainderDate || existingDate;
 
   const canSetReminder = !!selectedRemainderDate && !!selectedRemainderTime;
 
-  const formatTime = (dateObj) => {
+  const formatTime = dateObj => {
     try {
-      if (!dateObj) return "";
+      if (!dateObj) return '';
       const hh = dateObj.getHours();
       const mm = dateObj.getMinutes();
-      const ampm = hh >= 12 ? "PM" : "AM";
+      const ampm = hh >= 12 ? 'PM' : 'AM';
       const h12 = hh % 12 || 12;
-      return `${String(h12).padStart(2, "0")}:${String(mm).padStart(2, "0")} ${ampm}`;
+      return `${String(h12).padStart(2, '0')}:${String(mm).padStart(
+        2,
+        '0',
+      )} ${ampm}`;
     } catch (e) {
       console.log(e);
-      return "";
+      return '';
     }
   };
 
@@ -259,7 +265,7 @@ const JobOngoing = () => {
     try {
       if (!selectedRemainderDate || !selectedRemainderTime) return null;
 
-      const [y, m, d] = selectedRemainderDate.split("-").map(Number);
+      const [y, m, d] = selectedRemainderDate.split('-').map(Number);
 
       const hh = selectedRemainderTime.getHours();
       const mm = selectedRemainderTime.getMinutes();
@@ -664,13 +670,17 @@ const JobOngoing = () => {
 
   // CUSTOMER  UNREACHABLE
   // const custUnReach =
-  //   leadDataContext?.bookingDetails?.status !== 'Customer Unreachable' 
+  //   leadDataContext?.bookingDetails?.status !== 'Customer Unreachable'
   //   leadDataContext?.bookingDetails?.status === 'Negotiation' ||
   //               leadDataContext?.bookingDetails?.status === 'Customer Denied'
 
   const status = leadDataContext?.bookingDetails?.status;
 
-  const custUnReach = ['Customer Unreachable', 'Negotiation', 'Customer Denied'].includes(status)
+  const custUnReach = [
+    'Customer Unreachable',
+    'Negotiation',
+    'Customer Denied',
+  ].includes(status);
 
   const started = !!leadDataContext?.bookingDetails?.startProject;
   const showStartProjectBtn =
@@ -1556,36 +1566,45 @@ const JobOngoing = () => {
               </TouchableOpacity>
             </View>
           </View>
-          {leadDataContext?.leadReminder && leadDataContext.leadReminder?.status === "pending" &&
-            <View style={{
-              backgroundColor: 'white',
-              marginBottom: 15, borderRadius: 5,
-              padding: 10,
-              borderColor: "#ED1F24", borderWidth: 1,
-              marginHorizontal: 5
-            }}>
-              <Text style={{
-                fontSize: 14,
-                fontFamily: 'Poppins-Medium',
-                color: '#ED1F24', textAlign: "center"
-              }}>
-
-                Reminder set for{" "}
-                {leadDataContext.leadReminder?.reminderAt
-                  ? `${moment(leadDataContext.leadReminder?.reminderAt).format("DD-MM-YYYY")} at ${moment(
-                    leadDataContext.leadReminder?.reminderAt
-                  ).format("h:mma")}`
-                  : "--"}
-
-                {/* Reminder set for{" "}
+          {leadDataContext?.leadReminder &&
+            leadDataContext.leadReminder?.status === 'pending' && (
+              <View
+                style={{
+                  backgroundColor: 'white',
+                  marginBottom: 15,
+                  borderRadius: 5,
+                  padding: 10,
+                  borderColor: '#ED1F24',
+                  borderWidth: 1,
+                  marginHorizontal: 5,
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 14,
+                    fontFamily: 'Poppins-Medium',
+                    color: '#ED1F24',
+                    textAlign: 'center',
+                  }}
+                >
+                  Reminder set for{' '}
+                  {leadDataContext.leadReminder?.reminderAt
+                    ? `${moment(
+                      leadDataContext.leadReminder?.reminderAt,
+                    ).format('DD-MM-YYYY')} at ${moment(
+                      leadDataContext.leadReminder?.reminderAt,
+                    ).format('h:mma')}`
+                    : '--'}
+                  {/* Reminder set for{" "}
   {leadDataContext?.leadReminder?.reminderAt 
     ? `${moment(leadDataContext.leadReminder.reminderAt).format("DD-MMM-YYYY")} at ${moment(
         leadDataContext.leadReminder.reminderAt
       ).format("h:mma")}` 
-    : "--"} */}   {/* 29 Mar 2025 at 5:30pm */}
-              </Text>
-            </View>
-          }
+    : "--"} */}{' '}
+                  {/* 29 Mar 2025 at 5:30pm */}
+                </Text>
+              </View>
+            )}
           {leadDataContext?.service[0]?.category === 'Deep Cleaning' ? (
             <>
               <View style={styles.packageRow}>
@@ -1791,14 +1810,15 @@ const JobOngoing = () => {
             // leadDataContext?.bookingDetails?.status === 'Pending Hiring' ||
             leadDataContext?.bookingDetails?.status === 'Hired' ||
               leadDataContext?.bookingDetails?.status === 'Customer Cancelled' ||
-              (leadDataContext?.bookingDetails?.status === 'Customer Unreachable'
-                && firstPaid) ||
+              (leadDataContext?.bookingDetails?.status ===
+                'Customer Unreachable' &&
+                firstPaid) ||
               leadDataContext?.bookingDetails?.status === 'Project Ongoing' ||
               leadDataContext?.bookingDetails?.status ===
               'Waiting for final payment' ||
               // leadDataContext?.bookingDetails?.status === 'Survey Completed' ||
-              (vendorDataContext?.vendor?.serviceType === 'deep cleaning' ||
-                vendorDataContext?.vendor?.serviceType === 'Deep Cleaning') || // deep cleaing
+              vendorDataContext?.vendor?.serviceType === 'deep cleaning' ||
+              vendorDataContext?.vendor?.serviceType === 'Deep Cleaning' || // deep cleaing
               leadDataContext?.bookingDetails?.status === 'Project Completed' ? (
               <View
                 style={{
@@ -1828,9 +1848,7 @@ const JobOngoing = () => {
                     <>
                       {/* Show last approved edit info */}
                       <View style={styles.rowBetween}>
-                        <Text style={styles.amountLabel}>
-                          Old Total Amount
-                        </Text>
+                        <Text style={styles.amountLabel}>Old Total Amount</Text>
                         <Text style={styles.amountDue}>
                           {currency(originalTotal)}
                         </Text>
@@ -1850,9 +1868,7 @@ const JobOngoing = () => {
                         </Text>
                       </View>
                       <View style={styles.rowBetween}>
-                        <Text style={styles.amountLabel}>
-                          New Total Amount
-                        </Text>
+                        <Text style={styles.amountLabel}>New Total Amount</Text>
                         <Text style={styles.amountDue}>
                           {currency(approvedTotal)}
                         </Text>
@@ -1862,9 +1878,7 @@ const JobOngoing = () => {
                       {/* Payment summary as per last approved */}
                       <View style={styles.rowBetween}>
                         <Text style={styles.amountLabel}>Amount Paid</Text>
-                        <Text style={styles.amountPaid}>
-                          {currency(paid)}
-                        </Text>
+                        <Text style={styles.amountPaid}>{currency(paid)}</Text>
                       </View>
                       <View style={styles.rowBetween}>
                         <Text style={styles.amountLabel}>
@@ -1888,9 +1902,7 @@ const JobOngoing = () => {
                         </Text>
                       </View>
                       <View style={styles.rowBetween}>
-                        <Text style={styles.amountLabel}>
-                          New Total Amount
-                        </Text>
+                        <Text style={styles.amountLabel}>New Total Amount</Text>
                         <Text style={styles.amountDue}>
                           {currency(pendingTotal)}
                         </Text>
@@ -1908,9 +1920,7 @@ const JobOngoing = () => {
                       <View style={styles.dottedLine2} />
                       <View style={styles.rowBetween}>
                         <Text style={styles.amountLabel}>Amount Paid</Text>
-                        <Text style={styles.amountPaid}>
-                          {currency(paid)}
-                        </Text>
+                        <Text style={styles.amountPaid}>{currency(paid)}</Text>
                       </View>
                       <View style={styles.rowBetween}>
                         <Text style={styles.amountLabel}>
@@ -1943,9 +1953,7 @@ const JobOngoing = () => {
                     // SUBSEQUENT EDIT/APPROVAL OR REJECTED BLOCK
                     <>
                       <View style={styles.rowBetween}>
-                        <Text style={styles.amountLabel}>
-                          Old Total Amount
-                        </Text>
+                        <Text style={styles.amountLabel}>Old Total Amount</Text>
                         <Text style={styles.amountDue}>
                           {currency(oldTotal)}
                         </Text>
@@ -1963,9 +1971,7 @@ const JobOngoing = () => {
                         </Text>
                       </View>
                       <View style={styles.rowBetween}>
-                        <Text style={styles.amountLabel}>
-                          New Total Amount
-                        </Text>
+                        <Text style={styles.amountLabel}>New Total Amount</Text>
                         <Text style={styles.amountDue}>
                           {currency(newTotal)}{' '}
                           {(leadDataContext?.bookingDetails?.status ===
@@ -1992,9 +1998,7 @@ const JobOngoing = () => {
                       <View style={styles.dottedLine2} />
                       <View style={styles.rowBetween}>
                         <Text style={styles.amountLabel}>Amount Paid</Text>
-                        <Text style={styles.amountPaid}>
-                          {currency(paid)}
-                        </Text>
+                        <Text style={styles.amountPaid}>{currency(paid)}</Text>
                       </View>
                       <View style={styles.rowBetween}>
                         <Text style={styles.amountLabel}>
@@ -2036,9 +2040,7 @@ const JobOngoing = () => {
                       <View style={styles.dottedLine2} />
                       <View style={styles.rowBetween}>
                         <Text style={styles.amountLabel}>Amount Paid</Text>
-                        <Text style={styles.amountPaid}>
-                          {currency(paid)}
-                        </Text>
+                        <Text style={styles.amountPaid}>{currency(paid)}</Text>
                       </View>
                       <View style={styles.rowBetween}>
                         <Text style={styles.amountLabel}>
@@ -2202,8 +2204,7 @@ const JobOngoing = () => {
               {/* DEEP */}{' '}
             </Text>
           </TouchableOpacity>
-        ) :
-          //  leadDataContext?.bookingDetails?.status === 'Pending Hiring' ||  -- old logic to show start project btn (hp)
+        ) : //  leadDataContext?.bookingDetails?.status === 'Pending Hiring' ||  -- old logic to show start project btn (hp)
           //   leadDataContext?.bookingDetails?.status === 'Customer Cancelled' ||
           //   (leadDataContext?.bookingDetails?.status === 'Hired' &&
           //     leadDataContext?.bookingDetails?.startProject)
@@ -2236,7 +2237,7 @@ const JobOngoing = () => {
               //       status === "Hired" && started ? "#119b11ff" : "rgba(200, 220, 200, 1)",
               //   },
               // ]}
-              // disabled={!(status === "Hired" && started)} 
+              // disabled={!(status === "Hired" && started)}
               style={[
                 styles.endBtn,
                 {
@@ -2248,10 +2249,13 @@ const JobOngoing = () => {
                       : 'rgba(200, 220, 200, 1)',
                 },
               ]}
-              disabled={!((status === 'Hired' && started) ||
-                status === 'Customer Cancelled' ||
-                (status === 'Customer Unreachable' && firstPaid)
-              )}
+              disabled={
+                !(
+                  (status === 'Hired' && started) ||
+                  status === 'Customer Cancelled' ||
+                  (status === 'Customer Unreachable' && firstPaid)
+                )
+              }
               onPress={() => setStartProject(true)}
             >
               {/* api REQUESTING_SEND_OTP calling */}
@@ -2580,8 +2584,9 @@ const JobOngoing = () => {
             {leadDataContext?.bookingDetails?.status === 'Hired' ||
               leadDataContext?.bookingDetails?.status === 'Customer Cancelled' ||
               (leadDataContext?.bookingDetails?.status ===
-                'Customer Unreachable' && firstPaid) &&
-              !leadDataContext?.bookingDetails?.isJobStarted ? (
+                'Customer Unreachable' &&
+                firstPaid &&
+                !leadDataContext?.bookingDetails?.isJobStarted) ? (
               // ✅ After Hired, Before Start → Show Cancellation/Rescheduling options
               <>
                 <TouchableOpacity
@@ -2592,10 +2597,11 @@ const JobOngoing = () => {
                     Customer Unreachable
                   </Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.statusOption}
+                <TouchableOpacity
+                  style={styles.statusOption}
                   onPress={() => {
                     setShowRescheduleModal(true);
-                    setStatusModalVisible(false)
+                    setStatusModalVisible(false);
                   }}
                 >
                   <Text style={styles.statusOptionText}>
@@ -2624,7 +2630,7 @@ const JobOngoing = () => {
                   style={styles.statusOption}
                   onPress={() => {
                     setShowRescheduleModal(true);
-                    setStatusModalVisible(false)
+                    setStatusModalVisible(false);
                   }}
                 >
                   <Text style={styles.statusOptionText}>
@@ -2645,7 +2651,7 @@ const JobOngoing = () => {
                   style={styles.statusOption}
                   onPress={() => {
                     setStatusModalVisible(false);
-                    setOpenRemainderCalendar(true)
+                    setOpenRemainderCalendar(true);
                   }}
                 >
                   <Text style={styles.statusOptionText}>Set Remainder</Text>
@@ -2657,6 +2663,7 @@ const JobOngoing = () => {
                     if (!hasFinalized) {
                       setShowAlertPopup(true);
                       setStatusModalVisible(false);
+                      setMessageType(2);
                     } else {
                       setOpenCalendar(true);
                       setStatusModalVisible(false);
@@ -2768,10 +2775,12 @@ const JobOngoing = () => {
         animationType="slide"
         onRequestClose={handleResetSlotndClose}
       >
-        <View style={{
-          flex: 1,
-          backgroundColor: 'rgba(0, 0, 0, 0.4)',
-        }}>
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: 'rgba(0, 0, 0, 0.4)',
+          }}
+        >
           <View style={styles.rescheduleModal1}>
             <TouchableOpacity
               style={{
@@ -2881,24 +2890,24 @@ const JobOngoing = () => {
             </TouchableOpacity>
             <Text style={styles.rescheduleTitle}>Remainder</Text>
             <Text style={styles.subHeader}>Pick a date</Text>
-            <View
-            >
+            <View>
               <Calendar
-                onDayPress={(day) => {
+                onDayPress={day => {
                   try {
                     setSelectedRemainderDate(day.dateString);
+                    setSelectedRemainderTime(null);
                   } catch (e) {
                     console.log(e);
                   }
                 }}
-                minDate={tomorrow.format('YYYY-MM-DD')}
+                minDate={moment().format('YYYY-MM-DD')}
                 markedDates={
                   markedDateKey
                     ? {
                       [markedDateKey]: {
                         selected: true,
                         disableTouchEvent: true,
-                        selectedDotColor: "orange",
+                        selectedDotColor: 'orange',
                       },
                     }
                     : {}
@@ -2910,7 +2919,7 @@ const JobOngoing = () => {
                 style={{ borderRadius: 8 }}
               />
               <Text style={styles.subHeader}>Pick a time</Text>
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <Feather name="clock" color="black" size={25} />
                 <TouchableOpacity
                   style={{
@@ -2918,50 +2927,82 @@ const JobOngoing = () => {
                   }}
                   onPress={() => {
                     try {
-                      if (!selectedRemainderDate && !existingDate) return; // allow if either exists
+                      if (!selectedRemainderDate && !existingDate) return;
                       setOpenTimePicker(true);
                     } catch (e) {
                       console.log(e);
                     }
                   }}
                 >
-                  <Text style={{
-                    fontSize: 14,
-                    fontFamily: 'Poppins-Medium',
-                    color: selectedRemainderTime || existingTimeText ? "#000" : "#2c2c2c",
-                    borderColor: "#2c2c2c",
-                    borderWidth: 1.5,
-                    borderRadius: 6,
-                    paddingVertical: 4,
-                    paddingHorizontal: 10,
-                  }}>
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontFamily: 'Poppins-Medium',
+                      color:
+                        selectedRemainderTime || existingTimeText
+                          ? '#000'
+                          : '#2c2c2c',
+                      borderColor: '#2c2c2c',
+                      borderWidth: 1.5,
+                      borderRadius: 6,
+                      paddingVertical: 4,
+                      paddingHorizontal: 10,
+                    }}
+                  >
                     {selectedRemainderTime
                       ? formatTime(selectedRemainderTime)
                       : existingTimeText
                         ? existingTimeText
-                        : "Select time"}
+                        : 'Select time'}
                   </Text>
                 </TouchableOpacity>
               </View>
-
               <DateTimePickerModal
                 isVisible={openTimePicker}
                 mode="time"
-                onConfirm={(date) => {
+                onConfirm={date => {
                   try {
-                    setSelectedRemainderTime(date);
+                    const selectedDate =
+                      selectedRemainderDate ||
+                      existingDate ||
+                      moment().format('YYYY-MM-DD');
+
+                    const now = moment();
+                    const pickedTime = moment(date);
+
+                    const finalDateTime = moment(selectedDate)
+                      .hour(pickedTime.hour())
+                      .minute(pickedTime.minute())
+                      .second(0);
+
                     setOpenTimePicker(false);
+                    if (
+                      moment(selectedDate).isSame(moment(), 'day') &&
+                      finalDateTime.isSameOrBefore(now)
+                    ) {
+                      setTimeout(() => {
+                        setShowAlertPopup(true);
+                        setMessageType(1);
+                        // Alert.alert(
+                        //   'Invalid time',
+                        //   'Please select a future time.',
+                        // );
+                      }, 200);
+                      return;
+                    }
+
+                    setSelectedRemainderTime(date);
                   } catch (e) {
                     console.log(e);
+                    setOpenTimePicker(false);
                   }
                 }}
                 onCancel={() => setOpenTimePicker(false)}
               />
-
             </View>
             <TouchableOpacity
               style={{
-                backgroundColor: canSetReminder ? "#ED1F24" : "#b4b4b4ff",
+                backgroundColor: canSetReminder ? '#ED1F24' : '#b4b4b4ff',
                 paddingVertical: 12,
                 borderRadius: 6,
                 marginTop: 20,
@@ -2970,7 +3011,7 @@ const JobOngoing = () => {
               onPress={async () => {
                 try {
                   const reminderAt = buildReminderISO();
-                  console.log("reminderAt", reminderAt);
+                  console.log('reminderAt', reminderAt);
 
                   if (!reminderAt) return;
                   await postRequest(API_ENDPOINTS.SET_LEAD_REMINDER, {
@@ -2978,14 +3019,14 @@ const JobOngoing = () => {
                     vendorId,
                     reminderAt,
                   });
-                  fetchBookingData()
+                  fetchBookingData();
                   setOpenRemainderCalendar(false);
                   setSelectedRemainderDate(null);
                   setSelectedRemainderTime(null);
 
                   // show toast if you use any
                 } catch (e) {
-                  console.log("set reminder error", e);
+                  console.log('set reminder error', e);
                 }
               }}
             >
@@ -3041,20 +3082,55 @@ const JobOngoing = () => {
               }}
               disabled={!isStored}
               onPress={async () => {
-                if (!isStored) return;
-                if (!selectedRescheduleDate) return;
+                try {
+                  if (!isStored) return;
 
-                // wait for availability to load for this selection
-                const selectedInfo = await preloadAvailability();
+                  if (!selectedRescheduleDate) {
+                    ToastAndroid.show(
+                      'Please select a hiring date.',
+                      ToastAndroid.SHORT,
+                    );
+                    return;
+                  }
 
-                if (
-                  selectedInfo &&
-                  selectedInfo.canStart &&
-                  selectedInfo.availableMembers?.length
-                ) {
+                  // wait for availability to load for this selection
+                  const selectedInfo = await preloadAvailability();
+
+                  if (!selectedInfo) {
+                    ToastAndroid.show(
+                      'Availability not found',
+                      ToastAndroid.LONG,
+                    );
+                    return;
+                  }
+                  if (!selectedInfo.canStart) {
+                    ToastAndroid.show(
+                      'Team not available',
+                      ToastAndroid.LONG,
+                    );
+                    return;
+                  }
+
+                  if (
+                    !selectedInfo.availableMembers ||
+                    selectedInfo.availableMembers.length === 0
+                  ) {
+                    ToastAndroid.show(
+                      'No team members available',
+                      ToastAndroid.LONG,
+                    );
+                    return;
+                  }
+
                   setAvailableTeam(selectedInfo.availableMembers);
                   setOpenCalendar(false);
                   setTeamModalVisible(true);
+                } catch (error) {
+                  console.log(error);
+                  ToastAndroid.show(
+                    'Something went wrong while checking availability.',
+                    ToastAndroid.LONG,
+                  );
                 }
               }}
             >
@@ -3078,7 +3154,8 @@ const JobOngoing = () => {
                 <AntDesign name="close" color="black" size={20} />
               </TouchableOpacity>
             </View>
-            <ScrollView style={styles.memberList}
+            <ScrollView
+              style={styles.memberList}
               showsVerticalScrollIndicator={false}
               showsHorizontalScrollIndicator={false}
             >
@@ -3151,8 +3228,9 @@ const JobOngoing = () => {
                 marginBottom: 10,
               }}
             >
-              Please finalize at least one quotation before marking hiring.
-              {/* {showMessage} */}
+              {messageType === 1
+                ? `Invalid time! Please select a future time.`
+                : `Please finalize at least one quotation before marking hiring.`}
             </Text>
             <TouchableOpacity
               style={[
@@ -3197,7 +3275,8 @@ const JobOngoing = () => {
               <View style={{ marginTop: 10 }}>
                 <ScrollView
                   showsVerticalScrollIndicator={false}
-                  showsHorizontalScrollIndicator={false}>
+                  showsHorizontalScrollIndicator={false}
+                >
                   {packageList.map(item => (
                     <View key={item._id}>
                       <Text
@@ -3923,191 +4002,3 @@ const styles = StyleSheet.create({
   },
 });
 export default JobOngoing;
-
-// changin booking terms
-// exports.createBooking = async (req, res) => {
-//   try {
-//     const {
-//       customer,
-//       service,
-//       bookingDetails,
-//       assignedProfessional,
-//       address,
-//       selectedSlot,
-//       isEnquiry,
-//       formName,
-//     } = req.body;
-//     console.log("req.body", req.body);
-
-//     // Validation
-//     if (!service || !Array.isArray(service) || service.length === 0) {
-//       return res.status(400).json({ message: "Service list cannot be empty." });
-//     }
-
-//     // Parse coordinates
-//     let coords = [0, 0];
-//     if (
-//       address?.location?.coordinates &&
-//       Array.isArray(address.location.coordinates) &&
-//       address.location.coordinates.length === 2 &&
-//       typeof address.location.coordinates[0] === "number" &&
-//       typeof address.location.coordinates[1] === "number"
-//     ) {
-//       coords = address.location.coordinates;
-//     } else {
-//       return res
-//         .status(400)
-//         .json({ message: "Invalid or missing address coordinates." });
-//     }
-
-//     // 🔍 Detect service type
-//     const serviceType = detectServiceType(formName, service);
-
-//     // 💰 Calculate total from services
-//     const originalTotalAmount = service.reduce((sum, s) => {
-//       return sum + Number(s.price) * Number(s.quantity || 1);
-//     }, 0);
-
-//     console.log("bookingDetails", bookingDetails);
-
-//     // Booking amount from frontend (paid on website)
-//     const bookingAmount = Number(bookingDetails?.bookingAmount) || 0;
-
-//     // ✅ Prepare bookingDetails with correct installments
-//     let bookingDetailsConfig = {
-//       bookingDate: bookingDetails?.bookingDate
-//         ? new Date(bookingDetails.bookingDate)
-//         : new Date(),
-//       bookingTime: bookingDetails?.bookingTime || "10:30 AM",
-//       status: "Pending",
-//       bookingAmount: 0,
-//       originalTotalAmount: 0,
-//       finalTotal: 0,
-//       paidAmount: bookingDetails.paidAmount,
-//       amountYetToPay: 0,
-//       paymentMethod: bookingDetails?.paymentMethod || "Cash",
-//       paymentStatus: bookingAmount > 0 ? "Partial Payment" : "Unpaid",
-//       otp: generateOTP(), // 4-digit OTP
-//       siteVisitCharges: 0,
-//       paymentLink: { isActive: false },
-//     };
-
-//     if (serviceType === "deep_cleaning") {
-//       // ✅ Deep Cleaning: total is known at booking
-//       const bookingAmount = Number(bookingDetails?.bookingAmount) || 0;
-//       const originalTotal = originalTotalAmount; // computed from service prices
-
-//       bookingDetailsConfig.bookingAmount = bookingAmount;
-//       bookingDetailsConfig.originalTotalAmount = originalTotal;
-//       bookingDetailsConfig.finalTotal = originalTotal;
-//       bookingDetailsConfig.paidAmount = bookingDetails.paidAmount;
-//       bookingDetailsConfig.amountYetToPay = bookingDetails.amountYetToPay
-//       // Math.max(
-//       //   0,
-//       //   bookingAmount - bookingDetails.paidAmount
-//       // );
-//       bookingDetailsConfig.paymentStatus =
-//         bookingAmount > 0 ? "Partial Payment" : "Unpaid";
-
-//       // Installments
-//       bookingDetailsConfig.firstPayment = {
-//         status: bookingAmount > 0 ? "paid" : "pending",
-//         amount: bookingDetails.paidAmount,
-//         paidAt: bookingAmount > 0 ? new Date() : null,
-//         method: bookingDetails?.paymentMethod || "UPI",
-//       };
-//       bookingDetailsConfig.finalPayment = {
-//         status: "pending",
-//         amount: Math.max(0, originalTotal - bookingAmount),
-//       };
-//     } else if (serviceType === "house_painting") {
-//       // 🏠 House Painting: ONLY site visit charges (if any) collected now
-//       const siteVisitCharges = Number(bookingDetails?.siteVisitCharges) || 0;
-
-//       // All main amounts are 0 — will be set later during quotation
-//       bookingDetailsConfig.siteVisitCharges = siteVisitCharges;
-//       // bookingDetailsConfig.bookingAmount = siteVisitCharges; // this is the only "advance"
-//       bookingDetailsConfig.paidAmount = siteVisitCharges;
-//       bookingDetailsConfig.paymentStatus =
-//         siteVisitCharges > 0 ? "Partial Payment" : "Unpaid";
-//       bookingDetailsConfig.amountYetToPay = 0; // because total is unknown
-
-//       // Installments: only firstPayment may have site visit amount (but usually 0)
-//       // We'll leave all as pending with 0 — they'll be updated in `markPendingHiring`
-//       bookingDetailsConfig.firstPayment = { status: "pending", amount: 0 };
-//       bookingDetailsConfig.secondPayment = { status: "pending", amount: 0 };
-//       bookingDetailsConfig.finalPayment = { status: "pending", amount: 0 };
-
-//       // originalTotalAmount & finalTotal remain 0 until quote is finalized
-//     }
-
-//     // Track payment line-item
-//     const payments =
-//       serviceType === "house_painting"
-//         ? [] // empty array for house painting
-//         : [
-//           {
-//             at: new Date(),
-//             method: "UPI", // You can replace this dynamically later once payment integration
-//             amount: bookingDetails.paidAmount,
-//             providerRef: "razorpay_order_xyz" || undefined,
-//           },
-//         ];
-
-//     // 📦 Create booking
-//     const booking = new UserBooking({
-//       customer: {
-//         customerId: customer?.customerId,
-//         name: customer?.name,
-//         phone: customer?.phone,
-//       },
-//       service: service.map((s) => ({
-//         category: s.category,
-//         subCategory: s.subCategory,
-//         serviceName: s.serviceName,
-//         price: Number(s.price),
-//         quantity: Number(s.quantity) || 1,
-//         teamMembersRequired: Number(s.teamMembersRequired) || 1,
-//       })),
-//       serviceType, // NEW FIELD
-//       bookingDetails: bookingDetailsConfig,
-//       assignedProfessional: assignedProfessional
-//         ? {
-//           professionalId: assignedProfessional.professionalId,
-//           name: assignedProfessional.name,
-//           phone: assignedProfessional.phone,
-//         }
-//         : undefined,
-//       address: {
-//         houseFlatNumber: address?.houseFlatNumber || "",
-//         streetArea: address?.streetArea || "",
-//         landMark: address?.landMark || "",
-//         city: address?.city || "",
-//         location: {
-//           type: "Point",
-//           coordinates: coords,
-//         },
-//       },
-//       selectedSlot: {
-//         slotDate: selectedSlot?.slotDate || moment().format("YYYY-MM-DD"),
-//         slotTime: selectedSlot?.slotTime || "10:00 AM",
-//       },
-//       payments,
-//       isEnquiry: Boolean(isEnquiry),
-//       formName: formName || "Unknown",
-//       createdDate: new Date(),
-//     });
-
-//     await booking.save();
-
-//     res.status(201).json({
-//       message: "Booking created successfully",
-//       bookingId: booking._id,
-//       serviceType,
-//       booking,
-//     });
-//   } catch (error) {
-//     console.error("Error creating booking:", error);
-//     res.status(500).json({ message: "Server error", error: error.message });
-//   }
-// };
