@@ -1,4 +1,8 @@
-import { CommonActions, useNavigation, useRoute } from '@react-navigation/native';
+import {
+  CommonActions,
+  useNavigation,
+  useRoute,
+} from '@react-navigation/native';
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
@@ -12,6 +16,7 @@ import {
   Alert,
   ToastAndroid,
   StatusBar,
+  ScrollView,
 } from 'react-native';
 import { postRequest } from '../ApiService/apiHelper';
 import { API_ENDPOINTS } from '../ApiService/apiConstants';
@@ -90,8 +95,8 @@ const OTP = () => {
         navigation.dispatch(
           CommonActions.reset({
             index: 0,
-            routes: [{ name: "BottomTab" }],
-          })
+            routes: [{ name: 'BottomTab' }],
+          }),
         );
         // navigation.navigate('BottomTab');
       }
@@ -155,7 +160,11 @@ const OTP = () => {
           showHideTransition="fade"
         />
         {isLoading && <ResponseLoader />}
-        <View style={styles.container}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          style={styles.container}
+          contentContainerStyle={styles.containerContent}
+        >
           {/* Logo */}
           <Image
             source={require('../assets/images/logo.png.png')}
@@ -163,7 +172,7 @@ const OTP = () => {
             resizeMode="contain"
           />
           {/* Title */}
-          <Text style={styles.title}>OTP - </Text>
+          <Text style={styles.title}>OTP</Text>
           {/* Subtitle */}
           <Text style={styles.subtitle}>
             Enter OTP received on your Phone Number
@@ -219,13 +228,16 @@ const OTP = () => {
           </TouchableOpacity> */}
           </View>
           {/* Submit Button */}
-          <TouchableOpacity style={styles.submitButton} onPress={handleVerifyOtp}>
+          <TouchableOpacity
+            style={styles.submitButton}
+            onPress={handleVerifyOtp}
+          >
             <Text style={styles.submitButtonText}>Submit</Text>
           </TouchableOpacity>
           {/* <View style={styles.downborder} /> */}
           {/* Back to Login Button */}
           {/* Error Modal */}
-        </View>
+        </ScrollView>
         <Modal
           animationType="fade"
           transparent={true}
@@ -244,8 +256,8 @@ const OTP = () => {
 
               <Text style={styles.modalSubtitle}>
                 {/* {errorMessage} */}
-                Looks like this OTP in Invalid! Please try again. Kindly enter the
-                correct OTP to continue.
+                Looks like this OTP in Invalid! Please try again. Kindly enter
+                the correct OTP to continue.
               </Text>
 
               <TouchableOpacity
@@ -269,9 +281,12 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
+    // marginTop: 130,
+  },
+  containerContent: {
+    flexGrow: 1,
     paddingHorizontal: 24,
     justifyContent: 'center',
-    // marginTop: 130,
   },
   logo: {
     width: 186,

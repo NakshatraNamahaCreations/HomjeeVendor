@@ -1,5 +1,5 @@
-// export const API_BASE_URL = 'http://192.168.1.73:9000/api'; // development
-export const API_BASE_URL = 'https://homjee-backend.onrender.com/api'; // production
+export const API_BASE_URL = 'http://192.168.1.78:9000/api'; // development
+// export const API_BASE_URL = 'https://homjee-backend.onrender.com/api'; // production
 
 export const API_ENDPOINTS = {
   // USER AUTH
@@ -9,6 +9,9 @@ export const API_ENDPOINTS = {
 
   // PROFILE
   GET_VENDOR_PROFILE: '/vendor/get-vendor-by-vendorId/',
+
+  // ARCHIVE STATUS (lightweight poll)
+  ARCHIVE_STATUS: '/vendor/archive-status/',
   // TEAM
   GET_TEAMS_VENDOR_LINE: '/vendor/get-teams-by-vendor/',
   GET_TEAM_MEMBER_BY_OWN_ID: '/vendor/get-team-id/',
@@ -38,7 +41,7 @@ export const API_ENDPOINTS = {
   REQUEST_NEXT_PAYMENT: '/bookings/request-next-payment/second/project/',
   COMPLETE_PROJECT: '/bookings/completing-job/final-payemt/request/end-job/',
   // need to check finalPayment  requesting and check website and vendor app payment part
-  SET_LEAD_REMINDER: "/bookings/set-reminder/lead/vendor",
+  SET_LEAD_REMINDER: '/bookings/set-reminder/lead/vendor',
   RESCHEDULE_BOOKING: '/bookings/reschedule-booking/vendor',
 
   // SLOT FOR RESCHEDULE
@@ -83,16 +86,15 @@ export const API_ENDPOINTS = {
   KPI_PARAMETERS: '/kpi-parameters/',
 
   // WALLET
-  FETCH_WALLET_TRANSACTIONS: "/wallet/get-wallet-transaction/vendor/",
-  SEND_PAYMENT_LINK: "/wallet/send-recharge-link/",
-  PAYMENT_LINK_STATUS: "/wallet/get-link-status/payment-link/",
+  FETCH_WALLET_TRANSACTIONS: '/wallet/get-wallet-transaction/vendor/',
+  SEND_PAYMENT_LINK: '/wallet/send-recharge-link/',
+  PAYMENT_LINK_STATUS: '/wallet/get-link-status/payment-link/',
 
   // MONET DASHBOARD & NOTIFICATION
-  GET_MONEY_DASHBOARD: "/bookings/customer-payments/money-dashboard/",
-  GET_NOTIFICATION: "/notification/fetch-vendor-notifications/",
-  MARK_AS_READ_NOTIFICATION: "/notification/mark-notification-read/",
+  GET_MONEY_DASHBOARD: '/bookings/customer-payments/money-dashboard/',
+  GET_NOTIFICATION: '/notification/fetch-vendor-notifications/',
+  MARK_AS_READ_NOTIFICATION: '/notification/mark-notification-read/',
 };
-
 
 // status stage - house painting
 // pending
@@ -101,4 +103,3 @@ export const API_ENDPOINTS = {
 //  survey completed
 //  pending hiring
 // project ongoing
-

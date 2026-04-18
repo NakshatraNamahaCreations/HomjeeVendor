@@ -1,5 +1,6 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useNavigation } from '@react-navigation/native';
 import Ongoing from '../screens/Ongoing';
 import Money from '../screens/Money';
 import Performance from '../screens/Performance';
@@ -8,13 +9,19 @@ import Leadone from '../screens/Leadone';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { useVendorContext } from '../Utilities/VendorContext';
+import { useArchiveWatcher } from '../Utilities/useArchiveWatcher';
 
 const Tab = createBottomTabNavigator();
 
 const BottomTab = () => {
-  const { vendorDataContext } = useVendorContext();
+  const { vendorDataContext, clearVendorContextData } = useVendorContext();
+  const navigation = useNavigation();
   const vendorId = vendorDataContext?._id;
   console.log(`vendor Id>>> ${vendorId}`, vendorDataContext);
+
+  // 🔒 Watch for admin archive action → force logout
+  useArchiveWatcher({ vendorId, navigation, clearVendorContextData });
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({

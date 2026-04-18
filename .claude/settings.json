@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm --version)",
+      "Bash(npx react-native:*)",
+      "Bash(netstat -ano)",
+      "Bash(findstr :8081)",
+      "Bash(tasklist /FI \"PID eq 16024\")",
+      "Bash(cmd /c \"tasklist /FI \\\\\"PID eq 16024\\\\\"\")",
+      "Bash(java -version)",
+      "Bash(cmd /c \"netstat -ano | findstr :8081\")",
+      "Bash(cmd /c \"taskkill /PID 16024 /F\")",
+      "Bash(cmd /c \"for /f \\\\\"tokens=5\\\\\" %a in \\('netstat -ano ^| findstr :8081'\\) do taskkill /PID %a /F\")"
+    ]
+  }
+}

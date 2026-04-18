@@ -39,33 +39,67 @@ const SplashScreen = () => {
       const delay = new Promise(resolve => setTimeout(resolve, 80000));
 
       const sessionCheck = (async () => {
-        try {
-          const userData = await AsyncStorage.getItem('user');
-          const parsedData = userData ? JSON.parse(userData) : null;
+        const userData = await AsyncStorage.getItem('user');
+        const parsedData = userData ? JSON.parse(userData) : null;
 
-          if (!parsedData?.vendor?._id) {
+        // The vendor document's own _id (same one BottomTab uses).
+        // Fallback to the legacy sub-schema id only if the top-level is missing.
+        const vendorId = parsedData?._id || parsedData?.vendor?._id;
+
+        // Not logged in — go to login.
+        if (!parsedData || !vendorId) {
+          navigation.replace('login');
+          return;
+        }
+
+        // Restore context immediately so BottomTab has data even if the
+        // background refresh is slow.
+        setVendorDataContext(parsedData);
+
+        try {
+          const response = await getRequest(
+            `${API_ENDPOINTS.GET_VENDOR_PROFILE}${vendorId}`,
+          );
+
+          // 🔒 Archived → force logout. This is the only server state that
+          // should kick the vendor out; everything else should keep the
+          // session alive.
+          if (response?.vendor?.isArchived === true) {
+            await AsyncStorage.clear();
+            ToastAndroid.show(
+              'Your account has been archived. Please contact support.',
+              ToastAndroid.LONG,
+            );
             navigation.replace('login');
             return;
           }
 
-          const response = await getRequest(
-            `${API_ENDPOINTS.GET_VENDOR_PROFILE}${parsedData._id}`,
-          );
-
           if (response?.vendor) {
-            console.log('response.vendor', response.vendor);
+            // Refresh context with the latest profile.
+            await AsyncStorage.setItem('user', JSON.stringify(response.vendor));
             setVendorDataContext(response.vendor);
-            navigation.replace('BottomTab');
-          } else {
-            await AsyncStorage.removeItem('user');
-            ToastAndroid.show('Session expired', ToastAndroid.LONG);
-            navigation.replace('login');
           }
+
+          // Go to the authenticated area regardless of whether the refresh
+          // succeeded — we have cached credentials, and useArchiveWatcher
+          // will re-check archive status once online.
+          navigation.replace('BottomTab');
         } catch (error) {
-          console.error('Session check error:', error);
-          await AsyncStorage.removeItem('user');
-          ToastAndroid.show('Something went wrong', ToastAndroid.LONG);
-          navigation.replace('login');
+          // Explicit archive response from backend (403 VENDOR_ARCHIVED).
+          if (error?.code === 'VENDOR_ARCHIVED') {
+            await AsyncStorage.clear();
+            ToastAndroid.show(
+              error?.message ||
+                'Your account has been archived. Please contact support.',
+              ToastAndroid.LONG,
+            );
+            navigation.replace('login');
+            return;
+          }
+
+          // Network/server error — do NOT clear storage, stay logged in.
+          // The archive watcher will retry once connectivity returns.
+          navigation.replace('BottomTab');
         }
       })();
 

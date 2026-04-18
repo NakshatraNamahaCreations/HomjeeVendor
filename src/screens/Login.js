@@ -10,6 +10,9 @@ import {
   Modal,
   StatusBar,
   useColorScheme,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import React, { useMemo, useState } from 'react';
 import CountryPicker, { CountryCode } from 'react-native-country-picker-modal';
@@ -18,7 +21,6 @@ import { postRequest } from '../ApiService/apiHelper';
 import { useNavigation } from '@react-navigation/native';
 import ResponseLoader from '../components/ResponseLoader';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-
 
 const Login = () => {
   // const { deviceTheme } = useThemeColor();
@@ -30,6 +32,10 @@ const Login = () => {
   const [callingCode, setCallingCode] = useState('91');
   const [showCountryPicker, setShowCountryPicker] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [modalTitle, setModalTitle] = useState('Oops!');
+  const [modalMessage, setModalMessage] = useState(
+    'Looks like this user NOT registered!',
+  );
 
   // const statusBarStyle = useMemo(() => {
   //   return scheme === "dark-content";
@@ -87,6 +93,16 @@ const Login = () => {
       });
     } catch (error) {
       // console.log('Login failed:', error?.message);
+      if (error?.code === 'VENDOR_ARCHIVED') {
+        setModalTitle('Account Archived');
+        setModalMessage(
+          error?.message ||
+            'Your account has been archived. Please contact support.',
+        );
+      } else {
+        setModalTitle('Oops!');
+        setModalMessage('Looks like this user NOT registered!');
+      }
       setIsModalVisible(true);
       // ToastAndroid.showWithGravity(
       //   error?.message || 'Failed to send OTP',
@@ -109,11 +125,7 @@ const Login = () => {
 
   return (
     <SafeAreaProvider>
-      <SafeAreaView style={{
-        flex: 1,
-        paddingHorizontal: 20,
-        justifyContent: 'center',
-      }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
         <StatusBar
           animated
           translucent={false}
@@ -122,48 +134,60 @@ const Login = () => {
           showHideTransition="fade"
         />
         {isLoading && <ResponseLoader />}
-        <View >
-          <View style={styles.imageContainer}>
-            <Image
-              style={styles.image}
-              source={require('../assets/images/logo.png.png')}
-              resizeMode="contain"
-            />
-          </View>
-
-          <Text style={styles.title}>LOGIN</Text>
-          <Text style={styles.subtitle}>Enter your phone number to proceed</Text>
-
-          <View style={styles.phoneInputContainer}>
-            <View
-              style={styles.countryPickerButton}>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            style={styles.container}
+            contentContainerStyle={styles.containerContent}
+            keyboardShouldPersistTaps="handled"
+          >
+            <View style={styles.imageContainer}>
               <Image
-                style={{ width: 30, height: 30 }}
-                source={require("../assets/images/world.png")} />
-              <View style={styles.dropdownDot} />
-              <Text style={styles.codeText}>+91</Text>
+                style={styles.image}
+                source={require('../assets/images/logo.png.png')}
+                resizeMode="contain"
+              />
             </View>
-            <View style={styles.dropdownDot} />
-            <TextInput
-              style={styles.textInput}
-              placeholder="Phone Number"
-              placeholderTextColor="#cdcdcd"
-              value={phoneNumber}
-              onChangeText={text => {
-                const cleaned = text.replace(/[^0-9]/g, '');
-                if (cleaned.length <= 10) {
-                  setPhoneNumber(cleaned);
-                }
-              }}
-              keyboardType="phone-pad"
-              maxLength={10}
-            />
-          </View>
 
-          <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-            <Text style={styles.loginButtonText}>Login</Text>
-          </TouchableOpacity>
-        </View>
+            <Text style={styles.title}>LOGIN</Text>
+            <Text style={styles.subtitle}>
+              Enter your phone number to proceed
+            </Text>
+
+            <View style={styles.phoneInputContainer}>
+              <View style={styles.countryPickerButton}>
+                <Image
+                  style={{ width: 30, height: 30 }}
+                  source={require('../assets/images/world.png')}
+                />
+                <View style={styles.dropdownDot} />
+                <Text style={styles.codeText}>+91</Text>
+              </View>
+              <View style={styles.dropdownDot} />
+              <TextInput
+                style={styles.textInput}
+                placeholder="Phone Number"
+                placeholderTextColor="#cdcdcd"
+                value={phoneNumber}
+                onChangeText={text => {
+                  const cleaned = text.replace(/[^0-9]/g, '');
+                  if (cleaned.length <= 10) {
+                    setPhoneNumber(cleaned);
+                  }
+                }}
+                keyboardType="phone-pad"
+                maxLength={10}
+              />
+            </View>
+
+            <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+              <Text style={styles.loginButtonText}>Login</Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </KeyboardAvoidingView>
         {/* <View style={styles.downborder} /> */}
         <Modal
           animationType="fade"
@@ -179,11 +203,9 @@ const Login = () => {
                 resizeMode="contain"
               />
 
-              <Text style={styles.modalTitle}>Oops!</Text>
+              <Text style={styles.modalTitle}>{modalTitle}</Text>
 
-              <Text style={styles.modalSubtitle}>
-                Looks like this user NOT registered!
-              </Text>
+              <Text style={styles.modalSubtitle}>{modalMessage}</Text>
 
               <TouchableOpacity
                 style={styles.modalCloseButton}
@@ -200,11 +222,14 @@ const Login = () => {
 };
 
 const styles = StyleSheet.create({
-
   container: {
     flex: 1,
-    paddingHorizontal: 20,
+  },
+  containerContent: {
+    flexGrow: 1,
     justifyContent: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 24,
   },
   imageContainer: {
     alignItems: 'center',
@@ -313,17 +338,14 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   modalTitle: {
-    fontSize: 25,
-    fontFamily: 'Poppins',
-    fontStyle: 'italic',
-    fontWeight: 700,
+    fontSize: 18,
+    fontFamily: 'Poppins-SemiBold',
     color: '#ED1F24',
     marginBottom: 10,
-    letterSpacing: 0,
   },
   modalSubtitle: {
-    fontSize: 16,
-    fontFamily: 'Poppins-SemiBold',
+    fontSize: 14,
+    fontFamily: 'Poppins-Medium',
     color: '#373737',
     textAlign: 'center',
     marginBottom: 20,
@@ -338,9 +360,9 @@ const styles = StyleSheet.create({
   },
   modalCloseButtonText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 14,
     fontFamily: 'System',
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-Medium',
   },
   downborder: {
     position: 'relative',
