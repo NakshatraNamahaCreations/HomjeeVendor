@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm -v)",
+      "Bash(./gradlew assembleDebug)",
+      "Bash(yes)",
+      "Bash(\"C:/Users/Asrock/AppData/Local/Android/Sdk/cmdline-tools/latest/bin/sdkmanager.bat\" --licenses)",
+      "Bash(\"C:/Users/Asrock/AppData/Local/Android/Sdk/cmdline-tools/latest/bin/sdkmanager.bat\" --list)",
+      "Bash(\"C:/Users/Asrock/AppData/Local/Android/Sdk/platform-tools/adb.exe\" devices *)",
+      "PowerShell(\\(Get-ItemProperty \"HKLM:\\\\SYSTEM\\\\CurrentControlSet\\\\Control\\\\FileSystem\"\\).LongPathsEnabled)",
+      "PowerShell($admin = \\([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent\\(\\)\\).IsInRole\\([Security.Principal.WindowsBuiltInRole]::Administrator\\); Write-Host \"IsAdmin: $admin\")",
+      "Bash(cmd //c \"if exist C:\\\\\\\\rnv rmdir C:\\\\\\\\rnv\")",
+      "Bash(cmd //c \"mklink /J C:\\\\\\\\rnv \\\\\"D:\\\\\\\\projects-kiruthika\\\\\\\\HomjeeVendor-main - CLI-backup - 13Apr26\\\\\"\")",
+      "Bash(cmd //c \"dir C:\\\\\\\\rnv\")",
+      "Bash(cmd //c rmdir \"C:\\\\\\\\rnv\")",
+      "Bash(cmd //c 'mklink /J \"C:\\\\rnv\" \"D:\\\\projects-kiruthika\\\\HomjeeVendor-main - CLI-backup - 13Apr26\"')",
+      "Bash(\"C:/Users/Asrock/AppData/Local/Android/Sdk/cmdline-tools/latest/bin/sdkmanager.bat\" \"cmake;3.31.4\")",
+      "Bash(\"C:/Users/Asrock/AppData/Local/Android/Sdk/platform-tools/adb.exe\" install *)",
+      "Bash(\"C:/Users/Asrock/AppData/Local/Android/Sdk/platform-tools/adb.exe\" shell *)",
+      "Bash(\"C:/Users/Asrock/AppData/Local/Android/Sdk/platform-tools/adb.exe\" logcat *)"
+    ]
+  }
+}
