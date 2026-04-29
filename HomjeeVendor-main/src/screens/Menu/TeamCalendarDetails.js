@@ -11,7 +11,7 @@ import {
   TouchableOpacity,
   ToastAndroid,
 } from 'react-native';
-import { Calendar, Calendar as RNCalendar } from 'react-native-calendars';
+import { Calendar } from 'react-native-calendars';
 import { API_BASE_URL, API_ENDPOINTS } from '../../ApiService/apiConstants';
 
 const TeamCalendarDetails = () => {

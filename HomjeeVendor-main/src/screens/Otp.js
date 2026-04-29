@@ -13,7 +13,6 @@ import {
   StyleSheet,
   SafeAreaView,
   Modal,
-  Alert,
   ToastAndroid,
   StatusBar,
   ScrollView,

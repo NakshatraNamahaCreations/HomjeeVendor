@@ -6,7 +6,6 @@ import {
   ScrollView,
   StyleSheet,
   BackHandler,
-  StatusBar,
 } from 'react-native';
 import {
   useFocusEffect,
@@ -20,7 +19,6 @@ import { getRequest } from '../../ApiService/apiHelper';
 import { API_ENDPOINTS } from '../../ApiService/apiConstants';
 import PageLoader from '../../components/PageLoader';
 import { useEstimateContext } from '../../Utilities/EstimateContext';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useThemeColor } from '../../Utilities/ThemeContext';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useRoomNameContext } from '../../Utilities/RoomContext';
@@ -42,7 +40,6 @@ const StartMeasurement = () => {
   const leadId = leadDataContext._id;
   const [activeTab, setActiveTab] = useState(defaultTabParam || 'Interior');
   const [roomData, setRoomData] = useState({});
-  const [customRooms, setCustomRooms] = useState([]);
   const [customRoomsByTab, setCustomRoomsByTab] = useState({
     Interior: [],
     Exterior: [],

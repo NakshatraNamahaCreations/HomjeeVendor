@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, Image, StyleSheet } from 'react-native';
 import { useVendorContext } from '../../Utilities/VendorContext';
+import { StatusBadge } from '../../Utilities/VendorStatus';
 
 const Viewid = () => {
   const { vendorDataContext } = useVendorContext();
@@ -24,9 +25,10 @@ const Viewid = () => {
           width: 100,
           height: 100,
           borderRadius: 50,
-          backgroundColor: "#ED1F24",
-          alignItems: "center",
-          justifyContent: "center", alignSelf: 'center'
+          backgroundColor: '#ED1F24',
+          alignItems: 'center',
+          justifyContent: 'center',
+          alignSelf: 'center',
           // padding: 1,
         }}
       >
@@ -35,29 +37,37 @@ const Viewid = () => {
             width: 90,
             height: 90,
             borderRadius: 44,
-            overflow: "hidden", // ✅ important to clip image inside
-            backgroundColor: "#fff",
+            overflow: 'hidden', // ✅ important to clip image inside
+            backgroundColor: '#fff',
           }}
         >
           <Image
             source={{ uri: vendorDataContext?.vendor?.profileImage }}
             style={{
-              width: "100%",
-              height: "100%",
+              width: '100%',
+              height: '100%',
             }}
-            resizeMode="cover"  // ✅ fills circle without stretching
+            resizeMode="cover" // ✅ fills circle without stretching
           />
         </View>
       </View>
 
       {/* User Info */}
       <Text style={styles.name}>{vendorDataContext.vendor?.vendorName}</Text>
-      <Text style={styles.status}>Live</Text>
-      <Text style={{ fontFamily: 'Poppins-SemiBold', marginBottom: 15 }}>{vendorDataContext.vendor?.serviceType}</Text>
 
-      <Text style={styles.id}>ID NO :  {vendorDataContext.documents?.aadhaarNumber}</Text>
+      <StatusBadge vendor={vendorDataContext} />
+
+      <Text style={{ fontFamily: 'Poppins-SemiBold', marginBottom: 15 }}>
+        {vendorDataContext.vendor?.serviceType}
+      </Text>
+
+      <Text style={styles.id}>
+        ID NO : {vendorDataContext.documents?.aadhaarNumber}
+      </Text>
       <View style={styles.dottedLine} />
-      <Text style={styles.id}>PHONE :  {vendorDataContext.vendor?.mobileNumber}</Text>
+      <Text style={styles.id}>
+        PHONE : {vendorDataContext.vendor?.mobileNumber}
+      </Text>
       {/* Category Label */}
 
       {/* Barcode Placeholder */}
@@ -66,8 +76,6 @@ const Viewid = () => {
 };
 
 export default Viewid;
-
-const screenWidth = Dimensions.get('window').width;
 
 const styles = StyleSheet.create({
   container: {
@@ -80,6 +88,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     marginTop: 40,
   },
+
   logo: {
     width: 120,
     height: 50,
@@ -121,7 +130,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins-SemiBold',
     alignSelf: 'flex-start',
     marginLeft: 10,
-    fontSize: 16,
   },
 
   dottedLine: {

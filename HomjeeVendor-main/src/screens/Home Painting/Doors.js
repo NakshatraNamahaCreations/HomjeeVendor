@@ -136,13 +136,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     fontFamily: 'Poppins-SemiBold',
   },
-  dottedLine: {
-    borderBottomWidth: 2,
-    borderBottomColor: '#ED1F24',
-    borderStyle: 'dotted',
-    width: '100%',
-    marginBottom: 15,
-  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',

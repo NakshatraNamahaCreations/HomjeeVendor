@@ -17,7 +17,15 @@
       "Bash(\"C:/Users/Asrock/AppData/Local/Android/Sdk/cmdline-tools/latest/bin/sdkmanager.bat\" \"cmake;3.31.4\")",
       "Bash(\"C:/Users/Asrock/AppData/Local/Android/Sdk/platform-tools/adb.exe\" install *)",
       "Bash(\"C:/Users/Asrock/AppData/Local/Android/Sdk/platform-tools/adb.exe\" shell *)",
-      "Bash(\"C:/Users/Asrock/AppData/Local/Android/Sdk/platform-tools/adb.exe\" logcat *)"
+      "Bash(\"C:/Users/Asrock/AppData/Local/Android/Sdk/platform-tools/adb.exe\" logcat *)",
+      "Bash(npx --no-install eslint --quiet --ext .js,.jsx src/ MyStack.js App.js)",
+      "Bash(node -e \"['App.js','MyStack.js'].forEach\\(f=>{try{require\\('@babel/parser'\\).parse\\(require\\('fs'\\).readFileSync\\(f,'utf8'\\),{sourceType:'module',plugins:['jsx']}\\);console.log\\(f,'OK'\\)}catch\\(e\\){console.log\\(f,'FAIL',e.message\\)}}\\)\")",
+      "Bash(node -e ' *)",
+      "Bash(node -e \"const p=require\\('@babel/parser'\\);const fs=require\\('fs'\\);p.parse\\(fs.readFileSync\\('src/screens/Ongoing.js','utf8'\\),{sourceType:'module',plugins:['jsx']}\\);console.log\\('OK'\\)\")",
+      "Bash(node -e \"const c=require\\('./metro.config.js'\\);console.log\\('parsed OK, type=',typeof c,'hasResolver=',!!c.resolver,'hasTransformer=',!!c.transformer\\)\")",
+      "Read(//c/Users/Asrock/**)",
+      "Bash(npm uninstall *)",
+      "Bash(grep -E \"^\\(react-native-paper|react-native-phone-number-input|react-native-country-picker-modal|react-native-country-codes-picker|react-native-element-dropdown|react-native-modal-dropdown|react-semicircle-progressbar\\)$\")"
     ]
   }
 }

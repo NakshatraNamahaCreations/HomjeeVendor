@@ -22,7 +22,6 @@ import {
   findNodeHandle,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { useThemeColor } from '../../Utilities/ThemeContext';
 import { API_BASE_URL, API_ENDPOINTS } from '../../ApiService/apiConstants';
 import { useLeadContext } from '../../Utilities/LeadContext';
 import { useVendorContext } from '../../Utilities/VendorContext';

@@ -1,7 +1,5 @@
 import {
   BackHandler,
-  Image,
-  RefreshControl,
   ScrollView,
   StatusBar,
   StyleSheet,

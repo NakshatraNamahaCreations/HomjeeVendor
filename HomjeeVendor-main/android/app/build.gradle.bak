@@ -56,28 +56,8 @@ react {
 
 /**
  * Set this to true to Run Proguard on Release builds to minify the Java bytecode.
- * Enabled to shrink the release APK / AAB. RN-friendly proguard rules ship in
- * `proguard-rules.pro`; vector-icons + autolinked native modules already
- * supply their own consumer rules so this is safe in practice. If a release
- * build crashes with "ClassNotFoundException", add a -keep rule.
  */
-def enableProguardInReleaseBuilds = true
-
-/**
- * Set this to true to enable resource shrinking in Release builds. Strips
- * unused drawables, layouts, and translations once R8 has stripped the code
- * that referenced them. Has no effect unless minifyEnabled is also true.
- */
-def enableShrinkResourcesInReleaseBuilds = true
-
-/**
- * Set this to true to produce a separate APK per ABI (armeabi-v7a, arm64-v8a,
- * x86, x86_64) instead of a single fat APK that contains all native libs.
- * Roughly halves APK size for each device. Not needed when distributing as
- * an Android App Bundle (AAB) — Play Store does device-specific splits for
- * you — but harmless to leave on.
- */
-def enableSeparateBuildPerCPUArchitecture = true
+def enableProguardInReleaseBuilds = false
 
 /**
  * The preferred build flavor of JavaScriptCore (JSC)
@@ -119,17 +99,6 @@ android {
             keyPassword 'android'
         }
     }
-    // ABI splits — emits one APK per CPU architecture instead of bundling
-    // all native libs into a single fat APK. Cuts download size ~50% for
-    // sideloaded APKs. Toggle via enableSeparateBuildPerCPUArchitecture.
-    splits {
-        abi {
-            reset()
-            enable enableSeparateBuildPerCPUArchitecture
-            universalApk false  // also emit a fat APK alongside? false = no
-            include "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
-        }
-    }
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
@@ -139,22 +108,7 @@ android {
             // see https://reactnative.dev/docs/signed-apk-android.
             signingConfig signingConfigs.debug
             minifyEnabled enableProguardInReleaseBuilds
-            shrinkResources (enableProguardInReleaseBuilds && enableShrinkResourcesInReleaseBuilds)
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
-        }
-    }
-
-    // Per-ABI versionCode bumping — required so each ABI-specific APK gets
-    // a distinct versionCode in Play Console. Skip if you're shipping AAB
-    // only (Play Store handles version codes for splits automatically).
-    applicationVariants.all { variant ->
-        variant.outputs.each { output ->
-            def abi = output.getFilter(com.android.build.OutputFile.ABI)
-            if (abi != null) {
-                def abiVersionCodes = ["armeabi-v7a": 1, "arm64-v8a": 2, "x86": 3, "x86_64": 4]
-                output.versionCodeOverride =
-                    (abiVersionCodes.get(abi, 0) * 1048576) + variant.versionCode
-            }
         }
     }
 }
@@ -170,22 +124,4 @@ dependencies {
     }
 }
 // vector icon
-// By default fonts.gradle bundles ALL ~17 font families (≈ 3 MB of TTFs).
-// `project.ext.vectoricons.iconFontNames` whitelists only the families
-// actually imported in src/. Audit by running:
-//   grep -rho "react-native-vector-icons/[A-Z][a-zA-Z]*" src | sort -u
-// and update this list when you start using a new family.
-project.ext.vectoricons = [
-    iconFontNames: [
-        'AntDesign.ttf',
-        'Entypo.ttf',
-        'Feather.ttf',
-        'FontAwesome.ttf',
-        'Fontisto.ttf',
-        'Ionicons.ttf',
-        'MaterialIcons.ttf',
-        'Octicons.ttf',
-        'SimpleLineIcons.ttf',
-    ]
-]
 apply from: file("../../node_modules/react-native-vector-icons/fonts.gradle")

@@ -1,12 +1,6 @@
 import { useNavigation, useRoute } from '@react-navigation/native';
-import React, {
-  useState,
-  useEffect,
-  useMemo,
-  useRef,
-  useCallback,
-} from 'react';
-import { Calendar, Calendar as RNCalendar } from 'react-native-calendars';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Calendar } from 'react-native-calendars';
 import {
   View,
   Text,
@@ -18,7 +12,6 @@ import {
   ToastAndroid,
   Linking,
   TextInput,
-  StatusBar,
   Alert,
   RefreshControl,
 } from 'react-native';
@@ -28,14 +21,13 @@ import { API_BASE_URL, API_ENDPOINTS } from '../ApiService/apiConstants';
 import { getRequest, postRequest } from '../ApiService/apiHelper';
 import PageLoader from '../components/PageLoader';
 import moment from 'moment';
+import Octicons from 'react-native-vector-icons/Octicons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Entypo from 'react-native-vector-icons/Entypo';
 import useBackHandler from '../Utilities/useBackHandler';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useThemeColor } from '../Utilities/ThemeContext';
 import { useEstimateContext } from '../Utilities/EstimateContext';
 import axios from 'axios';
-// import MapView, { Marker } from 'react-native-maps';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Feather from 'react-native-vector-icons/Feather';
@@ -1314,7 +1306,7 @@ const JobOngoing = () => {
         bookingId: leadDataContext?._id,
         status:
           vendorDataContext?.vendor?.serviceType === 'house-painter' ||
-            vendorDataContext?.vendor?.serviceType === 'House Painting'
+          vendorDataContext?.vendor?.serviceType === 'House Painting'
             ? 'Survey Completed'
             : 'Project Completed',
         assignedProfessional: {
@@ -1508,15 +1500,15 @@ const JobOngoing = () => {
             {(leadDataContext?.bookingDetails?.status === 'Hired' ||
               leadDataContext?.bookingDetails?.status === 'Survey Completed' ||
               leadDataContext?.bookingDetails?.status ===
-              'Customer Unreachable' ||
+                'Customer Unreachable' ||
               leadDataContext?.bookingDetails?.status === 'Customer Denied' ||
               leadDataContext?.bookingDetails?.status === 'Negotiation' ||
               leadDataContext?.bookingDetails?.status ===
-              'Customer Cancelled') &&
+                'Customer Cancelled') &&
               // !leadDataContext?.bookingDetails?.isJobStarted &&
               (vendorDataContext?.vendor?.serviceType === 'house-painter' ||
                 vendorDataContext?.vendor?.serviceType ===
-                'House Painting') && (
+                  'House Painting') && (
                 <TouchableOpacity
                   style={[
                     styles.updateButton,
@@ -1590,10 +1582,10 @@ const JobOngoing = () => {
                   Reminder set for{' '}
                   {leadDataContext.leadReminder?.reminderAt
                     ? `${moment(
-                      leadDataContext.leadReminder?.reminderAt,
-                    ).format('DD-MM-YYYY')} at ${moment(
-                      leadDataContext.leadReminder?.reminderAt,
-                    ).format('h:mma')}`
+                        leadDataContext.leadReminder?.reminderAt,
+                      ).format('DD-MM-YYYY')} at ${moment(
+                        leadDataContext.leadReminder?.reminderAt,
+                      ).format('h:mma')}`
                     : '--'}
                   {/* Reminder set for{" "}
   {leadDataContext?.leadReminder?.reminderAt 
@@ -1616,17 +1608,16 @@ const JobOngoing = () => {
               <View style={{ backgroundColor: 'white', marginVertical: 10 }}>
                 {leadDataContext?.service?.map((ele, idx) => (
                   <View style={styles.card} key={idx}>
-                    <Text style={styles.packageTitle}>{ele.serviceName}</Text>
+                    <Text style={styles.packageTitle}>
+                      <Octicons name="north-star" size={14} color="#ED1F24" />{' '}
+                      {ele.serviceName}
+                    </Text>
                     <View style={styles.location}>
-                      <Image
-                        style={{ marginRight: 5 }}
-                        source={require('../assets/icons/star.png')}
-                      />
                       <Text style={styles.bulletText}>₹ {ele.price}</Text>
                       <Text
                         style={{
                           fontSize: 12,
-                          color: 'black',
+                          color: '#393939',
                           fontFamily: 'Poppins-SemiBold',
                         }}
                       >
@@ -1753,20 +1744,20 @@ const JobOngoing = () => {
                       <View
                         key={qot._id || qot.id || idx}
                         style={styles.row}
-                      // onPress={() =>
-                      //   navigation.navigate('SelectRoom', {
-                      //     dupMode: false,
-                      //     quoteId:
-                      //       qot._id ||
-                      //       String(qot._id) ||
-                      //       qot.id ||
-                      //       String(qot.id),
-                      //     leadId,
-                      //     measurementId,
-                      //     vendorId,
-                      //     quote: qot, // optional, lets SelectRoom skip GET
-                      //   })
-                      // }
+                        // onPress={() =>
+                        //   navigation.navigate('SelectRoom', {
+                        //     dupMode: false,
+                        //     quoteId:
+                        //       qot._id ||
+                        //       String(qot._id) ||
+                        //       qot.id ||
+                        //       String(qot.id),
+                        //     leadId,
+                        //     measurementId,
+                        //     vendorId,
+                        //     quote: qot, // optional, lets SelectRoom skip GET
+                        //   })
+                        // }
                       >
                         <View
                           style={{ flexDirection: 'row', alignItems: 'center' }}
@@ -1809,17 +1800,17 @@ const JobOngoing = () => {
           {
             // leadDataContext?.bookingDetails?.status === 'Pending Hiring' ||
             leadDataContext?.bookingDetails?.status === 'Hired' ||
-              leadDataContext?.bookingDetails?.status === 'Customer Cancelled' ||
-              (leadDataContext?.bookingDetails?.status ===
-                'Customer Unreachable' &&
-                firstPaid) ||
-              leadDataContext?.bookingDetails?.status === 'Project Ongoing' ||
-              leadDataContext?.bookingDetails?.status ===
+            leadDataContext?.bookingDetails?.status === 'Customer Cancelled' ||
+            (leadDataContext?.bookingDetails?.status ===
+              'Customer Unreachable' &&
+              firstPaid) ||
+            leadDataContext?.bookingDetails?.status === 'Project Ongoing' ||
+            leadDataContext?.bookingDetails?.status ===
               'Waiting for final payment' ||
-              // leadDataContext?.bookingDetails?.status === 'Survey Completed' ||
-              vendorDataContext?.vendor?.serviceType === 'deep cleaning' ||
-              vendorDataContext?.vendor?.serviceType === 'Deep Cleaning' || // deep cleaing
-              leadDataContext?.bookingDetails?.status === 'Project Completed' ? (
+            // leadDataContext?.bookingDetails?.status === 'Survey Completed' ||
+            vendorDataContext?.vendor?.serviceType === 'deep cleaning' ||
+            vendorDataContext?.vendor?.serviceType === 'Deep Cleaning' || // deep cleaing
+            leadDataContext?.bookingDetails?.status === 'Project Completed' ? (
               <View
                 style={{
                   backgroundColor: 'white',
@@ -1837,8 +1828,9 @@ const JobOngoing = () => {
                 > */}
                 <Text
                   style={{
-                    fontFamily: 'Poppins-SemiBold',
-                    paddingVertical: 10,
+                    fontFamily: 'Poppins-Bold',
+                    paddingVertical: 14,
+                    color: 'black',
                   }}
                 >
                   Payment Details
@@ -1977,7 +1969,7 @@ const JobOngoing = () => {
                           {(leadDataContext?.bookingDetails?.status ===
                             'Project Ongoing' ||
                             leadDataContext?.bookingDetails?.status ===
-                            'Job Ongoing') &&
+                              'Job Ongoing') &&
                             !iconDisabled && (
                               <TouchableOpacity
                                 onPress={() => setSecondModalVisible(true)}
@@ -2019,7 +2011,7 @@ const JobOngoing = () => {
                           {(leadDataContext?.bookingDetails?.status ===
                             'Project Ongoing' ||
                             leadDataContext?.bookingDetails?.status ===
-                            'Job Ongoing') &&
+                              'Job Ongoing') &&
                             !leadDataContext?.bookingDetails?.paymentLink
                               ?.isActive && (
                               <TouchableOpacity
@@ -2050,7 +2042,7 @@ const JobOngoing = () => {
                           {firstPaid && secondPending && finalPending
                             ? currency(bd.amountYetToPay)
                             : // either bd.finalPayment.remaining
-                            currency(originalTotal - paid)}
+                              currency(originalTotal - paid)}
                         </Text>
                       </View>
                     </>
@@ -2081,6 +2073,7 @@ const JobOngoing = () => {
                   fontFamily: 'Poppins-Medium',
                   fontSize: 14,
                   marginBottom: 10,
+                  color: '#3d3d3d',
                 }}
               >
                 Project Ended At: {moment(jobEndedDateAt).format('DD-MM-YYYY')}{' '}
@@ -2094,6 +2087,7 @@ const JobOngoing = () => {
                   fontFamily: 'Poppins-Medium',
                   fontSize: 14,
                   marginBottom: 10,
+                  color: '#3d3d3d',
                 }}
               >
                 Project Started At:{' '}
@@ -2108,6 +2102,7 @@ const JobOngoing = () => {
                   fontFamily: 'Poppins-Medium',
                   fontSize: 14,
                   marginBottom: 10,
+                  color: '#3d3d3d',
                 }}
               >
                 Survey End at:{' '}
@@ -2123,10 +2118,11 @@ const JobOngoing = () => {
                 fontFamily: 'Poppins-Medium',
                 fontSize: 14,
                 marginBottom: 10,
+                color: '#3d3d3d',
               }}
             >
               {vendorDataContext?.vendor?.serviceType === 'house-painter' ||
-                vendorDataContext?.vendor?.serviceType === 'House Painting'
+              vendorDataContext?.vendor?.serviceType === 'House Painting'
                 ? 'Survey Start'
                 : 'Job Ongoing'}{' '}
               at:{' '}
@@ -2148,9 +2144,10 @@ const JobOngoing = () => {
                         fontFamily: 'Poppins-Medium',
                         fontSize: 14,
                         marginBottom: 5,
+                        color: '#494949',
                       }}
                     >
-                      <FontAwesome5 name="user" color="black" size={15} />{' '}
+                      <FontAwesome5 name="user" color="#494949" size={15} />{' '}
                       {m.memberName}
                     </Text>
                   ))}
@@ -2205,100 +2202,100 @@ const JobOngoing = () => {
             </Text>
           </TouchableOpacity>
         ) : //  leadDataContext?.bookingDetails?.status === 'Pending Hiring' ||  -- old logic to show start project btn (hp)
-          //   leadDataContext?.bookingDetails?.status === 'Customer Cancelled' ||
-          //   (leadDataContext?.bookingDetails?.status === 'Hired' &&
-          //     leadDataContext?.bookingDetails?.startProject)
-          showStartProjectBtn ? (
-            <TouchableOpacity
-              // old logic toshow bg and disable
-              // style={[
-              //   styles.endBtn,
-              //   {
-              //     backgroundColor:
-              //       leadDataContext?.bookingDetails?.status === 'Hired' ||
-              //         leadDataContext?.bookingDetails?.status === 'Customer Cancelled' &&
-              //         leadDataContext?.bookingDetails?.startProject
-              //         ? '#119b11ff'
-              //         : 'rgba(200, 220, 200, 1)',
-              //   },
-              // ]}
-              // disabled={
-              //   leadDataContext?.bookingDetails?.status === 'Hired' ||
-              //     leadDataContext?.bookingDetails?.status === 'Customer Cancelled' &&
-              //     leadDataContext?.bookingDetails?.startProject
-              //     ? false
-              //     : true
-              // }
+        //   leadDataContext?.bookingDetails?.status === 'Customer Cancelled' ||
+        //   (leadDataContext?.bookingDetails?.status === 'Hired' &&
+        //     leadDataContext?.bookingDetails?.startProject)
+        showStartProjectBtn ? (
+          <TouchableOpacity
+            // old logic toshow bg and disable
+            // style={[
+            //   styles.endBtn,
+            //   {
+            //     backgroundColor:
+            //       leadDataContext?.bookingDetails?.status === 'Hired' ||
+            //         leadDataContext?.bookingDetails?.status === 'Customer Cancelled' &&
+            //         leadDataContext?.bookingDetails?.startProject
+            //         ? '#119b11ff'
+            //         : 'rgba(200, 220, 200, 1)',
+            //   },
+            // ]}
+            // disabled={
+            //   leadDataContext?.bookingDetails?.status === 'Hired' ||
+            //     leadDataContext?.bookingDetails?.status === 'Customer Cancelled' &&
+            //     leadDataContext?.bookingDetails?.startProject
+            //     ? false
+            //     : true
+            // }
 
-              //            style={[
-              //   styles.endBtn,    // chatGPT
-              //   {
-              //     backgroundColor:
-              //       status === "Hired" && started ? "#119b11ff" : "rgba(200, 220, 200, 1)",
-              //   },
-              // ]}
-              // disabled={!(status === "Hired" && started)}
-              style={[
-                styles.endBtn,
-                {
-                  backgroundColor:
-                    (status === 'Hired' && started) ||
-                      status === 'Customer Cancelled' ||
-                      (status === 'Customer Unreachable' && firstPaid)
-                      ? '#119b11ff'
-                      : 'rgba(200, 220, 200, 1)',
-                },
-              ]}
-              disabled={
-                !(
+            //            style={[
+            //   styles.endBtn,    // chatGPT
+            //   {
+            //     backgroundColor:
+            //       status === "Hired" && started ? "#119b11ff" : "rgba(200, 220, 200, 1)",
+            //   },
+            // ]}
+            // disabled={!(status === "Hired" && started)}
+            style={[
+              styles.endBtn,
+              {
+                backgroundColor:
                   (status === 'Hired' && started) ||
                   status === 'Customer Cancelled' ||
                   (status === 'Customer Unreachable' && firstPaid)
-                )
-              }
-              onPress={() => setStartProject(true)}
-            >
-              {/* api REQUESTING_SEND_OTP calling */}
-              <Text style={styles.endBtnText}>START PROJECT</Text>
-            </TouchableOpacity>
-          ) : canShowRequestNextPayment ? (
+                    ? '#119b11ff'
+                    : 'rgba(200, 220, 200, 1)',
+              },
+            ]}
+            disabled={
+              !(
+                (status === 'Hired' && started) ||
+                status === 'Customer Cancelled' ||
+                (status === 'Customer Unreachable' && firstPaid)
+              )
+            }
+            onPress={() => setStartProject(true)}
+          >
+            {/* api REQUESTING_SEND_OTP calling */}
+            <Text style={styles.endBtnText}>START PROJECT</Text>
+          </TouchableOpacity>
+        ) : canShowRequestNextPayment ? (
+          <TouchableOpacity
+            style={[
+              styles.endBtn,
+              { backgroundColor: requestNextEnabled ? '#ff7f00ff' : '#ffb97a' },
+            ]}
+            disabled={!requestNextEnabled}
+            onPress={
+              requestNextEnabled ? () => setRequestNext(true) : undefined
+            }
+          >
+            <Text style={styles.endBtnText}>Request Next Payment</Text>
+          </TouchableOpacity>
+        ) : (
+          !disableAllTheHell &&
+          !shouldHideEndProject &&
+          !custUnReach && (
             <TouchableOpacity
               style={[
                 styles.endBtn,
-                { backgroundColor: requestNextEnabled ? '#ff7f00ff' : '#ffb97a' },
+                {
+                  backgroundColor: endProjectEnabled
+                    ? '#ed1f24ff'
+                    : '#ff9294ff', // dull red when disabled
+                },
               ]}
-              disabled={!requestNextEnabled}
+              disabled={!endProjectEnabled}
               onPress={
-                requestNextEnabled ? () => setRequestNext(true) : undefined
+                endProjectEnabled ? () => setEndProject(true) : undefined
               }
             >
-              <Text style={styles.endBtnText}>Request Next Payment</Text>
+              <Text style={styles.endBtnText}>
+                End Project
+                {/* House */}
+              </Text>
             </TouchableOpacity>
-          ) : (
-            !disableAllTheHell &&
-            !shouldHideEndProject &&
-            !custUnReach && (
-              <TouchableOpacity
-                style={[
-                  styles.endBtn,
-                  {
-                    backgroundColor: endProjectEnabled
-                      ? '#ed1f24ff'
-                      : '#ff9294ff', // dull red when disabled
-                  },
-                ]}
-                disabled={!endProjectEnabled}
-                onPress={
-                  endProjectEnabled ? () => setEndProject(true) : undefined
-                }
-              >
-                <Text style={styles.endBtnText}>
-                  End Project
-                  {/* House */}
-                </Text>
-              </TouchableOpacity>
-            )
-          )}
+          )
+        )}
       </View>
 
       {/* edit price */}
@@ -2446,7 +2443,7 @@ const JobOngoing = () => {
             <TouchableOpacity
               style={styles.rescheduleBtn}
               onPress={updatePrice}
-            // onPress={() => setSecondModalVisible(false)}
+              // onPress={() => setSecondModalVisible(false)}
             >
               <Text style={styles.rescheduleText}>
                 {isReduce ? 'Share to Admin' : 'Share to Customer'}
@@ -2473,7 +2470,7 @@ const JobOngoing = () => {
             <Text style={{ fontFamily: 'Poppins-Bold', fontSize: 16 }}>
               End the{' '}
               {vendorDataContext?.vendor?.serviceType === 'house-painter' ||
-                vendorDataContext?.vendor?.serviceType === 'House Painting'
+              vendorDataContext?.vendor?.serviceType === 'House Painting'
                 ? 'survey'
                 : 'project'}
             </Text>
@@ -2487,7 +2484,7 @@ const JobOngoing = () => {
             >
               Are you sure you want to end the{' '}
               {vendorDataContext?.vendor?.serviceType === 'house-painter' ||
-                vendorDataContext?.vendor?.serviceType === 'House Painting'
+              vendorDataContext?.vendor?.serviceType === 'House Painting'
                 ? 'survey'
                 : 'project'}
               ?
@@ -2497,14 +2494,14 @@ const JobOngoing = () => {
               style={styles.confirmButton}
               onPress={
                 vendorDataContext?.vendor?.serviceType === 'deep cleaning' ||
-                  leadDataContext?.service[0]?.category === 'Deep Cleaning'
+                leadDataContext?.service[0]?.category === 'Deep Cleaning'
                   ? handleEndProject
                   : handleCompleteSurvey
               }
-            // onPress={() => {
-            //   setModalVisible(false);
-            //   navigation.navigate('OngoingLeadsScreen');
-            // }}
+              // onPress={() => {
+              //   setModalVisible(false);
+              //   navigation.navigate('OngoingLeadsScreen');
+              // }}
             >
               <Text style={styles.confirmButtonText}>Confirm</Text>
             </TouchableOpacity>
@@ -2582,11 +2579,11 @@ const JobOngoing = () => {
               </TouchableOpacity>
             </View>
             {leadDataContext?.bookingDetails?.status === 'Hired' ||
-              leadDataContext?.bookingDetails?.status === 'Customer Cancelled' ||
-              (leadDataContext?.bookingDetails?.status ===
-                'Customer Unreachable' &&
-                firstPaid &&
-                !leadDataContext?.bookingDetails?.isJobStarted) ? (
+            leadDataContext?.bookingDetails?.status === 'Customer Cancelled' ||
+            (leadDataContext?.bookingDetails?.status ===
+              'Customer Unreachable' &&
+              firstPaid &&
+              !leadDataContext?.bookingDetails?.isJobStarted) ? (
               // ✅ After Hired, Before Start → Show Cancellation/Rescheduling options
               <>
                 <TouchableOpacity
@@ -2730,12 +2727,12 @@ const JobOngoing = () => {
               {statusType === 1
                 ? 'Customer Unreachable!'
                 : statusType === 2
-                  ? 'Customer Denied'
-                  : statusType === 3
-                    ? 'Customer Negotiation going on'
-                    : statusType === 4
-                      ? 'Cancel Job!'
-                      : ''}
+                ? 'Customer Denied'
+                : statusType === 3
+                ? 'Customer Negotiation going on'
+                : statusType === 4
+                ? 'Cancel Job!'
+                : ''}
             </Text>
             <Text
               style={{
@@ -2904,12 +2901,12 @@ const JobOngoing = () => {
                 markedDates={
                   markedDateKey
                     ? {
-                      [markedDateKey]: {
-                        selected: true,
-                        disableTouchEvent: true,
-                        selectedDotColor: 'orange',
-                      },
-                    }
+                        [markedDateKey]: {
+                          selected: true,
+                          disableTouchEvent: true,
+                          selectedDotColor: 'orange',
+                        },
+                      }
                     : {}
                 }
                 theme={{
@@ -2952,8 +2949,8 @@ const JobOngoing = () => {
                     {selectedRemainderTime
                       ? formatTime(selectedRemainderTime)
                       : existingTimeText
-                        ? existingTimeText
-                        : 'Select time'}
+                      ? existingTimeText
+                      : 'Select time'}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -3104,10 +3101,7 @@ const JobOngoing = () => {
                     return;
                   }
                   if (!selectedInfo.canStart) {
-                    ToastAndroid.show(
-                      'Team not available',
-                      ToastAndroid.LONG,
-                    );
+                    ToastAndroid.show('Team not available', ToastAndroid.LONG);
                     return;
                   }
 
@@ -3264,7 +3258,13 @@ const JobOngoing = () => {
                 marginTop: 10,
               }}
             >
-              <Text style={{ fontFamily: 'Poppins-SemiBold', fontSize: 18 }}>
+              <Text
+                style={{
+                  fontFamily: 'Poppins-SemiBold',
+                  fontSize: 18,
+                  color: '#393939',
+                }}
+              >
                 Package Details
               </Text>
               <TouchableOpacity onPress={() => setViewPackages(false)}>
@@ -3490,8 +3490,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: 'Poppins-Bold',
     color: 'black',
-    // marginBottom: 20,
-    // marginTop: 15,
     marginLeft: 10,
   },
   headerBlock: {
@@ -3745,6 +3743,7 @@ const styles = StyleSheet.create({
   packageTitle: {
     fontFamily: 'Poppins-Medium',
     fontSize: 14,
+    color: 'black',
     // marginBottom: 6,
   },
 
@@ -3780,12 +3779,18 @@ const styles = StyleSheet.create({
   },
   amountLabel: {
     fontFamily: 'Poppins-SemiBold',
-    color: '#4D4D4D',
+    color: '#615858',
     fontSize: 14,
   },
-  amountBold: { fontFamily: 'Poppins-SemiBold', marginLeft: 130, marginTop: 5 },
-  amountPaid: { fontFamily: 'Poppins-SemiBold' },
-  amountDue: { color: '#000000', fontFamily: 'Poppins-SemiBold' },
+  amountBold: {
+    fontFamily: 'Poppins-SemiBold',
+    marginLeft: 130,
+    color: 'black',
+    fontSize: 14,
+    marginTop: 5,
+  },
+  amountPaid: { fontFamily: 'Poppins-SemiBold', fontSize: 14, color: 'black' },
+  amountDue: { color: '#000000', fontFamily: 'Poppins-SemiBold', fontSize: 14 },
   dottedLine2: {
     borderBottomWidth: 1,
     borderBottomColor: '#999',

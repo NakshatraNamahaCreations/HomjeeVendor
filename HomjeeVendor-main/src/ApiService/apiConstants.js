@@ -1,5 +1,5 @@
-// export const API_BASE_URL = 'http://192.168.1.78:9000/api'; // development
-export const API_BASE_URL = 'https://homjee-backend.onrender.com/api'; // production
+// export const API_BASE_URL = 'http://192.168.1.79:9000/api'; // development
+export const API_BASE_URL = 'https://homjee-backend-jeyp.onrender.com/api'; // production
 
 export const API_ENDPOINTS = {
   // USER AUTH

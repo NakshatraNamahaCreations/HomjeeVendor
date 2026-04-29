@@ -4,15 +4,13 @@ import {
   Image,
   TouchableOpacity,
   StyleSheet,
-  StatusBar,
   ScrollView,
   Alert,
   ToastAndroid,
   Modal,
   BackHandler,
 } from 'react-native';
-import React, { useEffect, useMemo, useState } from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useEffect, useState } from 'react';
 import { useThemeColor } from '../../Utilities/ThemeContext';
 import { API_BASE_URL, API_ENDPOINTS } from '../../ApiService/apiConstants';
 import { useVendorContext } from '../../Utilities/VendorContext';

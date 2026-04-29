@@ -3,11 +3,9 @@ import {
   Text,
   Image,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
   FlatList,
   RefreshControl,
-  StatusBar,
   useWindowDimensions,
 } from 'react-native';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -18,7 +16,6 @@ import { API_ENDPOINTS } from '../ApiService/apiConstants';
 import moment from 'moment';
 import { useNavigation } from '@react-navigation/native';
 import PageLoader from '../components/PageLoader';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useThemeColor } from '../Utilities/ThemeContext';
 import { useLeadContext } from '../Utilities/LeadContext';
 import IsEnabled3HoursBeforeSlot from '../Utilities/IsEnabled3HoursBeforeSlot';
@@ -85,6 +82,13 @@ const Leadone = () => {
           signal ? { signal } : undefined
         );
         const bookings = Array.isArray(response?.bookings) ? response.bookings : [];
+        // The BE gate may return { allowed: false, vendorStatus } when the
+        // vendor isn't Live (low coins / team unavailable / archived).
+        // Bookings will already be []; capture the status here so the UI
+        // can show "why no leads" if you wire a banner later.
+        if (response?.allowed === false && response?.vendorStatus) {
+          setError({ vendorStatus: response.vendorStatus });
+        }
         setNearByBookigs(bookings);
       } catch (err) {
         if (err.name !== "AbortError") setError(err);

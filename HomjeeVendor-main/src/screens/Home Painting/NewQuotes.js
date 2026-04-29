@@ -10,7 +10,6 @@ import {
   Alert,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import Icon from 'react-native-vector-icons/FontAwesome'; // Importing FontAwesome icons
 import axios from 'axios';
 import { API_BASE_URL, API_ENDPOINTS } from '../../ApiService/apiConstants';
 
@@ -394,33 +393,10 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   heading: {
-    fontSize: 24,
-    fontWeight: '600',
-    marginLeft: 10,
-    fontFamily: 'Poppins-SemiBold',
-  },
-  container: {
-    paddingHorizontal: 15,
-    paddingTop: 15,
-    paddingBottom: 40,
-    backgroundColor: '#F6F6F6',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  heading: {
     fontSize: 20,
     fontWeight: '600',
     marginLeft: 10,
     fontFamily: 'Poppins-SemiBold',
-  },
-  container: {
-    paddingHorizontal: 15,
-    paddingTop: 15,
-    paddingBottom: 40,
-    backgroundColor: '#F6F6F6',
   },
   quoteCard: {
     backgroundColor: '#FFFFFF',

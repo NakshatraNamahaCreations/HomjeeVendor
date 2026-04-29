@@ -2,9 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
-  Image,
   StyleSheet,
-  Dimensions,
   TouchableOpacity,
   ScrollView,
   RefreshControl,

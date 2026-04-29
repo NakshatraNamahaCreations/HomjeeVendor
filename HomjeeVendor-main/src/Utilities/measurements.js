@@ -3,15 +3,6 @@ export const toNumber = v => {
   return Number.isFinite(n) ? n : 0;
 };
 
-const area = (w, h) => +Math.max(toNumber(w) * toNumber(h), 0).toFixed(2);
-
-const mapOpenings = (arr = []) =>
-  (arr || []).map(o => ({
-    width: toNumber(o.width),
-    height: toNumber(o.height),
-    area: area(o.width, o.height),
-  }));
-
 export function buildMeasurementPayload({ vendorId, leadId, rooms }) {
   console.log('roomsState', rooms);
   //   const rooms = {};

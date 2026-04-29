@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
-  Image,
   Alert,
   Modal,
   ActivityIndicator,
@@ -21,7 +20,6 @@ import Entypo from 'react-native-vector-icons/Entypo';
 import axios from 'axios';
 import { API_BASE_URL, API_ENDPOINTS } from '../../ApiService/apiConstants';
 import PageLoader from '../../components/PageLoader';
-import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useIsFocused } from '@react-navigation/native';
 import { useBackHandler } from '@react-native-community/hooks';
 import { useVendorContext } from '../../Utilities/VendorContext';

@@ -9,10 +9,8 @@ import {
   BackHandler,
   Modal,
   ActivityIndicator,
-  StatusBar,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useThemeColor } from '../../Utilities/ThemeContext';
 import PaintDropdown from '../../Utilities/PaintDropdown';
 import { useLeadContext } from '../../Utilities/LeadContext';
@@ -20,7 +18,6 @@ import axios from 'axios';
 import { API_BASE_URL, API_ENDPOINTS } from '../../ApiService/apiConstants';
 import PageLoader from '../../components/PageLoader';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
 import Entypo from 'react-native-vector-icons/Entypo';
 import { useVendorContext } from '../../Utilities/VendorContext';
 import { getRequest } from '../../ApiService/apiHelper';

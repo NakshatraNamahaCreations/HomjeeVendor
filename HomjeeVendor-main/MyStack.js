@@ -20,14 +20,12 @@ import FinancialDetails from './src/screens/Menu/FinancialDetails';
 import TeamMember from './src/screens/Menu/TeamMember';
 import Calendar from './src/screens/Menu/Calendar';
 import TeamCalendarDetails from './src/screens/Menu/TeamCalendarDetails';
-// import StartMeasurement from './src/screens/Home Painting/StartMeasurement';
 import Bedroom1 from './src/screens/Home Painting/Bedroom1';
 import Doors from './src/screens/Home Painting/Doors';
 import Grills from './src/screens/Home Painting/Grills';
 import Quotes from './src/screens/Home Painting/Quotes';
 import Selectpackage from './src/screens/Home Painting/Selectpackage';
 import SelectRoom from './src/screens/Home Painting/SelectRoom';
-// import BedroomDetail from './src/screens/Home Painting/SelectPaint';
 import QuoteSummary from './src/screens/Home Painting/QuoteSummary';
 import AdditionalService from './src/screens/Home Painting/AdditionalService';
 import Balcony from './src/screens/Home Painting/Balcony';
@@ -84,11 +82,6 @@ function MyStack() {
               component={OTP}
               options={{ headerShown: false }}
             />
-            {/* <Stack.Screen
-          name="leadsone"
-          component={Leadone}
-          options={{headerShown: false}}
-        /> */}
             <Stack.Screen
               name="newleads"
               component={Newlead}
@@ -281,7 +274,6 @@ function MyStack() {
                   fontSize: 17,
                 },
               }}
-              OngoingCustomerDetails
             />
             <Stack.Screen
               name="StartMeasurement"
@@ -294,7 +286,6 @@ function MyStack() {
                   fontSize: 17,
                 },
               }}
-              OngoingCustomerDetails
             />
             <Stack.Screen
               name="RoomMeasurementScreen"
@@ -307,7 +298,6 @@ function MyStack() {
                   fontSize: 17,
                 },
               }}
-              OngoingCustomerDetails
             />
             <Stack.Screen
               name="Bedroom1"
@@ -320,7 +310,6 @@ function MyStack() {
                   fontSize: 17,
                 },
               }}
-              OngoingCustomerDetails
             />
             <Stack.Screen
               name="Doors"
@@ -333,7 +322,6 @@ function MyStack() {
                   fontSize: 17,
                 },
               }}
-              OngoingCustomerDetails
             />
             <Stack.Screen
               name="Grills"
@@ -346,7 +334,6 @@ function MyStack() {
                   fontSize: 17,
                 },
               }}
-              OngoingCustomerDetails
             />
             <Stack.Screen
               name="Balcony"
@@ -359,7 +346,6 @@ function MyStack() {
                   fontSize: 17,
                 },
               }}
-              OngoingCustomerDetails
             />
             <Stack.Screen
               name="Quotes"
@@ -372,7 +358,6 @@ function MyStack() {
                   fontSize: 17,
                 },
               }}
-              OngoingCustomerDetails
             />
             <Stack.Screen
               name="Selectpackage"
@@ -385,7 +370,6 @@ function MyStack() {
                   fontSize: 17,
                 },
               }}
-              OngoingCustomerDetails
             />
             <Stack.Screen
               name="SelectRoom"
@@ -398,7 +382,6 @@ function MyStack() {
                   fontSize: 17,
                 },
               }}
-              OngoingCustomerDetails
             />
             <Stack.Screen
               name="SelectPaint"
@@ -411,7 +394,6 @@ function MyStack() {
                   fontSize: 17,
                 },
               }}
-              OngoingCustomerDetails
             />
             <Stack.Screen
               name="QuoteSummary"
@@ -424,7 +406,6 @@ function MyStack() {
                   fontSize: 17,
                 },
               }}
-              OngoingCustomerDetails
             />
             <Stack.Screen
               name="QuotesView"
@@ -437,7 +418,6 @@ function MyStack() {
                   fontSize: 17,
                 },
               }}
-              OngoingCustomerDetails
             />
             <Stack.Screen
               name="AdditionalService"
@@ -450,7 +430,6 @@ function MyStack() {
                   fontSize: 17,
                 },
               }}
-              OngoingCustomerDetails
             />
             <Stack.Screen
               name="NewQuotes"
@@ -463,7 +442,6 @@ function MyStack() {
                   fontSize: 17,
                 },
               }}
-              OngoingCustomerDetails
             />
             <Stack.Screen
               name="QuotesPending"
@@ -621,7 +599,6 @@ function MyStack() {
                 },
               }}
             />
-            {/*  */}
           </Stack.Navigator>
         </NavigationContainer>
       </SafeAreaView>

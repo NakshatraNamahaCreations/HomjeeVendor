@@ -293,11 +293,6 @@ const styles = StyleSheet.create({
     marginTop: -30,
   },
   hiredText: {color: 'white', fontFamily: 'Poppins-SemiBold'},
-  sectionTitle: {
-    fontFamily: 'Poppins-SemiBold',
-    fontSize: 15,
-    marginBottom: 20,
-  },
   card: {
     backgroundColor: '#fff',
     borderRadius: 10,

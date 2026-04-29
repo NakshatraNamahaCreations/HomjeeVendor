@@ -485,9 +485,7 @@ import {
   ScrollView,
   Image,
   Modal,
-  Alert,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
 import {useNavigation} from '@react-navigation/native';
 
 // Sample DEFAULT_LEAD object to replace undefined references
@@ -1089,17 +1087,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     gap: 10,
-  },
-  confirmButton: {
-    flex: 1,
-    padding: 15,
-    borderRadius: 6,
-    alignItems: 'center',
-  },
-  confirmButtonText: {
-    color: '#fff',
-    fontFamily: 'Poppins-SemiBold',
-    fontSize: 14,
   },
 
   // Calendar Modal Styles

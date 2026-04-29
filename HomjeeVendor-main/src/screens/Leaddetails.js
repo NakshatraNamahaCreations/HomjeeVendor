@@ -8,16 +8,13 @@ import {
   Modal,
   ToastAndroid,
   ScrollView,
-  StatusBar,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { getRequest, postRequest } from '../ApiService/apiHelper';
 import { API_ENDPOINTS } from '../ApiService/apiConstants';
 import PageLoader from '../components/PageLoader';
 import moment from 'moment';
-// import MapView, { Marker } from 'react-native-maps';
 import { useVendorContext } from '../Utilities/VendorContext';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import { useThemeColor } from '../Utilities/ThemeContext';
 import { useLeadContext } from '../Utilities/LeadContext';
@@ -475,19 +472,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontFamily: 'Poppins-SemiBold',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContainer: {
-    width: '80%',
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 20,
-    alignItems: 'center',
   },
   errorImage: {
     width: 80,

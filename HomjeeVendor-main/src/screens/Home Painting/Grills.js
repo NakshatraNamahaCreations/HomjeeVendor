@@ -224,12 +224,6 @@ const styles = StyleSheet.create({
     color: '#000',
     fontFamily: 'Poppins-SemiBold',
   },
-  addBtnText: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#000',
-    fontFamily: 'Poppins-SemiBold',
-  },
   doneButton: {
     backgroundColor: '#FF0000',
     paddingVertical: 15,

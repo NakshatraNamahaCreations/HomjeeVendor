@@ -412,7 +412,6 @@ import {
   Modal,
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
-import Icon from 'react-native-vector-icons/FontAwesome'; // Back arrow
 
 // Default lead data
 const DEFAULT_LEAD = {
@@ -427,7 +426,6 @@ const DEFAULT_LEAD = {
 const LeadDescriptionFinal = () => {
   const navigation = useNavigation();
   const [modalVisible, setModalVisible] = useState(false);
-  const [secondModalVisible, setSecondModalVisible] = useState(false);
 
   return (
     <View style={styles.container}>

@@ -2,17 +2,13 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
   Image,
-  Modal,
-  Alert,
-  TextInput,
 } from 'react-native';
 import React, { useState } from 'react';
 
 const Payment = () => {
-  const [modalVisible, setModalVisible] = useState(false);
+  const [, setModalVisible] = useState(false);
   return (
     <View>
       <Image

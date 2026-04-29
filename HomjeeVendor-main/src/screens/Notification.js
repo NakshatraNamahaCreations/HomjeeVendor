@@ -1,16 +1,12 @@
 import {
   View,
   Text,
-  Image,
-  ScrollView,
-  StatusBar,
   TouchableOpacity,
   StyleSheet,
   FlatList,
   RefreshControl,
 } from 'react-native';
 import React, { useCallback, useEffect, useState } from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useThemeColor } from '../Utilities/ThemeContext';
 import { useVendorContext } from '../Utilities/VendorContext';
 import { getRequest } from '../ApiService/apiHelper';
@@ -18,7 +14,6 @@ import { API_BASE_URL, API_ENDPOINTS } from '../ApiService/apiConstants';
 import PageLoader from '../components/PageLoader';
 import moment from 'moment';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import Octicons from 'react-native-vector-icons/Octicons';
 import { useNavigation } from '@react-navigation/native';
 
 const Notification = () => {

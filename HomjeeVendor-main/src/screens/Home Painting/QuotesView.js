@@ -5,7 +5,6 @@ import {
   ScrollView,
   StyleSheet,
   Image,
-  TouchableOpacity,
   Linking,
   BackHandler,
   Pressable,
@@ -14,12 +13,6 @@ import { useLeadContext } from '../../Utilities/LeadContext';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { getRequest } from '../../ApiService/apiHelper';
 import { API_ENDPOINTS } from '../../ApiService/apiConstants';
-import Entypo from 'react-native-vector-icons/Entypo';
-import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-
-// ✅ optional: replace with your logo
-const LOGO_URI = '../../logo.png.png';
 
 export default function QuotesView() {
   const { leadDataContext } = useLeadContext();

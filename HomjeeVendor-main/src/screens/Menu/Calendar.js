@@ -22,8 +22,8 @@ const Calendar = () => {
   const [selectedDates, setSelectedDates] = useState({});
   const [savingLeaves, setSavingLeaves] = useState(false);
 
-  const today = moment().format("YYYY-MM-DD");
-  const tomorrow = moment().add(1, "day").format("YYYY-MM-DD");
+  const today = moment().format('YYYY-MM-DD');
+  const tomorrow = moment().add(1, 'day').format('YYYY-MM-DD');
 
   useEffect(() => {
     try {
@@ -32,26 +32,26 @@ const Calendar = () => {
         : [];
 
       const prefilled = leaves.reduce((acc, d) => {
-        const key = String(d || "").trim();
+        const key = String(d || '').trim();
         if (!key) return acc;
 
         acc[key] = {
           selected: true,
-          selectedColor: "#E74C3C",
-          selectedTextColor: "#fff",
+          selectedColor: '#E74C3C',
+          selectedTextColor: '#fff',
         };
         return acc;
       }, {});
 
       setSelectedDates(prefilled);
-    } catch (e) { }
+    } catch (e) {}
   }, [vendorDataContext?.markedLeaves]);
 
-  const onDayPress = (day) => {
+  const onDayPress = day => {
     try {
-      if (moment(day.dateString).isBefore(tomorrow, "day")) return;
+      if (moment(day.dateString).isBefore(tomorrow, 'day')) return;
 
-      setSelectedDates((prev) => {
+      setSelectedDates(prev => {
         const updated = { ...prev };
 
         if (updated[day.dateString]) {
@@ -59,14 +59,14 @@ const Calendar = () => {
         } else {
           updated[day.dateString] = {
             selected: true,
-            selectedColor: "#E74C3C",
-            selectedTextColor: "#fff",
+            selectedColor: '#E74C3C',
+            selectedTextColor: '#fff',
           };
         }
         return updated;
       });
     } catch (e) {
-      console.log("onpress select date", e)
+      console.log('onpress select date', e);
     }
   };
   const markedDates = selectedDates;
@@ -86,25 +86,27 @@ const Calendar = () => {
 
       const res = await axios.put(
         `${API_BASE_URL}${API_ENDPOINTS.MARK_VENDOR_LEAVES}`,
-        body
+        body,
       );
 
       ToastAndroid.showWithGravity(
-        res?.data?.message || "Leaves updated",
+        res?.data?.message || 'Leaves updated',
         ToastAndroid.SHORT,
-        ToastAndroid.CENTER
+        ToastAndroid.CENTER,
       );
-      console.log("res.data.vendor", res.data);
+      console.log('res.data.vendor', res.data);
 
-      setVendorDataContext(res.data.results)
+      setVendorDataContext(res.data.results);
       navigation.goBack();
     } catch (error) {
-      console.log("update leaves error:", error);
+      console.log('update leaves error:', error);
 
       ToastAndroid.showWithGravity(
-        error?.response?.data?.message || error?.message || "Failed to update leave",
+        error?.response?.data?.message ||
+          error?.message ||
+          'Failed to update leave',
         ToastAndroid.SHORT,
-        ToastAndroid.CENTER
+        ToastAndroid.CENTER,
       );
     } finally {
       setSavingLeaves(false);
@@ -118,9 +120,10 @@ const Calendar = () => {
           width: 100,
           height: 100,
           borderRadius: 50,
-          backgroundColor: "#ED1F24",
-          alignItems: "center",
-          justifyContent: "center", alignSelf: 'center',
+          backgroundColor: '#ED1F24',
+          alignItems: 'center',
+          justifyContent: 'center',
+          alignSelf: 'center',
           marginTop: 15,
         }}
       >
@@ -129,17 +132,17 @@ const Calendar = () => {
             width: 90,
             height: 90,
             borderRadius: 44,
-            overflow: "hidden", // ✅ important to clip image inside
-            backgroundColor: "#fff",
+            overflow: 'hidden', // ✅ important to clip image inside
+            backgroundColor: '#fff',
           }}
         >
           <Image
             source={{ uri: vendorDataContext?.vendor?.profileImage }}
             style={{
-              width: "100%",
-              height: "100%",
+              width: '100%',
+              height: '100%',
             }}
-            resizeMode="cover"  // ✅ fills circle without stretching
+            resizeMode="cover" // ✅ fills circle without stretching
           />
         </View>
       </View>
@@ -152,41 +155,38 @@ const Calendar = () => {
           fontSize: 10,
           fontFamily: 'Poppins-SemiBold',
           marginTop: -15,
-        }}>
+        }}
+      >
         {vendorDataContext.vendor?.serviceType}
       </Text>
-
 
       <View style={styles.infoSection}>
         <Text style={styles.label}>Calendar</Text>
       </View>
 
       <View style={styles.calendarBox}>
-        .        <RNCalendar
+        <RNCalendar
           current={today}
-          minDate={tomorrow}   // ✅ disables past + today, selectable from tomorrow
+          minDate={tomorrow} // ✅ disables past + today, selectable from tomorrow
           onDayPress={onDayPress}
           markedDates={markedDates}
           theme={{
-            backgroundColor: "#ffffff",
-            calendarBackground: "#ffffff",
-            selectedDayBackgroundColor: "#E74C3C",
-            selectedDayTextColor: "#ffffff",
-            dayTextColor: "#000000",
-            textDisabledColor: "#d9e1e8",
-            monthTextColor: "#000000",
-            arrowColor: "#000000",
-            textMonthFontWeight: "bold",
+            backgroundColor: '#ffffff',
+            calendarBackground: '#ffffff',
+            selectedDayBackgroundColor: '#E74C3C',
+            selectedDayTextColor: '#ffffff',
+            dayTextColor: '#000000',
+            textDisabledColor: '#d9e1e8',
+            monthTextColor: '#000000',
+            arrowColor: '#000000',
+            textMonthFontWeight: 'bold',
           }}
           style={{ borderRadius: 10 }}
         />
       </View>
 
       <TouchableOpacity
-        style={[
-          styles.button,
-          savingLeaves ? { opacity: 0.7 } : null,
-        ]}
+        style={[styles.button, savingLeaves ? { opacity: 0.7 } : null]}
         onPress={handleSaveLeaves}
         disabled={savingLeaves}
       >

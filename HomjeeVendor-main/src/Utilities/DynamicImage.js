@@ -1,5 +1,5 @@
 import { Image } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 
 const DynamicImage = ({ uri }) => {
   //   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });

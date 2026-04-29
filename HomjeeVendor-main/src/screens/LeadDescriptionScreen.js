@@ -11,18 +11,15 @@ import {
   TextInput,
   ToastAndroid,
   Linking,
-  StatusBar,
 } from 'react-native';
 import { Calendar } from 'react-native-calendars';
-// import MapView, { Marker } from 'react-native-maps';
 import { API_BASE_URL, API_ENDPOINTS } from '../ApiService/apiConstants';
 import { getRequest, postRequest } from '../ApiService/apiHelper';
 import PageLoader from '../components/PageLoader';
-import { Link, useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { useVendorContext } from '../Utilities/VendorContext';
 import { useLeadContext } from '../Utilities/LeadContext';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useThemeColor } from '../Utilities/ThemeContext';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Feather from 'react-native-vector-icons/Feather';
@@ -83,25 +80,6 @@ const LeadDescriptionScreen = () => {
   const today = new Date().toISOString().split('T')[0];
   const [selectedRescheduleDate, setSelectedRescheduleDate] = useState(today);
 
-  // function isEnabled3HoursBeforeSlot(slotDateISOString, slotTimeStr) {
-  //   if (!slotDateISOString || !slotTimeStr) return false;
-
-  //   // Get the date portion in local time (IST, user's time)
-  //   const slotDateLocal = moment(slotDateISOString);
-  //   const slotDateLocalString = slotDateLocal.format('YYYY-MM-DD');
-  //   // Combine local date and slot time, then parse in local time!
-  //   const slotDateTime = moment(
-  //     `${slotDateLocalString} ${slotTimeStr}`,
-  //     'YYYY-MM-DD hh:mm A',
-  //   );
-
-  //   // Debug: console.log('Slot DateTime:', slotDateTime.format(), "Now:", moment().format());
-
-  //   const activationTime = slotDateTime.clone().subtract(3, 'hours');
-  //   return moment().isSameOrAfter(activationTime);
-  // }
-  // isEnabled3HoursBeforeSlot
-
   const enableUI = IsEnabled3HoursBeforeSlot(
     leadDataContext.selectedSlot?.slotDate,
     leadDataContext.selectedSlot?.slotTime,
@@ -123,7 +101,6 @@ const LeadDescriptionScreen = () => {
     setLoading(true);
     getRequest(`${API_ENDPOINTS.GET_BOOKINGS_BY_bOOKING_ID}${leadId}`)
       .then(response => {
-        // console.log('response', response);
         setLeadDataContext(response.booking);
         setLoading(false);
       })
@@ -380,65 +357,6 @@ const LeadDescriptionScreen = () => {
     }
   };
 
-  // const handleConfirmJob = async () => {
-  //   setLoading(true);
-  //   if (joinedOtp === null) {
-  //     return ToastAndroid.showWithGravity(
-  //       'OTP Is Required',
-  //       ToastAndroid.LONG,
-  //       ToastAndroid.CENTER,
-  //     );
-  //   }
-  //   try {
-  //     const formData = {
-  //       bookingId: leadDataContext._id,
-  //       status:
-  //         vendorDataContext?.vendor?.serviceType === 'house-painter'
-  //           ? 'Survey Ongoing'
-  //           : 'Job Ongoing',
-  //       otp: joinedOtp,
-  //       assignedProfessional: {
-  //         professionalId: vendorDataContext._id,
-  //         name: vendorDataContext.vendor?.vendorName,
-  //         phone: vendorDataContext.vendor?.mobileNumber,
-  //         acceptedDate: leadDataContext.assignedProfessional?.acceptedDate,
-  //         acceptedTime: leadDataContext.assignedProfessional?.acceptedTime,
-  //         startedDate: moment().format('ll'),
-  //         startedTime: moment().format('LT'),
-  //       },
-  //       teamMembers:
-  //         vendorDataContext?.vendor?.serviceType === 'house-painter'
-  //           ? []
-  //           : selectedMembers.map(id => {
-  //               const member = availableTeam.find(m => m._id === id);
-  //               return { _id: member._id, name: member.name };
-  //             }),
-  //     };
-
-  //     const result = await postRequest(API_ENDPOINTS.START_JOB, formData);
-  //     console.log('Job Started');
-  //     setOtp(['', '', '', '']);
-  //     setOtpModalVisible(false);
-  //     setModalVisible(false);
-  //     ToastAndroid.showWithGravity(
-  //       result.message || 'Job Started',
-  //       ToastAndroid.LONG,
-  //       ToastAndroid.CENTER,
-  //     );
-
-  //     navigation.navigate('JobOngoing');
-  //   } catch (error) {
-  //     console.log('Error while starting job:', error);
-  //     ToastAndroid.showWithGravity(
-  //       error?.message || 'Failed to start Job',
-  //       ToastAndroid.LONG,
-  //       ToastAndroid.CENTER,
-  //     );
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
   const handleConfirmJob = async () => {
     setLoading(true);
     if (joinedOtp === null) {
@@ -470,7 +388,7 @@ const LeadDescriptionScreen = () => {
         bookingId: leadDataContext._id,
         status:
           vendorDataContext?.vendor?.serviceType === 'house-painter' ||
-            vendorDataContext?.vendor?.serviceType === 'House Painting'
+          vendorDataContext?.vendor?.serviceType === 'House Painting'
             ? 'Survey Ongoing'
             : 'Job Ongoing',
         otp: joinedOtp,
@@ -849,7 +767,7 @@ const LeadDescriptionScreen = () => {
       >
         <Text style={styles.confirmButtonText}>
           {vendorDataContext?.vendor?.serviceType === 'house-painter' ||
-            vendorDataContext?.vendor?.serviceType === 'House Painting'
+          vendorDataContext?.vendor?.serviceType === 'House Painting'
             ? 'START SURVEY'
             : 'START JOB'}
         </Text>
@@ -882,7 +800,7 @@ const LeadDescriptionScreen = () => {
             <Text style={styles.modalTitle}>
               Start the{' '}
               {vendorDataContext?.vendor?.serviceType === 'house-painter' ||
-                vendorDataContext?.vendor?.serviceType === 'House Painting'
+              vendorDataContext?.vendor?.serviceType === 'House Painting'
                 ? 'survey'
                 : 'job'}
               !
@@ -890,7 +808,7 @@ const LeadDescriptionScreen = () => {
             <Text style={styles.modalSubtitle}>
               Are you sure you want to start the{' '}
               {vendorDataContext?.vendor?.serviceType === 'house-painter' ||
-                vendorDataContext?.vendor?.serviceType === 'House Painting'
+              vendorDataContext?.vendor?.serviceType === 'House Painting'
                 ? 'survey'
                 : 'job'}
               ?
@@ -899,7 +817,7 @@ const LeadDescriptionScreen = () => {
               style={styles.confirmButton}
               onPress={
                 vendorDataContext?.vendor?.serviceType === 'house-painter' ||
-                  vendorDataContext?.vendor?.serviceType === 'House Painting'
+                vendorDataContext?.vendor?.serviceType === 'House Painting'
                   ? handleOpenOtp // start,otp/house painting
                   : handleStartJob // start,team,otp/deep cleaning
               }
@@ -1046,13 +964,13 @@ const LeadDescriptionScreen = () => {
             <TouchableOpacity
               style={styles.confirmButton}
               onPress={handleConfirmJob}
-            // onPress={() => {
-            //   const enteredOtp = otp.join('');
-            //   if (enteredOtp.length === 4) {
-            //     setOtpModalVisible(false);
-            //     navigation.navigate('JobOngoing', { lead });
-            //   }
-            // }}
+              // onPress={() => {
+              //   const enteredOtp = otp.join('');
+              //   if (enteredOtp.length === 4) {
+              //     setOtpModalVisible(false);
+              //     navigation.navigate('JobOngoing', { lead });
+              //   }
+              // }}
             >
               <Text style={styles.confirmButtonText}>Submit</Text>
             </TouchableOpacity>
@@ -1110,37 +1028,6 @@ const LeadDescriptionScreen = () => {
             >
               <Text style={styles.statusOptionText}>Customer Cancel</Text>
             </TouchableOpacity>
-            {/* </>
-              
-            ) : (
-              // house painting
-              <>
-                <TouchableOpacity
-                  style={styles.statusOption}
-                  // onPress={() => {
-                  //   setReachablePrompt(true);
-                  //   setStatusModalVisible(false);
-                  // }}
-                >
-                  <Text style={styles.statusOptionText}>Negotiations</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.statusOption}
-                  // onPress={() => handleUpdateStatus('Customer Reschedule')}
-                >
-                  <Text style={styles.statusOptionText}>Hired</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.statusOption}
-                  // onPress={() => {
-                  //   setCancelModal(true);
-                  //   setStatusModalVisible(false);
-                  // }}
-                >
-                  <Text style={styles.statusOptionText}>Customer Cancel</Text>
-                </TouchableOpacity>
-              </>
-            )} */}
           </View>
         </View>
       </Modal>
@@ -1190,50 +1077,10 @@ const LeadDescriptionScreen = () => {
             >
               <Text style={styles.cancelButtonText}>Cancel</Text>
             </TouchableOpacity>
-
-            {/* <View
-                style={{
-                  flexDirection: 'row',
-                  marginTop: 20,
-                  justifyContent: 'space-between',
-                }}
-              >
-                <View
-                  style={[
-                    styles.cancelReasonJobBtn,
-                    { backgroundColor: '#F4F4F4' },
-                  ]}
-                >
-                  <TouchableOpacity
-                    onPress={() => {
-                      setReachablePrompt(false);
-                    }}
-                  >
-                    <Text style={[styles.cancleReasonTxt, { color: 'black' }]}>
-                      Close
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-                <View
-                  style={[
-                    styles.cancelReasonJobBtn,
-                    { backgroundColor: '#ED1F24' },
-                  ]}
-                >
-                  <TouchableOpacity
-                    
-                  >
-                    <Text style={[styles.cancleReasonTxt, { color: 'white' }]}>
-                      Yes
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </View> */}
           </View>
         </View>
       </Modal>
 
-      {/* prompt for cancellening */}
       <Modal
         animationType="fade"
         transparent={true}
@@ -1514,7 +1361,6 @@ const LeadDescriptionScreen = () => {
             <TouchableOpacity
               style={styles.updatePricBtn}
               onPress={updatePrice}
-            // onPress={() => setSecondModalVisible(false)}
             >
               <Text style={styles.rescheduleText}>
                 {isReduce ? 'Share to Admin' : 'Share to Customer'}
@@ -1762,25 +1608,10 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     marginBottom: 10,
     marginTop: 20,
-    // position:"absolute",
-    // bottom:0
   },
   startBtn: {
-    // backgroundColor: '#ED1F24',
-    // borderRadius: 6,
-    // width: '100%',
-    // paddingVertical: 12,
-    // marginBottom: 50,
-
-    // backgroundColor: '#ED1F24',
-    // paddingVertical: 12,
     borderRadius: 5,
-
     alignItems: 'center',
-    // marginTop: 10,
-    // marginBottom: 15,
-    // marginHorizontal: 20,
-
     flexDirection: 'row',
     justifyContent: 'center',
   },
@@ -2025,16 +1856,19 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins-Bold',
     marginBottom: 20,
     textAlign: 'center',
+    color: '#000',
   },
   statusOption: {
     paddingVertical: 12,
     backgroundColor: '#F6F6F6',
     borderRadius: 6,
     marginBottom: 10,
+    color: '#000',
   },
   statusOptionText: {
     fontSize: 15,
     fontFamily: 'Poppins-Medium',
+    color: '#000',
     textAlign: 'center',
   },
 });

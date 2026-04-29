@@ -1,6 +1,5 @@
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import React, { useState, useEffect } from 'react';
-import { Calendar as RNCalendar } from 'react-native-calendars';
 import {
   View,
   Text,
@@ -12,13 +11,11 @@ import {
   StatusBar,
 } from 'react-native';
 import { useLeadContext } from '../Utilities/LeadContext';
-import { useVendorContext } from '../Utilities/VendorContext';
 import { API_ENDPOINTS } from '../ApiService/apiConstants';
 import { getRequest } from '../ApiService/apiHelper';
 import PageLoader from '../components/PageLoader';
 import moment from 'moment';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import AntDesign from 'react-native-vector-icons/AntDesign';
 import useBackHandler from '../Utilities/useBackHandler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useThemeColor } from '../Utilities/ThemeContext';
@@ -26,11 +23,9 @@ import { useThemeColor } from '../Utilities/ThemeContext';
 const CompletedScreen = () => {
   const { deviceTheme } = useThemeColor();
   useBackHandler();
-  const route = useRoute();
   const navigation = useNavigation();
   const { leadDataContext, setLeadDataContext } = useLeadContext();
   const leadId = leadDataContext._id;
-  const { vendorDataContext } = useVendorContext();
   const [loading, setLoading] = useState(false);
 
   console.log('leadDataContext', leadDataContext);
@@ -360,12 +355,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 15,
   },
-  updateButton: {
-    backgroundColor: '#ED1F24',
-    borderRadius: 6,
-    flexDirection: 'row',
-    padding: 12,
-  },
   rescheduleText: {
     fontSize: 16,
     fontFamily: 'Poppins-Medium',
@@ -382,12 +371,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontFamily: 'Poppins-Bold',
     textAlign: 'center',
-  },
-  updateButtonText: {
-    color: '#FFFFFF',
-    fontFamily: 'Poppins-Bold',
-    fontSize: 14,
-    marginRight: 40,
   },
   measurementSummaryContainer: {
     marginTop: 10,
@@ -419,21 +402,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#ED1F24',
     textAlign: 'center',
-  },
-  endBtn: {
-    backgroundColor: '#ED1F24',
-    padding: 16,
-    alignItems: 'center',
-    borderRadius: 5,
-    marginHorizontal: 50,
-    alignSelf: 'center',
-    minWidth: 340,
-    marginBottom: 30,
-  },
-  endBtnText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
   },
   modalOverlay: {
     flex: 1,
@@ -529,9 +497,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginRight: 40,
   },
-  contactText: {
-    color: 'white',
-  },
   contactText: { color: '#fff', fontFamily: 'Poppins-SemiBold' },
   packageRow: { flexDirection: 'row', justifyContent: 'space-between' },
   viewDetails: {
@@ -569,11 +534,6 @@ const styles = StyleSheet.create({
   amountBold: { fontFamily: 'Poppins-SemiBold', marginLeft: 130, marginTop: 5 },
   amountPaid: { fontFamily: 'Poppins-SemiBold' },
   amountDue: { color: '#000000', fontFamily: 'Poppins-SemiBold' },
-  dottedLine: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#999',
-    borderStyle: 'dashed',
-  },
   endBtn: {
     position: 'absolute',
     bottom: 20,

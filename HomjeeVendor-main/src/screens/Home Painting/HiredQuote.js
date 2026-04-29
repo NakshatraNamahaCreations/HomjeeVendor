@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 
 const HiredQuote = ({route, navigation}) => {
-  const {lead, measurementSummary} = route.params; // Access the passed parameters
+  const {lead} = route.params; // Access the passed parameters
   const [modalVisible, setModalVisible] = useState(false); // For modal visibility
 
   // Function to handle when "Start Project" button is pressed

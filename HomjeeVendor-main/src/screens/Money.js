@@ -1,17 +1,13 @@
 import {
   View,
   Text,
-  Image,
   StyleSheet,
   TouchableOpacity,
-  ScrollView,
-  StatusBar,
   FlatList,
   RefreshControl,
 } from 'react-native';
 import React, { useCallback, useEffect, useState } from 'react';
 import Header from '../components/Header';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useThemeColor } from '../Utilities/ThemeContext';
 import { getRequest } from '../ApiService/apiHelper';
 import { API_ENDPOINTS } from '../ApiService/apiConstants';

@@ -1,12 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
   StyleSheet,
   Animated,
   Image,
   ToastAndroid,
-  ActivityIndicator,
   StatusBar,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';

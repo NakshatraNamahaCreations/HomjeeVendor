@@ -9,7 +9,6 @@ import {
   Modal,
   Image,
   Alert,
-  ToastAndroid,
   BackHandler,
 } from 'react-native';
 import {

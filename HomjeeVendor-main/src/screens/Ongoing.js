@@ -9,7 +9,6 @@ import {
   View,
   Text,
   Image,
-  ScrollView,
   StyleSheet,
   TouchableOpacity,
   Modal,
@@ -17,7 +16,6 @@ import {
   FlatList,
   Dimensions,
   Animated,
-  StatusBar,
   TextInput,
   Pressable,
 } from 'react-native';
@@ -30,17 +28,16 @@ import moment from 'moment';
 import PageLoader from '../components/PageLoader';
 import { useLeadContext } from '../Utilities/LeadContext';
 import { filterLeads } from '../Utilities/leadFilters';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useThemeColor } from '../Utilities/ThemeContext';
 import Fontisto from 'react-native-vector-icons/Fontisto';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 import IsEnabled3HoursBeforeSlot from '../Utilities/IsEnabled3HoursBeforeSlot';
 
 const screenWidth = Dimensions.get('window').width;
 
 const OngoingLeadsScreen = () => {
-  const { deviceTheme } = useThemeColor();
   const { vendorDataContext } = useVendorContext();
   const { leadDataContext, setLeadDataContext } = useLeadContext();
   const professionalId = vendorDataContext?._id;
@@ -76,7 +73,6 @@ const OngoingLeadsScreen = () => {
         setLeadsLists(response.leadsList);
       } catch (err) {
         if (err.name !== 'AbortError') {
-          setError(err);
           console.error('Error fetching bookings:', err);
         }
       } finally {
@@ -99,12 +95,9 @@ const OngoingLeadsScreen = () => {
     setRefreshing(false);
   }, [fetchConfirmedLeads]);
 
-  // console.log('leadsList Ongoing', leadsList);
-
-
   useEffect(() => {
     Animated.spring(translateX, {
-      toValue: -activeTab * screenWidth,
+      toValue: -TABS.indexOf(activeTab) * screenWidth,
       useNativeDriver: true,
       speed: 14,
       bounciness: 6,
@@ -131,68 +124,12 @@ const OngoingLeadsScreen = () => {
     [activeTab],
   );
 
-  // const filteredLeads = leadsData
-  //   .filter(item => activeTab === 'All Leads' || item.day === activeTab)
-  //   .filter(item => !selectedStatus || item.status === selectedStatus);
-
-  // const groupedLeads = {};
-  // filteredLeads.forEach(item => {
-  //   if (!groupedLeads[item.day]) groupedLeads[item.day] = [];
-  //   groupedLeads[item.day].push(item);
-  // });
-
   const handleFilterSelect = status => {
     setSelectedStatus(status);
     setFilterPopupVisible(false);
   };
 
-  // const navigationDecision = lead => {
-  //   setNavigationLoader(true); // Show the loader
-
-  //   const status = lead.bookingDetails?.status;
-  //   const hasLeadLocked = lead.bookingDetails?.hasLeadLocked;
-  //   const isSurveyStarted = lead.bookingDetails?.isSurveyStarted;
-
-
-  //   // Navigate first, without waiting for context update
-  //   if (status === 'Customer Cancelled' || status === 'Rescheduled') {
-  //     if (hasLeadLocked) {
-  //       setNavigationLoader(false); // Stop loader if no navigation happens
-  //       return;
-  //     }
-  //     // Navigate immediately to the appropriate screen
-  //     navigation.navigate('LeadDescriptionScreen');
-  //   }
-
-  //   // For other statuses
-  //   if (status === 'Confirmed' || status === 'Customer Unreachable') {
-  //     // Navigate immediately to the appropriate screen
-  //     navigation.navigate('LeadDescriptionScreen');
-  //   }
-
-  //   // For job or survey ongoing statuses
-  //   if (
-  //     [
-  //       'Survey Ongoing',
-  //       'Survey Completed',
-  //       'Pending Hiring',
-  //       'Hired',
-  //       'Project Ongoing',
-  //       'Job Ongoing',
-  //       'Project Completed',
-  //       'Waiting for final payment',
-  //     ].includes(status)
-  //   ) {
-  //     // Navigate immediately to the job ongoing screen
-  //     navigation.navigate('JobOngoing');
-  //   }
-
-  //   // Update the context after navigation is triggered
-  //   setLeadDataContext(lead);
-  //   setNavigationLoader(false); // Stop loader after the context is updated
-  // };
-
-  const navigationDecision = (lead) => {
+  const navigationDecision = lead => {
     try {
       setNavigationLoader(true);
 
@@ -201,16 +138,16 @@ const OngoingLeadsScreen = () => {
       const isSurveyStarted = lead?.bookingDetails?.isSurveyStarted;
 
       // ✅ Special case: Customer Unreachable
-      if (status === "Customer Unreachable" ||
-        status === "Negotiation" ||
-        status === "Customer Denied" ||
-        status === "Customer Cancelled"
-
+      if (
+        status === 'Customer Unreachable' ||
+        status === 'Negotiation' ||
+        status === 'Customer Denied' ||
+        status === 'Customer Cancelled'
       ) {
         if (isSurveyStarted) {
-          navigation.navigate("JobOngoing");
+          navigation.navigate('JobOngoing');
         } else {
-          navigation.navigate("LeadDescriptionScreen");
+          navigation.navigate('LeadDescriptionScreen');
         }
 
         setLeadDataContext(lead);
@@ -219,20 +156,20 @@ const OngoingLeadsScreen = () => {
       }
 
       // Customer Cancelled / Rescheduled
-      if (status === "Customer Cancelled" || status === "Rescheduled") {
+      if (status === 'Customer Cancelled' || status === 'Rescheduled') {
         if (hasLeadLocked) {
           setNavigationLoader(false);
           return;
         }
-        navigation.navigate("LeadDescriptionScreen");
+        navigation.navigate('LeadDescriptionScreen');
         setLeadDataContext(lead);
         setNavigationLoader(false);
         return;
       }
 
       // Confirmed
-      if (status === "Confirmed") {
-        navigation.navigate("LeadDescriptionScreen");
+      if (status === 'Confirmed') {
+        navigation.navigate('LeadDescriptionScreen');
         setLeadDataContext(lead);
         setNavigationLoader(false);
         return;
@@ -241,32 +178,31 @@ const OngoingLeadsScreen = () => {
       // Job or survey ongoing statuses
       if (
         [
-          "Survey Ongoing",
-          "Survey Completed",
-          "Pending Hiring",
-          "Hired",
-          "Project Ongoing",
-          "Job Ongoing",
-          "Project Completed",
-          "Waiting for final payment",
+          'Survey Ongoing',
+          'Survey Completed',
+          'Pending Hiring',
+          'Hired',
+          'Project Ongoing',
+          'Job Ongoing',
+          'Project Completed',
+          'Waiting for final payment',
         ].includes(status)
       ) {
-        navigation.navigate("JobOngoing");
+        navigation.navigate('JobOngoing');
         setLeadDataContext(lead);
         setNavigationLoader(false);
         return;
       }
 
       // ✅ Default fallback (optional)
-      navigation.navigate("LeadDescriptionScreen");
+      navigation.navigate('LeadDescriptionScreen');
       setLeadDataContext(lead);
       setNavigationLoader(false);
     } catch (e) {
       setNavigationLoader(false);
-      console.log("navigationDecision error:", e);
+      console.log('navigationDecision error:', e);
     }
   };
-
 
   const showStatus = lead => {
     if (lead.bookingDetails?.status === 'Confirmed') {
@@ -337,25 +273,6 @@ const OngoingLeadsScreen = () => {
     }
   };
 
-  {
-    /* <Text style={styles.housePaintingText}>
-          {lead?.service[0]?.category}
-        </Text> */
-  }
-  {
-    /* <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <Text
-            style={{
-              color: '#ED1F24',
-              fontSize: 11,
-              fontFamily: 'Poppins-SemiBold',
-            }}
-          >
-            {lead?.service[0]?.category}
-          </Text>
-        </View> */
-  }
-
   const LeadItem = React.memo(({ lead }) => {
     const enableUI = IsEnabled3HoursBeforeSlot(
       lead.selectedSlot?.slotDate,
@@ -385,40 +302,9 @@ const OngoingLeadsScreen = () => {
           <View style={styles.cardBody}>
             <Ionicons name="location" color="red" size={17} />
             <Text style={styles.cardText} numberOfLines={2}>
-              {/* {enableUI && lead?.address.houseFlatNumber + ','} */}
               {lead.address?.streetArea}
             </Text>
           </View>
-          {/* <View style={styles.cardBody}>
-            {enableUI ? (
-              <>
-                <Ionicons name="location" color="red" size={17} />
-                <Text style={styles.cardText} numberOfLines={2}>
-                  {lead?.address.houseFlatNumber}, {lead?.address.streetArea}
-                </Text>
-              </>
-            ) : (
-              <View
-                style={{
-                  backgroundColor: '#ffecec',
-                  flex: 1,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                }}
-              >
-                <Ionicons
-                  name="information-circle-outline"
-                  color="red"
-                  size={14}
-                />
-                <Text
-                  style={[styles.cardText, { color: '#ED1F24', fontSize: 11 }]}
-                >
-                  Address will appear 3 hours prior to the Slot time.
-                </Text>
-              </View>
-            )}
-          </View> */}
         </View>
         <View
           style={{
@@ -446,16 +332,13 @@ const OngoingLeadsScreen = () => {
   return (
     <GestureDetector gesture={swipeGesture}>
       <View style={{ flex: 1 }}>
-
         {(loading || navigationLoader) && <PageLoader />}
         <Header />
 
         <View style={styles.container}>
           <View style={styles.titleRow}>
             <Text style={styles.title}>{activeTab}</Text>
-            <TouchableOpacity
-              onPress={() => setShowSearchBar(!showSearchBar)}
-            >
+            <TouchableOpacity onPress={() => setShowSearchBar(!showSearchBar)}>
               {showSearchBar ? (
                 <Fontisto name="close-a" color="black" size={15} />
               ) : (
@@ -504,10 +387,7 @@ const OngoingLeadsScreen = () => {
               style={styles.filterBtn}
               onPress={() => setFilterPopupVisible(true)}
             >
-              <Image
-                source={require('../assets/icons/Frame.png')}
-                style={styles.filterIcon}
-              />
+              <FontAwesome6 name="sliders" size={16} color="#757474" />
             </TouchableOpacity>
           </View>
           {displayedLeads?.length > 0 ? (
@@ -523,10 +403,7 @@ const OngoingLeadsScreen = () => {
               windowSize={21}
               removeClippedSubviews={true}
               refreshControl={
-                <RefreshControl
-                  refreshing={refreshing}
-                  onRefresh={onRefresh}
-                />
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
               }
               style={styles.listContainer}
             />
@@ -560,9 +437,7 @@ const OngoingLeadsScreen = () => {
             <View style={styles.popupContainer}>
               <View style={styles.popupHeader}>
                 <Text style={styles.popupTitle}>Filter</Text>
-                <TouchableOpacity
-                  onPress={() => setFilterPopupVisible(false)}
-                >
+                <TouchableOpacity onPress={() => setFilterPopupVisible(false)}>
                   <Text style={styles.popupClose}>×</Text>
                 </TouchableOpacity>
               </View>
@@ -584,7 +459,7 @@ const OngoingLeadsScreen = () => {
                           style={[
                             styles.radioCircle,
                             selectedStatus === option &&
-                            styles.radioCircleSelected,
+                              styles.radioCircleSelected,
                           ]}
                         >
                           {selectedStatus === option && (
@@ -616,7 +491,7 @@ const OngoingLeadsScreen = () => {
                           style={[
                             styles.radioCircle,
                             selectedStatus === option &&
-                            styles.radioCircleSelected,
+                              styles.radioCircleSelected,
                           ]}
                         >
                           {selectedStatus === option && (
@@ -629,14 +504,6 @@ const OngoingLeadsScreen = () => {
                   </View>
                 </>
               )}
-              {/* <View
-                  style={{
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginTop: 10,
-                  }}
-                > */}
               <TouchableOpacity
                 onPress={() => {
                   setSelectedStatus(null);
@@ -666,7 +533,6 @@ const OngoingLeadsScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  // safeArea: { flex: 1, backgroundColor: '#F6F6F6' },
   container: { padding: 15 },
   titleRow: {
     flexDirection: 'row',
@@ -816,6 +682,7 @@ const styles = StyleSheet.create({
   cardName: {
     fontSize: 14,
     fontFamily: 'Poppins-SemiBold',
+    color: '#252525',
   },
   cardRightTime: {
     alignItems: 'flex-end',

@@ -347,7 +347,6 @@ const styles = StyleSheet.create({
   modalCloseButtonText: {
     color: '#fff',
     fontSize: 14,
-    fontFamily: 'System',
     fontFamily: 'Poppins-Medium',
   },
   downborder: {

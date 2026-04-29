@@ -1,7 +1,6 @@
 import {
   View,
   Text,
-  Image,
   StyleSheet,
   TouchableOpacity,
   FlatList,
@@ -9,7 +8,7 @@ import {
   Modal,
   ToastAndroid,
 } from 'react-native';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useVendorContext } from '../Utilities/VendorContext';
 import axios from 'axios';
 import { API_BASE_URL, API_ENDPOINTS } from '../ApiService/apiConstants';

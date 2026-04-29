@@ -837,10 +837,6 @@ const styles = StyleSheet.create({
     color: '#333',
     fontSize: 14,
   },
-  container: {
-    flex: 1,
-    backgroundColor: '#F6F6F6',
-  },
   backButton: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -2,21 +2,21 @@ import { View, Text, Image, StyleSheet } from 'react-native';
 import React from 'react';
 import { useVendorContext } from '../../Utilities/VendorContext';
 import moment from 'moment';
-
+import { StatusBadge } from '../../Utilities/VendorStatus';
 
 const Profiledetails = () => {
   const { vendorDataContext } = useVendorContext();
   return (
     <View style={{ marginTop: 20 }}>
-
       <View
         style={{
           width: 100,
           height: 100,
           borderRadius: 50,
-          backgroundColor: "#ED1F24",
-          alignItems: "center",
-          justifyContent: "center", alignSelf: 'center'
+          backgroundColor: '#ED1F24',
+          alignItems: 'center',
+          justifyContent: 'center',
+          alignSelf: 'center',
           // padding: 1,
         }}
       >
@@ -25,23 +25,29 @@ const Profiledetails = () => {
             width: 90,
             height: 90,
             borderRadius: 44,
-            overflow: "hidden", // ✅ important to clip image inside
-            backgroundColor: "#fff",
+            overflow: 'hidden', // ✅ important to clip image inside
+            backgroundColor: '#fff',
           }}
         >
           <Image
             source={{ uri: vendorDataContext?.vendor?.profileImage }}
             style={{
-              width: "100%",
-              height: "100%",
+              width: '100%',
+              height: '100%',
             }}
-            resizeMode="cover"  // ✅ fills circle without stretching
+            resizeMode="cover" // ✅ fills circle without stretching
           />
         </View>
       </View>
-      <Text style={styles.profileName}>{vendorDataContext.vendor?.vendorName}</Text>
-      <Text style={styles.status}>Live</Text>
-      <Text style={styles.lastActive}>{vendorDataContext.vendor?.serviceType}</Text>
+      <Text style={styles.profileName}>
+        {vendorDataContext.vendor?.vendorName}
+      </Text>
+      <View style={styles.status}>
+        <StatusBadge vendor={vendorDataContext} />
+      </View>
+      <Text style={styles.lastActive}>
+        {vendorDataContext.vendor?.serviceType}
+      </Text>
       {/* <Text style={styles.lastActiveTime}>09 Jan 2023 | 5:30 PM</Text> */}
       <View>
         <Text
@@ -51,7 +57,8 @@ const Profiledetails = () => {
             fontSize: 14,
             top: 20,
             marginLeft: 20,
-          }}>
+          }}
+        >
           Profile Details
         </Text>
         <Text
@@ -61,7 +68,8 @@ const Profiledetails = () => {
             fontSize: 14,
             top: 30,
             marginLeft: 20,
-          }}>
+          }}
+        >
           Name
         </Text>
         <Text
@@ -71,7 +79,8 @@ const Profiledetails = () => {
             fontSize: 12,
             top: 30,
             marginLeft: 20,
-          }}>
+          }}
+        >
           {vendorDataContext.vendor?.vendorName}
         </Text>
         <Text
@@ -82,7 +91,8 @@ const Profiledetails = () => {
             top: 30,
             marginLeft: 20,
             marginTop: 10,
-          }}>
+          }}
+        >
           Date Of Birth
         </Text>
         <Text
@@ -92,7 +102,8 @@ const Profiledetails = () => {
             fontSize: 12,
             top: 30,
             marginLeft: 20,
-          }}>
+          }}
+        >
           {/* 09 Jan 2023 */}
           {moment(vendorDataContext.vendor?.dateOfBirth).format('ll')}
         </Text>
@@ -104,7 +115,8 @@ const Profiledetails = () => {
             top: 30,
             marginLeft: 20,
             marginTop: 10,
-          }}>
+          }}
+        >
           Date of Joining
         </Text>
         <Text
@@ -114,11 +126,11 @@ const Profiledetails = () => {
             fontSize: 12,
             top: 30,
             marginLeft: 20,
-          }}>
+          }}
+        >
           {/* 09 Jan 2023 */}
           {moment(vendorDataContext?.createdAt).format('ll')}
         </Text>
-
       </View>
       {/* <Text
         style={{
@@ -149,7 +161,8 @@ const Profiledetails = () => {
           top: 30,
           marginLeft: 20,
           marginTop: 10,
-        }}>
+        }}
+      >
         Aadhaar No
       </Text>
       <Text
@@ -159,7 +172,8 @@ const Profiledetails = () => {
           fontSize: 12,
           top: 30,
           marginLeft: 20,
-        }}>
+        }}
+      >
         {vendorDataContext.documents?.aadhaarNumber}
       </Text>
       <Text
@@ -170,7 +184,8 @@ const Profiledetails = () => {
           top: 30,
           marginLeft: 20,
           marginTop: 10,
-        }}>
+        }}
+      >
         Phone No
       </Text>
       <Text
@@ -180,7 +195,8 @@ const Profiledetails = () => {
           fontSize: 12,
           top: 30,
           marginLeft: 20,
-        }}>
+        }}
+      >
         {vendorDataContext.vendor?.mobileNumber}
       </Text>
       {/* <Text
@@ -224,10 +240,6 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   status: {
-    fontFamily: 'Poppins-SemiBold',
-    color: '#ED1F24',
-    fontSize: 10,
-    letterSpacing: 0.2,
     alignSelf: 'center',
   },
   lastActive: {
