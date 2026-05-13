@@ -1,7 +1,26 @@
 {
   "permissions": {
     "allow": [
-      "Bash(grep -v ':0$')"
+      "Bash(grep -v ':0$')",
+      "Bash(awk 'NR>=7117 && NR<=7500 && /res\\\\.\\(json|status\\)/ {print NR\": \"$0}' 'd:/projects-kiruthika/Homjee/Homjee_Backend-main/src/controllers/user/userBookings.js')",
+      "Bash(awk 'NR>=7406 && NR<=7700 && /res\\\\.\\(json|status|send\\)/ {print NR\": \"$0}' 'd:/projects-kiruthika/Homjee/Homjee_Backend-main/src/controllers/user/userBookings.js')",
+      "Bash(xargs ls *)",
+      "Bash(npx --version)",
+      "Bash(npx --yes md-to-pdf INTERVIEW_PREP.md)",
+      "Bash(node -e \"const babel=require\\('@babel/parser'\\); const fs=require\\('fs'\\); try { babel.parse\\(fs.readFileSync\\('src/pages/OngoingLeadDetails.jsx','utf8'\\), { sourceType:'module', plugins:['jsx'] }\\); console.log\\('OK'\\); } catch\\(e\\) { console.log\\('ERR:', e.message\\); console.log\\('loc:', e.loc\\); }\")",
+      "Bash(node --check src/controllers/user/userBookings.js)",
+      "Bash(node --check src/routes/user/userBookings.js)",
+      "PowerShell(npm install ioredis --silent --prefix \"d:\\\\projects-kiruthika\\\\Homjee\\\\Homjee_Backend-main\" 2>&1)",
+      "PowerShell(Get-Service Memurai -ErrorAction SilentlyContinue)",
+      "PowerShell(Test-NetConnection -ComputerName 127.0.0.1 -Port 6379 -InformationLevel Quiet)",
+      "PowerShell(Get-NetTCPConnection -State Listen -LocalPort 9000,3000,5000,8080,8000 -ErrorAction SilentlyContinue)",
+      "Bash(Get-ChildItem -Path \"d:\\\\projects-kiruthika\\\\Homjee\" -Directory)",
+      "Bash(Select-Object Name)",
+      "Bash(xargs grep -l \"coinDeduct\\\\|coinsDeduct\")",
+      "Bash(xargs grep -l \"available-slots\\\\|getAvailableSlots\")",
+      "Bash(grep -E \"\\\\.\\(js|ts\\)$\")",
+      "Bash(npx jest *)",
+      "PowerShell($env:CI=$null; npx --prefix d:/projects-kiruthika/Homjee/Homjee_Backend-main jest --rootDir d:/projects-kiruthika/Homjee/Homjee_Backend-main src/services/__tests__/slotBookingSpec.test.js --no-coverage --verbose 2>&1 | Select-String -Pattern \"TC|✓|✗|PASS|FAIL\")"
     ],
     "additionalDirectories": [
       "d:\\projects-kiruthika\\Homjee\\HomjeeVendor-main\\src\\screens\\Menu"

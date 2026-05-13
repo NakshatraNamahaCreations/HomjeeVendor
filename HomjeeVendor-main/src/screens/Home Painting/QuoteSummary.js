@@ -10,6 +10,9 @@ import {
   Image,
   Alert,
   BackHandler,
+  ToastAndroid,
+  Platform,
+  Linking,
 } from 'react-native';
 import {
   useFocusEffect,
@@ -20,6 +23,7 @@ import { useEstimateContext } from '../../Utilities/EstimateContext';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { API_BASE_URL, API_ENDPOINTS } from '../../ApiService/apiConstants';
 import axios from 'axios';
+import PageLoader from '../../components/PageLoader';
 
 export default function QuoteSummary() {
   const navigation = useNavigation();
@@ -75,7 +79,7 @@ export default function QuoteSummary() {
       setDiscountFlat(flat > 0 ? String(flat) : '');
       // setDiscountFlat(String(q?.discount?.amount || 0));
       setComments(q?.comments || '');
-    } catch { }
+    } catch {}
   }, [quoteId]);
 
   useEffect(() => {
@@ -224,8 +228,8 @@ export default function QuoteSummary() {
   // );
   const additionalServices = Number(
     totalsFromServer?.additionalServices ??
-    totalsFromLines.additionalServices ??
-    0,
+      totalsFromLines.additionalServices ??
+      0,
   );
 
   const subtotal = useMemo(() => {
@@ -259,6 +263,18 @@ export default function QuoteSummary() {
   const incrementDays = () => setDays(d => d + 1);
   const decrementDays = () => setDays(d => Math.max(1, d - 1));
 
+  const notify = msg => {
+    if (Platform.OS === 'android') {
+      ToastAndroid.showWithGravity(
+        msg,
+        ToastAndroid.LONG,
+        ToastAndroid.CENTER,
+      );
+    } else {
+      Alert.alert('', msg);
+    }
+  };
+
   const createQuote = async () => {
     setModalVisible(false);
     setIsLoading(true);
@@ -268,8 +284,9 @@ export default function QuoteSummary() {
           ? { type: 'PERCENT', value: +discountPercent }
           : { type: 'FLAT', value: +discountFlat };
 
+      let response;
       if (quoteId) {
-        await axios.patch(
+        response = await axios.patch(
           `${API_BASE_URL}${API_ENDPOINTS.UPDATE_QUOTATION}${encodeURIComponent(
             quoteId,
           )}`,
@@ -281,14 +298,38 @@ export default function QuoteSummary() {
         );
       } else {
         // fallback
-        await axios.post(`${API_BASE_URL}${API_ENDPOINTS.SAVE_QUOTATION}`, {
-          leadId: estimateData?.leadId,
-          vendorId: estimateData?.vendorId,
-          measurementId: estimateData?._id,
-          days: Math.max(1, +days),
-          discount: discountPayload,
-          comments,
-        });
+        response = await axios.post(
+          `${API_BASE_URL}${API_ENDPOINTS.SAVE_QUOTATION}`,
+          {
+            leadId: estimateData?.leadId,
+            vendorId: estimateData?.vendorId,
+            measurementId: estimateData?._id,
+            days: Math.max(1, +days),
+            discount: discountPayload,
+            comments,
+          },
+        );
+      }
+
+      const delivery = response?.data?.delivery;
+      if (delivery?.dryRun && delivery?.pdfUrl) {
+        Alert.alert(
+          'Quote saved (PDF preview mode)',
+          'WhatsApp is disabled in dev. Tap "View PDF" to inspect the generated quote.',
+          [
+            { text: 'Skip', style: 'cancel' },
+            {
+              text: 'View PDF',
+              onPress: () => Linking.openURL(delivery.pdfUrl),
+            },
+          ],
+        );
+      } else if (delivery?.sent) {
+        notify('Quote saved & sent to customer on WhatsApp');
+      } else if (delivery?.error) {
+        notify(`Quote saved. WhatsApp send failed: ${delivery.error}`);
+      } else {
+        notify('Quote saved');
       }
 
       navigation.navigate('Quotes');
@@ -304,7 +345,7 @@ export default function QuoteSummary() {
 
   return (
     <>
-      {/* {isLoading && <ResponseLoader />} */}
+      {isLoading && <PageLoader />}
 
       <ScrollView contentContainerStyle={styles.container}>
         {/* Cost Summary */}
@@ -367,6 +408,7 @@ export default function QuoteSummary() {
               fontFamily: 'Poppins-SemiBold',
               marginTop: 20,
               fontSize: 13,
+              color: '#444',
             }}
           >
             No.Of Days
@@ -389,10 +431,17 @@ export default function QuoteSummary() {
             activeOpacity={0.7}
             onPress={openDiscountModal}
           >
-            <Text style={{ fontFamily: 'Poppins-SemiBold', marginLeft: 15 }}>
+            <Text
+              style={{
+                fontFamily: 'Poppins-SemiBold',
+                marginLeft: 15,
+                color: '#444',
+              }}
+            >
               {discountType === DISCOUNT_TYPES.PERCENT
-                ? `Discount (Percentage${discountPercent ? ` – ${discountPercent}%` : ''
-                })`
+                ? `Discount (Percentage${
+                    discountPercent ? ` – ${discountPercent}%` : ''
+                  })`
                 : 'Discount (Flat amount)'}
             </Text>
 
@@ -448,14 +497,14 @@ export default function QuoteSummary() {
                 style={[
                   styles.togglePill,
                   draftType === DISCOUNT_TYPES.PERCENT &&
-                  styles.togglePillActive,
+                    styles.togglePillActive,
                 ]}
               >
                 <Text
                   style={[
                     styles.togglePillText,
                     draftType === DISCOUNT_TYPES.PERCENT &&
-                    styles.togglePillTextActive,
+                      styles.togglePillTextActive,
                   ]}
                 >
                   Percentage
@@ -476,7 +525,7 @@ export default function QuoteSummary() {
                   style={[
                     styles.togglePillText,
                     draftType === DISCOUNT_TYPES.FLAT &&
-                    styles.togglePillTextActive,
+                      styles.togglePillTextActive,
                   ]}
                 >
                   Flat amount
@@ -540,7 +589,7 @@ export default function QuoteSummary() {
           </View>
         </View>
       </Modal>
-
+      {/* generate quote */}
       <Modal
         animationType="fade"
         transparent

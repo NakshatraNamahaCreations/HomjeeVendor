@@ -37,9 +37,8 @@ const Leadone = () => {
   console.log('vendorDataContext.Id', vendorDataContext);
   console.log('isPerformanceLow', isPerformanceLow);
 
-
-  const vendorType = vendorDataContext.vendor?.serviceType;
-  const coins = vendorDataContext?.wallet?.coins
+  const vendorType = vendorDataContext?.vendor?.serviceType;
+  const coins = vendorDataContext?.wallet?.coins;
   console.log('coin', coins);
 
   const VENDOR_SERVICE_TYPE =
@@ -61,7 +60,7 @@ const Leadone = () => {
   }, [coins, isPerformanceLow]);
 
   const fetchNearbyBookings = useCallback(
-    async (signal) => {
+    async signal => {
       setError(null);
       if (!refreshing) setLoading(true);
 
@@ -79,9 +78,11 @@ const Leadone = () => {
 
         const response = await getRequest(
           `${VENDOR_SERVICE_TYPE}${lat}/${long}?vendorId=${vendorId}`,
-          signal ? { signal } : undefined
+          signal ? { signal } : undefined,
         );
-        const bookings = Array.isArray(response?.bookings) ? response.bookings : [];
+        const bookings = Array.isArray(response?.bookings)
+          ? response.bookings
+          : [];
         // The BE gate may return { allowed: false, vendorStatus } when the
         // vendor isn't Live (low coins / team unavailable / archived).
         // Bookings will already be []; capture the status here so the UI
@@ -91,12 +92,12 @@ const Leadone = () => {
         }
         setNearByBookigs(bookings);
       } catch (err) {
-        if (err.name !== "AbortError") setError(err);
+        if (err.name !== 'AbortError') setError(err);
       } finally {
         if (!refreshing) setLoading(false);
       }
     },
-    [lat, long, refreshing, isPerfReady, isPerformanceLow, coins] // ✅ add
+    [lat, long, refreshing, isPerfReady, isPerformanceLow, coins], // ✅ add
   );
 
   const updateVendor = useCallback(async () => {
@@ -340,6 +341,7 @@ const styles = StyleSheet.create({
   titles: {
     fontSize: 14,
     fontFamily: 'Poppins-SemiBold',
+    color: '#000',
   },
   headertwo: {
     flexDirection: 'row',

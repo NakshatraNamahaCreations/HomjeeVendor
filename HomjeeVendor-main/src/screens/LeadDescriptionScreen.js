@@ -11,6 +11,7 @@ import {
   TextInput,
   ToastAndroid,
   Linking,
+  ActivityIndicator,
 } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import { API_BASE_URL, API_ENDPOINTS } from '../ApiService/apiConstants';
@@ -77,6 +78,7 @@ const LeadDescriptionScreen = () => {
   const [selectedMembers, setSelectedMembers] = useState([]);
   const [availableTeam, setAvailableTeam] = useState([]);
   const [availability, setAvailability] = useState({});
+  const [isTeamLoading, setIsTeamLoading] = useState(false);
   const today = new Date().toISOString().split('T')[0];
   const [selectedRescheduleDate, setSelectedRescheduleDate] = useState(today);
 
@@ -215,6 +217,7 @@ const LeadDescriptionScreen = () => {
   }, []);
 
   const preloadAvailability = async () => {
+    setIsTeamLoading(true);
     try {
       const start = moment().format('YYYY-MM-DD');
       const end = moment().add(30, 'days').format('YYYY-MM-DD');
@@ -244,6 +247,8 @@ const LeadDescriptionScreen = () => {
       });
     } catch (err) {
       console.error('Error preloading availability:', err);
+    } finally {
+      setIsTeamLoading(false);
     }
   };
 
@@ -854,7 +859,13 @@ const LeadDescriptionScreen = () => {
               </TouchableOpacity>
             </View>
             <ScrollView style={styles.memberList}>
-              {availableTeam.length > 0 ? (
+              {isTeamLoading ? (
+                <ActivityIndicator
+                  size="large"
+                  color="#ED1F24"
+                  style={{ marginVertical: 30 }}
+                />
+              ) : availableTeam.length > 0 ? (
                 availableTeam.map(member => {
                   const isSelected = selectedMembers.includes(member._id);
                   return (
@@ -952,6 +963,10 @@ const LeadDescriptionScreen = () => {
                       !value &&
                       index > 0
                     ) {
+                      const newOtp = [...otp];
+                      newOtp[index - 1] = '';
+                      setOtp(newOtp);
+                      setJoinedOTP(newOtp.join(''));
                       inputs.current[index - 1]?.focus();
                     }
                   }}
@@ -1733,6 +1748,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 18,
     fontFamily: 'Poppins-Medium',
+    color: '#000',
   },
   resendText: {
     color: '#ED1F24',

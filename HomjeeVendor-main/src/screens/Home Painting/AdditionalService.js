@@ -27,12 +27,16 @@ const services = [
   'Others',
 ];
 
-const norm = s => String(s || '').trim().toLowerCase().replace(/\s+/g, ' ');
+const norm = s =>
+  String(s || '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ');
 const rupee = n => `₹ ${Number(n || 0).toFixed(2)}`;
 
 export default function AdditionalServices() {
   const { vendorDataContext } = useVendorContext();
-  const vendorCity = vendorDataContext.vendor.city
+  const vendorCity = vendorDataContext.vendor.city;
   const navigation = useNavigation();
   const route = useRoute();
   const { quoteId, roomName, surfaceType, surfaceRef, breakdownItem } =
@@ -85,7 +89,9 @@ export default function AdditionalServices() {
   const fetchFinishingPaints = async () => {
     setLoading(true);
     try {
-      const response = await getRequest(`${API_ENDPOINTS.GET_ALL_FINISHING_PAINTS}?city=${vendorCity}`);
+      const response = await getRequest(
+        `${API_ENDPOINTS.GET_ALL_FINISHING_PAINTS}?city=${vendorCity}`,
+      );
       if (response) setPaintType(response.data || []);
     } catch (err) {
       console.log('Error fetching paints:', err);
@@ -110,12 +116,16 @@ export default function AdditionalServices() {
       // Prefer exact match by displayIndex (since you already store it)
       let candidates = bd.filter(b => String(b.type) === targetType);
       if (targetMode) {
-        const modeFiltered = candidates.filter(b => String(b.mode || '') === targetMode);
+        const modeFiltered = candidates.filter(
+          b => String(b.mode || '') === targetMode,
+        );
         if (modeFiltered.length) candidates = modeFiltered;
       }
 
       // If displayIndex exists, use it
-      const hitByDisplay = candidates.find(b => Number(b.displayIndex) === targetIndex);
+      const hitByDisplay = candidates.find(
+        b => Number(b.displayIndex) === targetIndex,
+      );
       if (hitByDisplay) return Number(hitByDisplay.sqft || 0);
 
       // Else fallback: ordinal position within that type
@@ -140,7 +150,9 @@ export default function AdditionalServices() {
     (async () => {
       try {
         const { data } = await axios.get(
-          `${API_BASE_URL}${API_ENDPOINTS.GET_QUOTATION}${encodeURIComponent(quoteId)}`,
+          `${API_BASE_URL}${API_ENDPOINTS.GET_QUOTATION}${encodeURIComponent(
+            quoteId,
+          )}`,
         );
 
         const quote = data?.data?.quote || data?.data || null;
@@ -221,7 +233,7 @@ export default function AdditionalServices() {
   const isSameService = (a, b) =>
     String(a.materialId || '') === String(b.materialId || '') &&
     (a.materialName || a.customName || '') ===
-    (b.materialName || b.customName || '') &&
+      (b.materialName || b.customName || '') &&
     (a.serviceType || '') === (b.serviceType || '') &&
     (a.surfaceType || '') === (b.surfaceType || '') &&
     !!a.withPaint === !!b.withPaint &&
@@ -231,7 +243,11 @@ export default function AdditionalServices() {
   const confirmDelete = s =>
     Alert.alert('Delete', 'Remove this additional service?', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: () => onDeleteExisting(s) },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: () => onDeleteExisting(s),
+      },
     ]);
 
   const onDeleteExisting = async s => {
@@ -239,7 +255,9 @@ export default function AdditionalServices() {
       setLoading(true);
       await axios.delete(
         `${API_BASE_URL}${API_ENDPOINTS.DELETE_ADDITIONAL_SERVICE}` +
-        `${encodeURIComponent(quoteId)}/rooms/${encodeURIComponent(roomName)}/additional-services`,
+          `${encodeURIComponent(quoteId)}/rooms/${encodeURIComponent(
+            roomName,
+          )}/additional-services`,
         {
           data: {
             where: {
@@ -272,11 +290,15 @@ export default function AdditionalServices() {
       <View style={styles.savedWrap}>
         <Text style={styles.savedHeader}>Saved</Text>
         {list.map((s, i) => {
-          const line = `${s.areaSqft} sq ft × ₹${s.unitPrice} = ${rupee(s.total)}`;
+          const line = `${s.areaSqft} sq ft × ₹${s.unitPrice} = ${rupee(
+            s.total,
+          )}`;
           return (
             <View key={`${serviceType}-${i}`} style={styles.savedCard}>
               <View style={styles.savedTop}>
-                <Text style={styles.savedName}>{s.materialName || s.serviceType}</Text>
+                <Text style={styles.savedName}>
+                  {s.materialName || s.serviceType}
+                </Text>
                 <Text style={styles.savedAmt}>{rupee(s.total)}</Text>
               </View>
               <Text style={styles.savedMeta}>{line}</Text>
@@ -301,7 +323,9 @@ export default function AdditionalServices() {
                   }}
                   onPress={() => confirmDelete(s)}
                 >
-                  <Text style={{ fontFamily: 'Poppins-Medium', color: '#b22222' }}>
+                  <Text
+                    style={{ fontFamily: 'Poppins-Medium', color: '#b22222' }}
+                  >
                     Delete
                   </Text>
                 </TouchableOpacity>
@@ -360,7 +384,8 @@ export default function AdditionalServices() {
     { materialName, withPaint, areaSqft, unitPrice, customName, customNote },
     materialId,
   ) => {
-    const isWith = typeof withPaint === 'string' ? withPaint === 'with' : !!withPaint;
+    const isWith =
+      typeof withPaint === 'string' ? withPaint === 'with' : !!withPaint;
 
     // ✅ For WITHOUT paint: if area not given, take from breakdown / surface fallback
     let area = Number(areaSqft || 0);
@@ -392,11 +417,19 @@ export default function AdditionalServices() {
 
     // Textures
     if (textureMaterialType) {
-      const { unitPrice, materialId } = resolveMaterial('Textures', textureMaterialType);
+      const { unitPrice, materialId } = resolveMaterial(
+        'Textures',
+        textureMaterialType,
+      );
       items.push(
         row(
           'Textures',
-          { materialName: textureMaterialType, withPaint: texturePaintOption, areaSqft: 0, unitPrice },
+          {
+            materialName: textureMaterialType,
+            withPaint: texturePaintOption,
+            areaSqft: 0,
+            unitPrice,
+          },
           materialId,
         ),
       );
@@ -404,11 +437,19 @@ export default function AdditionalServices() {
 
     // Chemical Waterproofing
     if (waterproofMaterialType && Number(waterproofArea) > 0) {
-      const { unitPrice, materialId } = resolveMaterial('Chemical Waterproofing', waterproofMaterialType);
+      const { unitPrice, materialId } = resolveMaterial(
+        'Chemical Waterproofing',
+        waterproofMaterialType,
+      );
       items.push(
         row(
           'Chemical Waterproofing',
-          { materialName: waterproofMaterialType, withPaint: waterproofPaintOption, areaSqft: waterproofArea, unitPrice },
+          {
+            materialName: waterproofMaterialType,
+            withPaint: waterproofPaintOption,
+            areaSqft: waterproofArea,
+            unitPrice,
+          },
           materialId,
         ),
       );
@@ -416,11 +457,19 @@ export default function AdditionalServices() {
 
     // Terrace Waterproofing
     if (terraceMaterialType && Number(terraceArea) > 0) {
-      const { unitPrice, materialId } = resolveMaterial('Terrace Waterproofing', terraceMaterialType);
+      const { unitPrice, materialId } = resolveMaterial(
+        'Terrace Waterproofing',
+        terraceMaterialType,
+      );
       items.push(
         row(
           'Terrace Waterproofing',
-          { materialName: terraceMaterialType, withPaint: terracePaintOption, areaSqft: terraceArea, unitPrice },
+          {
+            materialName: terraceMaterialType,
+            withPaint: terracePaintOption,
+            areaSqft: terraceArea,
+            unitPrice,
+          },
           materialId,
         ),
       );
@@ -428,11 +477,19 @@ export default function AdditionalServices() {
 
     // Tile Grouting
     if (tileMaterialType && Number(tileArea) > 0) {
-      const { unitPrice, materialId } = resolveMaterial('Tile Grouting', tileMaterialType);
+      const { unitPrice, materialId } = resolveMaterial(
+        'Tile Grouting',
+        tileMaterialType,
+      );
       items.push(
         row(
           'Tile Grouting',
-          { materialName: tileMaterialType, withPaint: tilePaintOption, areaSqft: tileArea, unitPrice },
+          {
+            materialName: tileMaterialType,
+            withPaint: tilePaintOption,
+            areaSqft: tileArea,
+            unitPrice,
+          },
           materialId,
         ),
       );
@@ -444,7 +501,12 @@ export default function AdditionalServices() {
       items.push(
         row(
           'POP',
-          { materialName: popMaterialType, withPaint: popPaintOption, areaSqft: popArea, unitPrice },
+          {
+            materialName: popMaterialType,
+            withPaint: popPaintOption,
+            areaSqft: popArea,
+            unitPrice,
+          },
           materialId,
         ),
       );
@@ -452,11 +514,19 @@ export default function AdditionalServices() {
 
     // Wood Polish
     if (woodMaterialType && Number(woodArea) > 0) {
-      const { unitPrice, materialId } = resolveMaterial('Wood Polish', woodMaterialType);
+      const { unitPrice, materialId } = resolveMaterial(
+        'Wood Polish',
+        woodMaterialType,
+      );
       items.push(
         row(
           'Wood Polish',
-          { materialName: woodMaterialType, withPaint: woodPaintOption, areaSqft: woodArea, unitPrice },
+          {
+            materialName: woodMaterialType,
+            withPaint: woodPaintOption,
+            areaSqft: woodArea,
+            unitPrice,
+          },
           materialId,
         ),
       );
@@ -484,26 +554,36 @@ export default function AdditionalServices() {
   };
 
   const enableContinueBtn = buildPayload();
-  console.log("enableContinueBtn", enableContinueBtn.items)
+  console.log('enableContinueBtn', enableContinueBtn.items);
 
   const onContinue = async () => {
     try {
       const payload = buildPayload();
       if (!payload.items.length) {
-        Alert.alert('Select service', 'Please add at least one additional service.');
+        Alert.alert(
+          'Select service',
+          'Please add at least one additional service.',
+        );
         return;
       }
       setLoading(true);
 
       await axios.post(
-        `${API_BASE_URL}${API_ENDPOINTS.ADD_ADDITIONAL_SERVICE}${encodeURIComponent(quoteId)}/rooms/${encodeURIComponent(roomName)}/additional-services`,
+        `${API_BASE_URL}${
+          API_ENDPOINTS.ADD_ADDITIONAL_SERVICE
+        }${encodeURIComponent(quoteId)}/rooms/${encodeURIComponent(
+          roomName,
+        )}/additional-services`,
         payload,
       );
 
       navigation.goBack();
     } catch (err) {
       console.log('save additional services error', err?.response?.data || err);
-      Alert.alert('Error', err?.response?.data?.message || 'Failed to save additional services');
+      Alert.alert(
+        'Error',
+        err?.response?.data?.message || 'Failed to save additional services',
+      );
     } finally {
       setLoading(false);
     }
@@ -512,17 +592,36 @@ export default function AdditionalServices() {
   const renderTextures = () => (
     <View style={styles.expandedContent}>
       {renderSavedFor('Textures')}
-      <TouchableOpacity style={styles.selector} onPress={() => openModalPopup('Texture')}>
-        <Text style={styles.selectorText}>{textureMaterialType || 'Select material type'}</Text>
+      <TouchableOpacity
+        style={styles.selector}
+        onPress={() => openModalPopup('Texture')}
+      >
+        <Text style={styles.selectorText}>
+          {textureMaterialType || 'Select material type'}
+        </Text>
       </TouchableOpacity>
       <Text style={styles.selectLabel}>Select</Text>
       <View style={styles.radioContainer}>
-        <TouchableOpacity style={styles.radioButton} onPress={() => setTexturePaintOption('with')}>
-          <View style={styles.radioCircle}>{texturePaintOption === 'with' && <View style={styles.selectedRb} />}</View>
+        <TouchableOpacity
+          style={styles.radioButton}
+          onPress={() => setTexturePaintOption('with')}
+        >
+          <View style={styles.radioCircle}>
+            {texturePaintOption === 'with' && (
+              <View style={styles.selectedRb} />
+            )}
+          </View>
           <Text style={styles.radioText}>with paint</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.radioButton} onPress={() => setTexturePaintOption('without')}>
-          <View style={styles.radioCircle}>{texturePaintOption === 'without' && <View style={styles.selectedRb} />}</View>
+        <TouchableOpacity
+          style={styles.radioButton}
+          onPress={() => setTexturePaintOption('without')}
+        >
+          <View style={styles.radioCircle}>
+            {texturePaintOption === 'without' && (
+              <View style={styles.selectedRb} />
+            )}
+          </View>
           <Text style={styles.radioText}>without paint</Text>
         </TouchableOpacity>
       </View>
@@ -537,8 +636,13 @@ export default function AdditionalServices() {
   const renderWaterProofing = () => (
     <View style={styles.expandedContent}>
       {renderSavedFor('Chemical Waterproofing')}
-      <TouchableOpacity style={styles.selector} onPress={() => openModalPopup('Chemical Waterproofing')}>
-        <Text style={styles.selectorText}>{waterproofMaterialType || 'Select material type'}</Text>
+      <TouchableOpacity
+        style={styles.selector}
+        onPress={() => openModalPopup('Chemical Waterproofing')}
+      >
+        <Text style={styles.selectorText}>
+          {waterproofMaterialType || 'Select material type'}
+        </Text>
       </TouchableOpacity>
       <Text style={styles.selectLabel}>Area</Text>
       <TextInput
@@ -551,12 +655,26 @@ export default function AdditionalServices() {
       />
       <Text style={styles.selectLabel}>Select</Text>
       <View style={styles.radioContainer}>
-        <TouchableOpacity style={styles.radioButton} onPress={() => setWaterproofPaintOption('with')}>
-          <View style={styles.radioCircle}>{waterproofPaintOption === 'with' && <View style={styles.selectedRb} />}</View>
+        <TouchableOpacity
+          style={styles.radioButton}
+          onPress={() => setWaterproofPaintOption('with')}
+        >
+          <View style={styles.radioCircle}>
+            {waterproofPaintOption === 'with' && (
+              <View style={styles.selectedRb} />
+            )}
+          </View>
           <Text style={styles.radioText}>With Paint</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.radioButton} onPress={() => setWaterproofPaintOption('without')}>
-          <View style={styles.radioCircle}>{waterproofPaintOption === 'without' && <View style={styles.selectedRb} />}</View>
+        <TouchableOpacity
+          style={styles.radioButton}
+          onPress={() => setWaterproofPaintOption('without')}
+        >
+          <View style={styles.radioCircle}>
+            {waterproofPaintOption === 'without' && (
+              <View style={styles.selectedRb} />
+            )}
+          </View>
           <Text style={styles.radioText}>Without Paint</Text>
         </TouchableOpacity>
       </View>
@@ -565,8 +683,13 @@ export default function AdditionalServices() {
 
   const renderTerraceProofing = () => (
     <View style={styles.expandedContent}>
-      <TouchableOpacity style={styles.selector} onPress={() => openModalPopup('Terrace Waterproofing')}>
-        <Text style={styles.selectorText}>{terraceMaterialType || 'Select material type'}</Text>
+      <TouchableOpacity
+        style={styles.selector}
+        onPress={() => openModalPopup('Terrace Waterproofing')}
+      >
+        <Text style={styles.selectorText}>
+          {terraceMaterialType || 'Select material type'}
+        </Text>
       </TouchableOpacity>
       <Text style={styles.selectLabel}>Area</Text>
       <TextInput
@@ -579,12 +702,26 @@ export default function AdditionalServices() {
       />
       <Text style={styles.selectLabel}>Select</Text>
       <View style={styles.radioContainer}>
-        <TouchableOpacity style={styles.radioButton} onPress={() => setTerracePaintOption('with')}>
-          <View style={styles.radioCircle}>{terracePaintOption === 'with' && <View style={styles.selectedRb} />}</View>
+        <TouchableOpacity
+          style={styles.radioButton}
+          onPress={() => setTerracePaintOption('with')}
+        >
+          <View style={styles.radioCircle}>
+            {terracePaintOption === 'with' && (
+              <View style={styles.selectedRb} />
+            )}
+          </View>
           <Text style={styles.radioText}>With Paint</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.radioButton} onPress={() => setTerracePaintOption('without')}>
-          <View style={styles.radioCircle}>{terracePaintOption === 'without' && <View style={styles.selectedRb} />}</View>
+        <TouchableOpacity
+          style={styles.radioButton}
+          onPress={() => setTerracePaintOption('without')}
+        >
+          <View style={styles.radioCircle}>
+            {terracePaintOption === 'without' && (
+              <View style={styles.selectedRb} />
+            )}
+          </View>
           <Text style={styles.radioText}>Without Paint</Text>
         </TouchableOpacity>
       </View>
@@ -593,8 +730,13 @@ export default function AdditionalServices() {
 
   const renderTileGrouting = () => (
     <View style={styles.expandedContent}>
-      <TouchableOpacity style={styles.selector} onPress={() => openModalPopup('Tile Grouting')}>
-        <Text style={styles.selectorText}>{tileMaterialType || 'Select material type'}</Text>
+      <TouchableOpacity
+        style={styles.selector}
+        onPress={() => openModalPopup('Tile Grouting')}
+      >
+        <Text style={styles.selectorText}>
+          {tileMaterialType || 'Select material type'}
+        </Text>
       </TouchableOpacity>
       <Text style={styles.selectLabel}>Area</Text>
       <TextInput
@@ -607,12 +749,24 @@ export default function AdditionalServices() {
       />
       <Text style={styles.selectLabel}>Select</Text>
       <View style={styles.radioContainer}>
-        <TouchableOpacity style={styles.radioButton} onPress={() => setTilePaintOption('with')}>
-          <View style={styles.radioCircle}>{tilePaintOption === 'with' && <View style={styles.selectedRb} />}</View>
+        <TouchableOpacity
+          style={styles.radioButton}
+          onPress={() => setTilePaintOption('with')}
+        >
+          <View style={styles.radioCircle}>
+            {tilePaintOption === 'with' && <View style={styles.selectedRb} />}
+          </View>
           <Text style={styles.radioText}>With Paint</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.radioButton} onPress={() => setTilePaintOption('without')}>
-          <View style={styles.radioCircle}>{tilePaintOption === 'without' && <View style={styles.selectedRb} />}</View>
+        <TouchableOpacity
+          style={styles.radioButton}
+          onPress={() => setTilePaintOption('without')}
+        >
+          <View style={styles.radioCircle}>
+            {tilePaintOption === 'without' && (
+              <View style={styles.selectedRb} />
+            )}
+          </View>
           <Text style={styles.radioText}>Without Paint</Text>
         </TouchableOpacity>
       </View>
@@ -621,8 +775,13 @@ export default function AdditionalServices() {
 
   const renderPop = () => (
     <View style={styles.expandedContent}>
-      <TouchableOpacity style={styles.selector} onPress={() => openModalPopup('POP')}>
-        <Text style={styles.selectorText}>{popMaterialType || 'Select material type'}</Text>
+      <TouchableOpacity
+        style={styles.selector}
+        onPress={() => openModalPopup('POP')}
+      >
+        <Text style={styles.selectorText}>
+          {popMaterialType || 'Select material type'}
+        </Text>
       </TouchableOpacity>
       <Text style={styles.selectLabel}>Area</Text>
       <TextInput
@@ -635,12 +794,22 @@ export default function AdditionalServices() {
       />
       <Text style={styles.selectLabel}>Select</Text>
       <View style={styles.radioContainer}>
-        <TouchableOpacity style={styles.radioButton} onPress={() => setPopPaintOption('with')}>
-          <View style={styles.radioCircle}>{popPaintOption === 'with' && <View style={styles.selectedRb} />}</View>
+        <TouchableOpacity
+          style={styles.radioButton}
+          onPress={() => setPopPaintOption('with')}
+        >
+          <View style={styles.radioCircle}>
+            {popPaintOption === 'with' && <View style={styles.selectedRb} />}
+          </View>
           <Text style={styles.radioText}>With Paint</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.radioButton} onPress={() => setPopPaintOption('without')}>
-          <View style={styles.radioCircle}>{popPaintOption === 'without' && <View style={styles.selectedRb} />}</View>
+        <TouchableOpacity
+          style={styles.radioButton}
+          onPress={() => setPopPaintOption('without')}
+        >
+          <View style={styles.radioCircle}>
+            {popPaintOption === 'without' && <View style={styles.selectedRb} />}
+          </View>
           <Text style={styles.radioText}>Without Paint</Text>
         </TouchableOpacity>
       </View>
@@ -649,8 +818,13 @@ export default function AdditionalServices() {
 
   const renderWoodPolish = () => (
     <View style={styles.expandedContent}>
-      <TouchableOpacity style={styles.selector} onPress={() => openModalPopup('Wood Polish')}>
-        <Text style={styles.selectorText}>{woodMaterialType || 'Select material type'}</Text>
+      <TouchableOpacity
+        style={styles.selector}
+        onPress={() => openModalPopup('Wood Polish')}
+      >
+        <Text style={styles.selectorText}>
+          {woodMaterialType || 'Select material type'}
+        </Text>
       </TouchableOpacity>
       <Text style={styles.selectLabel}>Area</Text>
       <TextInput
@@ -663,12 +837,24 @@ export default function AdditionalServices() {
       />
       <Text style={styles.selectLabel}>Select</Text>
       <View style={styles.radioContainer}>
-        <TouchableOpacity style={styles.radioButton} onPress={() => setWoodPaintOption('with')}>
-          <View style={styles.radioCircle}>{woodPaintOption === 'with' && <View style={styles.selectedRb} />}</View>
+        <TouchableOpacity
+          style={styles.radioButton}
+          onPress={() => setWoodPaintOption('with')}
+        >
+          <View style={styles.radioCircle}>
+            {woodPaintOption === 'with' && <View style={styles.selectedRb} />}
+          </View>
           <Text style={styles.radioText}>With Paint</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.radioButton} onPress={() => setWoodPaintOption('without')}>
-          <View style={styles.radioCircle}>{woodPaintOption === 'without' && <View style={styles.selectedRb} />}</View>
+        <TouchableOpacity
+          style={styles.radioButton}
+          onPress={() => setWoodPaintOption('without')}
+        >
+          <View style={styles.radioCircle}>
+            {woodPaintOption === 'without' && (
+              <View style={styles.selectedRb} />
+            )}
+          </View>
           <Text style={styles.radioText}>Without Paint</Text>
         </TouchableOpacity>
       </View>
@@ -703,12 +889,24 @@ export default function AdditionalServices() {
 
       <Text style={styles.selectLabel}>Select</Text>
       <View style={styles.radioContainer}>
-        <TouchableOpacity style={styles.radioButton} onPress={() => setOthersPaintOption('with')}>
-          <View style={styles.radioCircle}>{othersPaintOption === 'with' && <View style={styles.selectedRb} />}</View>
+        <TouchableOpacity
+          style={styles.radioButton}
+          onPress={() => setOthersPaintOption('with')}
+        >
+          <View style={styles.radioCircle}>
+            {othersPaintOption === 'with' && <View style={styles.selectedRb} />}
+          </View>
           <Text style={styles.radioText}>With Paint</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.radioButton} onPress={() => setOthersPaintOption('without')}>
-          <View style={styles.radioCircle}>{othersPaintOption === 'without' && <View style={styles.selectedRb} />}</View>
+        <TouchableOpacity
+          style={styles.radioButton}
+          onPress={() => setOthersPaintOption('without')}
+        >
+          <View style={styles.radioCircle}>
+            {othersPaintOption === 'without' && (
+              <View style={styles.selectedRb} />
+            )}
+          </View>
           <Text style={styles.radioText}>Without Paint</Text>
         </TouchableOpacity>
       </View>
@@ -720,7 +918,10 @@ export default function AdditionalServices() {
 
     return (
       <View style={styles.parentView}>
-        <TouchableOpacity style={styles.row} onPress={() => toggleExpand(index)}>
+        <TouchableOpacity
+          style={styles.row}
+          onPress={() => toggleExpand(index)}
+        >
           <Text style={styles.rowText}>{item}</Text>
           <Entypo name="chevron-with-circle-right" size={18} color="#FF0000" />
         </TouchableOpacity>
@@ -753,12 +954,20 @@ export default function AdditionalServices() {
 
       <View style={styles.footer}>
         <TouchableOpacity
-          style={[styles.continueButton, {
-            backgroundColor: !enableContinueBtn.items.length ? "#888888" : '#d31a1a'
-          }]}
+          style={[
+            styles.continueButton,
+            {
+              backgroundColor: !enableContinueBtn.items.length
+                ? '#888888'
+                : '#d31a1a',
+            },
+          ]}
           onPress={enableContinueBtn.items.length && onContinue}
-          disabled={!enableContinueBtn.items.length || loading}>
-          <Text style={styles.continueText}>{loading ? 'Saving...' : 'Continue'}</Text>
+          disabled={!enableContinueBtn.items.length || loading}
+        >
+          <Text style={styles.continueText}>
+            {loading ? 'Saving...' : 'Continue'}
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -779,12 +988,18 @@ export default function AdditionalServices() {
                 <TouchableOpacity
                   style={styles.item}
                   onPress={() => {
-                    if (expandedIndex === 0) setTextureMaterialType(item.paintName);
-                    else if (expandedIndex === 1) setWaterproofMaterialType(item.paintName);
-                    else if (expandedIndex === 2) setTerraceMaterialType(item.paintName);
-                    else if (expandedIndex === 3) setTileMaterialType(item.paintName);
-                    else if (expandedIndex === 4) setPopMaterialType(item.paintName);
-                    else if (expandedIndex === 5) setWoodMaterialType(item.paintName);
+                    if (expandedIndex === 0)
+                      setTextureMaterialType(item.paintName);
+                    else if (expandedIndex === 1)
+                      setWaterproofMaterialType(item.paintName);
+                    else if (expandedIndex === 2)
+                      setTerraceMaterialType(item.paintName);
+                    else if (expandedIndex === 3)
+                      setTileMaterialType(item.paintName);
+                    else if (expandedIndex === 4)
+                      setPopMaterialType(item.paintName);
+                    else if (expandedIndex === 5)
+                      setWoodMaterialType(item.paintName);
 
                     setIsModalOpen(false);
                     setPopOption(null);
@@ -924,7 +1139,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#ddd',
   },
-  title: { fontSize: 16, fontFamily: 'Poppins-SemiBold' },
+  title: { fontSize: 16, fontFamily: 'Poppins-SemiBold', color: '#222' },
   close: { fontSize: 18, color: 'red', fontFamily: 'Poppins-Bold' },
 
   item: {
@@ -934,7 +1149,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
-  itemText: { fontSize: 14, fontFamily: 'Poppins-Medium' },
+  itemText: { fontSize: 14, fontFamily: 'Poppins-Medium', color: '#555' },
   price: { fontSize: 14, color: '#555', fontFamily: 'Poppins-Medium' },
 
   savedWrap: { marginBottom: 8 },
@@ -953,7 +1168,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     marginBottom: 6,
   },
-  savedTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  savedTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   savedName: { fontFamily: 'Poppins-Medium', fontSize: 12, color: '#222' },
   savedAmt: { fontFamily: 'Poppins-SemiBold', fontSize: 12, color: '#222' },
   savedMeta: { marginTop: 2, fontSize: 11, color: '#666' },

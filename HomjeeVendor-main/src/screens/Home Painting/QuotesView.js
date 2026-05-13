@@ -376,8 +376,9 @@ export default function QuotesView() {
             addMap.set(key, {
               kind: 'additional',
               title: `${title}`,
-              sub: `${name || ''}${a?.surfaceType ? ` • ${a.surfaceType}` : ''
-                } (${Math.round(area)} sqft)`,
+              sub: `${name || ''}${
+                a?.surfaceType ? ` • ${a.surfaceType}` : ''
+              } (${Math.round(area)} sqft)`,
               amount: total,
             });
           } else {
@@ -417,7 +418,7 @@ export default function QuotesView() {
       const p = String(phone || '').trim();
       if (!p) return;
       Linking.openURL(`tel:${p}`);
-    } catch (e) { }
+    } catch (e) {}
   };
 
   console.log('leadDataContext', leadDataContext);
@@ -428,10 +429,12 @@ export default function QuotesView() {
   // ✅ UI
   // =========================
   return (
-    <ScrollView style={styles.page}
+    <ScrollView
+      style={styles.page}
       showsVerticalScrollIndicator={false}
       showsHorizontalScrollIndicator={false}
-      contentContainerStyle={styles.pageInner}>
+      contentContainerStyle={styles.pageInner}
+    >
       {/* Header */}
       <View style={styles.header}>
         <Image
@@ -441,13 +444,44 @@ export default function QuotesView() {
       </View>
 
       <Text style={styles.hi}>
-        Hi {safeText(header.customerName, 'Customer')}
+        Hi {safeText(header.customerName, 'Customer')},
       </Text>
 
       <Text style={styles.subText}>
         Here is a quote for your painting work based on accurate measurements.
         If you need any clarifications, reply to us.
       </Text>
+
+      {quotes?.sentToCustomerAt ? (
+        <Pressable
+          style={styles.sentPill}
+          onPress={() => quotes?.pdfUrl && Linking.openURL(quotes.pdfUrl)}
+        >
+          <Text style={styles.sentPillText}>
+            ✓ Sent to customer on WhatsApp ·{' '}
+            {new Date(quotes.sentToCustomerAt).toLocaleDateString('en-IN', {
+              day: '2-digit',
+              month: 'short',
+              year: 'numeric',
+            })}
+          </Text>
+        </Pressable>
+      ) : quotes?.pdfUrl ? (
+        <Pressable
+          style={[styles.sentPill, styles.sentPillDryRun]}
+          onPress={() => Linking.openURL(quotes.pdfUrl)}
+        >
+          <Text style={[styles.sentPillText, styles.sentPillTextDryRun]}>
+            ⓘ PDF preview ready (WhatsApp disabled) · Tap to view
+          </Text>
+        </Pressable>
+      ) : quotes?.pdfSendError ? (
+        <View style={[styles.sentPill, styles.sentPillError]}>
+          <Text style={[styles.sentPillText, styles.sentPillTextError]}>
+            ! WhatsApp send failed: {String(quotes.pdfSendError)}
+          </Text>
+        </View>
+      ) : null}
 
       {/* Top summary row */}
       <View style={styles.topRow}>
@@ -474,8 +508,10 @@ export default function QuotesView() {
 
           <View style={styles.durationPill}>
             <Text style={styles.durationText}>
-              <Text style={{ fontSize: 15, color: '#2B6CB0', marginTop: 4 }}>⏱</Text>
-              {' '} Project Duration: {getDayLabel(quotes?.days)}
+              <Text style={{ fontSize: 15, color: '#2B6CB0', marginTop: 4 }}>
+                ⏱
+              </Text>{' '}
+              Project Duration: {getDayLabel(quotes?.days)}
             </Text>
           </View>
         </View>
@@ -538,7 +574,9 @@ export default function QuotesView() {
           title="Dedicated Project Manager"
           icon={
             <Image
-              source={{ uri: "https://img.icons8.com/dotty/80/20618d/user.png" }}
+              source={{
+                uri: 'https://img.icons8.com/dotty/80/20618d/user.png',
+              }}
               style={styles.whyIconUser}
             />
           }
@@ -547,7 +585,9 @@ export default function QuotesView() {
           title="Genuine Product Used"
           icon={
             <Image
-              source={{ uri: "https://img.icons8.com/ios/50/20618d/roller-brush--v1.png" }}
+              source={{
+                uri: 'https://img.icons8.com/ios/50/20618d/roller-brush--v1.png',
+              }}
               style={styles.whyIcon}
             />
           }
@@ -556,7 +596,9 @@ export default function QuotesView() {
           title="100% Transparency"
           icon={
             <Image
-              source={{ uri: "https://img.icons8.com/ios/50/20618d/diamond--v1.png" }}
+              source={{
+                uri: 'https://img.icons8.com/ios/50/20618d/diamond--v1.png',
+              }}
               style={styles.whyIcon}
             />
           }
@@ -565,7 +607,9 @@ export default function QuotesView() {
           title="6 months service warranty"
           icon={
             <Image
-              source={{ uri: "https://img.icons8.com/ios/50/20618d/approval--v1.png" }}
+              source={{
+                uri: 'https://img.icons8.com/ios/50/20618d/approval--v1.png',
+              }}
               style={styles.whyIcon}
             />
           }
@@ -1027,8 +1071,11 @@ const styles = StyleSheet.create({
 
   gTick: { color: '#2B6CB0', fontFamily: 'Poppins-SemiBold', marginTop: 1 },
   gText: {
-    flex: 1, color: '#1F2937',
-    fontFamily: 'Poppins-Regular', fontSize: 10, lineHeight: 16
+    flex: 1,
+    color: '#1F2937',
+    fontFamily: 'Poppins-Regular',
+    fontSize: 10,
+    lineHeight: 16,
   },
 
   scrollHint: {
@@ -1079,11 +1126,13 @@ const styles = StyleSheet.create({
   },
   roomTitle: {
     fontFamily: 'Poppins-SemiBold',
-    fontSize: 11, color: '#111827'
+    fontSize: 11,
+    color: '#111827',
   },
   roomAmt: {
-    fontFamily: 'Poppins-SemiBold', fontSize: 11,
-    color: '#111827'
+    fontFamily: 'Poppins-SemiBold',
+    fontSize: 11,
+    color: '#111827',
   },
 
   roomRow: {
@@ -1102,11 +1151,14 @@ const styles = StyleSheet.create({
   },
   roomMeta: {
     color: '#6B7280',
-    fontFamily: 'Poppins-Regular', fontSize: 10, marginTop: 2
+    fontFamily: 'Poppins-Regular',
+    fontSize: 10,
+    marginTop: 2,
   },
   roomRowAmt: {
     fontFamily: 'Poppins-Medium',
-    color: '#111827', fontSize: 11,
+    color: '#111827',
+    fontSize: 11,
   },
 
   tableRow: {
@@ -1131,7 +1183,8 @@ const styles = StyleSheet.create({
   },
   tableRowAmt: {
     fontFamily: 'Poppins-SemiBold',
-    color: '#111827', fontSize: 11,
+    color: '#111827',
+    fontSize: 11,
   },
 
   tableLine: {
@@ -1151,11 +1204,13 @@ const styles = StyleSheet.create({
 
   miniLabel: {
     color: '#374151',
-    fontSize: 11, fontFamily: 'Poppins-SemiBold'
+    fontSize: 11,
+    fontFamily: 'Poppins-SemiBold',
   },
   miniValue: {
     color: '#111827',
-    fontSize: 11, fontFamily: 'Poppins-SemiBold'
+    fontSize: 11,
+    fontFamily: 'Poppins-SemiBold',
   },
 
   note: {
@@ -1178,8 +1233,8 @@ const styles = StyleSheet.create({
   },
 
   whyChip: {
-    width: '48%',          // ✅ 2 columns
-    alignItems: 'center',  // ✅ center icon + text
+    width: '48%', // ✅ 2 columns
+    alignItems: 'center', // ✅ center icon + text
     justifyContent: 'center',
     // backgroundColor: '#F1F5F9',
     // borderWidth: 1,
@@ -1187,7 +1242,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 10,
     borderRadius: 14,
-    marginBottom: 10,      // ✅ row gap
+    marginBottom: 10, // ✅ row gap
   },
 
   whyIconWrap: {
@@ -1215,7 +1270,8 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontFamily: 'Poppins-Medium',
     color: '#0b3769',
-    lineHeight: 15, marginTop: 10
+    lineHeight: 15,
+    marginTop: 10,
   },
 
   processBox: {
@@ -1315,5 +1371,34 @@ const styles = StyleSheet.create({
     marginTop: 14,
     fontFamily: 'Poppins-SemiBold',
     color: '#111827',
+  },
+  sentPill: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#E7F5EC',
+    borderColor: '#1F9D55',
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    marginTop: 8,
+  },
+  sentPillText: {
+    color: '#1F6F3A',
+    fontFamily: 'Poppins-SemiBold',
+    fontSize: 10,
+  },
+  sentPillError: {
+    backgroundColor: '#FDECEC',
+    borderColor: '#ED1F24',
+  },
+  sentPillTextError: {
+    color: '#B91C1C',
+  },
+  sentPillDryRun: {
+    backgroundColor: '#FEF3C7',
+    borderColor: '#D97706',
+  },
+  sentPillTextDryRun: {
+    color: '#92400E',
   },
 });

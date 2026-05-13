@@ -764,11 +764,11 @@ const RoomMeasurementScreen = () => {
       prev.map((s, i) =>
         i === sectionIndex
           ? {
-            ...s,
-            windows: s.windows.map((w, j) =>
-              j === winIndex ? { ...w, width: value } : w,
-            ),
-          }
+              ...s,
+              windows: s.windows.map((w, j) =>
+                j === winIndex ? { ...w, width: value } : w,
+              ),
+            }
           : s,
       ),
     );
@@ -783,11 +783,11 @@ const RoomMeasurementScreen = () => {
       prev.map((s, i) =>
         i === sectionIndex
           ? {
-            ...s,
-            windows: s.windows.map((w, j) =>
-              j === winIndex ? { ...w, height: value } : w,
-            ),
-          }
+              ...s,
+              windows: s.windows.map((w, j) =>
+                j === winIndex ? { ...w, height: value } : w,
+              ),
+            }
           : s,
       ),
     );
@@ -802,11 +802,11 @@ const RoomMeasurementScreen = () => {
       prev.map((s, i) =>
         i === sectionIndex
           ? {
-            ...s,
-            doors: s.doors.map((d, j) =>
-              j === doorIndex ? { ...d, width: value } : d,
-            ),
-          }
+              ...s,
+              doors: s.doors.map((d, j) =>
+                j === doorIndex ? { ...d, width: value } : d,
+              ),
+            }
           : s,
       ),
     );
@@ -821,11 +821,11 @@ const RoomMeasurementScreen = () => {
       prev.map((s, i) =>
         i === sectionIndex
           ? {
-            ...s,
-            doors: s.doors.map((d, j) =>
-              j === doorIndex ? { ...d, height: value } : d,
-            ),
-          }
+              ...s,
+              doors: s.doors.map((d, j) =>
+                j === doorIndex ? { ...d, height: value } : d,
+              ),
+            }
           : s,
       ),
     );
@@ -840,11 +840,11 @@ const RoomMeasurementScreen = () => {
       prev.map((s, i) =>
         i === sectionIndex
           ? {
-            ...s,
-            cupboards: s.cupboards.map((c, j) =>
-              j === cupIndex ? { ...c, width: value } : c,
-            ),
-          }
+              ...s,
+              cupboards: s.cupboards.map((c, j) =>
+                j === cupIndex ? { ...c, width: value } : c,
+              ),
+            }
           : s,
       ),
     );
@@ -859,11 +859,11 @@ const RoomMeasurementScreen = () => {
       prev.map((s, i) =>
         i === sectionIndex
           ? {
-            ...s,
-            cupboards: s.cupboards.map((c, j) =>
-              j === cupIndex ? { ...c, height: value } : c,
-            ),
-          }
+              ...s,
+              cupboards: s.cupboards.map((c, j) =>
+                j === cupIndex ? { ...c, height: value } : c,
+              ),
+            }
           : s,
       ),
     );
@@ -1249,14 +1249,14 @@ const RoomMeasurementScreen = () => {
                     style={[
                       styles.checkbox,
                       roomDefaultMode === MODE.REPAINT &&
-                      styles.checkboxSelected,
+                        styles.checkboxSelected,
                     ]}
                   />
                   <Text
                     style={[
                       styles.checkboxLabel,
                       roomDefaultMode === MODE.REPAINT &&
-                      styles.checkboxLabelSelected,
+                        styles.checkboxLabelSelected,
                     ]}
                   >
                     Repaint with Primer
@@ -1276,7 +1276,7 @@ const RoomMeasurementScreen = () => {
                     style={[
                       styles.checkboxLabel,
                       roomDefaultMode === MODE.FRESH &&
-                      styles.checkboxLabelSelected,
+                        styles.checkboxLabelSelected,
                     ]}
                   >
                     Fresh Paint
@@ -1311,14 +1311,14 @@ const RoomMeasurementScreen = () => {
                           style={[
                             styles.checkbox,
                             section.mode === MODE.REPAINT &&
-                            styles.checkboxSelected,
+                              styles.checkboxSelected,
                           ]}
                         />
                         <Text
                           style={[
                             styles.checkboxLabel,
                             section.mode === MODE.REPAINT &&
-                            styles.checkboxLabelSelected,
+                              styles.checkboxLabelSelected,
                           ]}
                         >
                           Repaint
@@ -1332,14 +1332,14 @@ const RoomMeasurementScreen = () => {
                           style={[
                             styles.checkbox,
                             section.mode === MODE.FRESH &&
-                            styles.checkboxSelected,
+                              styles.checkboxSelected,
                           ]}
                         />
                         <Text
                           style={[
                             styles.checkboxLabel,
                             section.mode === MODE.FRESH &&
-                            styles.checkboxLabelSelected,
+                              styles.checkboxLabelSelected,
                           ]}
                         >
                           Fresh
@@ -1742,14 +1742,14 @@ const RoomMeasurementScreen = () => {
                           style={[
                             styles.checkbox,
                             section.mode === MODE.REPAINT &&
-                            styles.checkboxSelected,
+                              styles.checkboxSelected,
                           ]}
                         />
                         <Text
                           style={[
                             styles.checkboxLabel,
                             section.mode === MODE.REPAINT &&
-                            styles.checkboxLabelSelected,
+                              styles.checkboxLabelSelected,
                           ]}
                         >
                           Repaint
@@ -1763,14 +1763,14 @@ const RoomMeasurementScreen = () => {
                           style={[
                             styles.checkbox,
                             section.mode === MODE.FRESH &&
-                            styles.checkboxSelected,
+                              styles.checkboxSelected,
                           ]}
                         />
                         <Text
                           style={[
                             styles.checkboxLabel,
                             section.mode === MODE.FRESH &&
-                            styles.checkboxLabelSelected,
+                              styles.checkboxLabelSelected,
                           ]}
                         >
                           Fresh
@@ -2176,14 +2176,14 @@ const RoomMeasurementScreen = () => {
                     style={[
                       styles.checkbox,
                       roomDefaultMode === MODE.REPAINT &&
-                      styles.checkboxSelected,
+                        styles.checkboxSelected,
                     ]}
                   />
                   <Text
                     style={[
                       styles.checkboxLabel,
                       roomDefaultMode === MODE.REPAINT &&
-                      styles.checkboxLabelSelected,
+                        styles.checkboxLabelSelected,
                     ]}
                   >
                     Repaint with Primer
@@ -2203,7 +2203,7 @@ const RoomMeasurementScreen = () => {
                     style={[
                       styles.checkboxLabel,
                       roomDefaultMode === MODE.FRESH &&
-                      styles.checkboxLabelSelected,
+                        styles.checkboxLabelSelected,
                     ]}
                   >
                     Fresh Paint
@@ -2219,14 +2219,14 @@ const RoomMeasurementScreen = () => {
                       {
                         // gross - sum(openings)
                         calculateArea(section.width, section.height) -
-                        (section.windows || [])
-                          .concat(section.doors || [])
-                          .concat(section.cupboards || [])
-                          .reduce(
-                            (sum, o) =>
-                              sum + calculateArea(o.width, o.height),
-                            0,
-                          )
+                          (section.windows || [])
+                            .concat(section.doors || [])
+                            .concat(section.cupboards || [])
+                            .reduce(
+                              (sum, o) =>
+                                sum + calculateArea(o.width, o.height),
+                              0,
+                            )
                       }{' '}
                       sq ft
                     </Text>
@@ -2243,14 +2243,14 @@ const RoomMeasurementScreen = () => {
                         style={[
                           styles.checkbox,
                           section.mode === MODE.REPAINT &&
-                          styles.checkboxSelected,
+                            styles.checkboxSelected,
                         ]}
                       />
                       <Text
                         style={[
                           styles.checkboxLabel,
                           section.mode === MODE.REPAINT &&
-                          styles.checkboxLabelSelected,
+                            styles.checkboxLabelSelected,
                         ]}
                       >
                         Repaint
@@ -2264,14 +2264,14 @@ const RoomMeasurementScreen = () => {
                         style={[
                           styles.checkbox,
                           section.mode === MODE.FRESH &&
-                          styles.checkboxSelected,
+                            styles.checkboxSelected,
                         ]}
                       />
                       <Text
                         style={[
                           styles.checkboxLabel,
                           section.mode === MODE.FRESH &&
-                          styles.checkboxLabelSelected,
+                            styles.checkboxLabelSelected,
                         ]}
                       >
                         Fresh
@@ -2927,6 +2927,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     textAlign: 'center',
     fontFamily: 'Poppins-Medium',
+    color: '#000000',
   },
   multiply: { fontSize: 16, color: '#000000', marginHorizontal: 5 },
   equalSign: { fontSize: 16, color: '#000', marginHorizontal: 5 },
