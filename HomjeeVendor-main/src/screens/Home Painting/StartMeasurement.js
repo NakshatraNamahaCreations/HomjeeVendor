@@ -37,7 +37,7 @@ const StartMeasurement = () => {
     console.log('defaultTabParam read error', e);
     defaultTabParam = undefined;
   }
-  const leadId = leadDataContext._id;
+  const leadId = leadDataContext?._id;
   const [activeTab, setActiveTab] = useState(defaultTabParam || 'Interior');
   const [roomData, setRoomData] = useState({});
   const [customRoomsByTab, setCustomRoomsByTab] = useState({
@@ -481,8 +481,8 @@ const StartMeasurement = () => {
                 w => w.mode === 'FRESH' && getWallNet(w) > 0,
               );
 
-              const hasRepaint = repaintCeil.length || repaintWall.length;
-              const hasFresh = freshCeil.length || freshWall.length;
+              const hasRepaint = !!(repaintCeil.length || repaintWall.length);
+              const hasFresh = !!(freshCeil.length || freshWall.length);
               const hasAny = hasRepaint || hasFresh;
               const hasBoth = hasRepaint && hasFresh;
 

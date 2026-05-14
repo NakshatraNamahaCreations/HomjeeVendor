@@ -1471,7 +1471,10 @@ const JobOngoing = () => {
               <Text style={styles.descriptionText}>
                 <Ionicons name="location" color="red" size={17} />{' '}
                 {leadDataContext?.address.houseFlatNumber + ','}
-                {leadDataContext?.address.streetArea}
+                {leadDataContext?.address.streetArea}{' '}
+                {leadDataContext?.address.landMark ? (
+                  <Text>Landmark: {leadDataContext?.address.landMark}</Text>
+                ) : null}
               </Text>
             </View>
             {/* {(leadDataContext?.bookingDetails.status === 'Completed' ||

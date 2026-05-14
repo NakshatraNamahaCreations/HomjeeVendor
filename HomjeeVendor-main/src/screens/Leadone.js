@@ -223,7 +223,10 @@ const Leadone = () => {
           <Ionicons name="location" color="red" size={17} />
           <Text style={styles.cardText} numberOfLines={2}>
             {/* {enableUI && lead?.address.houseFlatNumber + ','} */}
-            {lead?.address.streetArea}
+            {lead?.address.streetArea}{' '}
+            {lead?.address.landMark ? (
+              <Text>Landmark: {lead?.address.landMark}</Text>
+            ) : null}
           </Text>
         </View>
 

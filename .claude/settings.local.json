@@ -20,7 +20,13 @@
       "Bash(xargs grep -l \"available-slots\\\\|getAvailableSlots\")",
       "Bash(grep -E \"\\\\.\\(js|ts\\)$\")",
       "Bash(npx jest *)",
-      "PowerShell($env:CI=$null; npx --prefix d:/projects-kiruthika/Homjee/Homjee_Backend-main jest --rootDir d:/projects-kiruthika/Homjee/Homjee_Backend-main src/services/__tests__/slotBookingSpec.test.js --no-coverage --verbose 2>&1 | Select-String -Pattern \"TC|✓|✗|PASS|FAIL\")"
+      "PowerShell($env:CI=$null; npx --prefix d:/projects-kiruthika/Homjee/Homjee_Backend-main jest --rootDir d:/projects-kiruthika/Homjee/Homjee_Backend-main src/services/__tests__/slotBookingSpec.test.js --no-coverage --verbose 2>&1 | Select-String -Pattern \"TC|✓|✗|PASS|FAIL\")",
+      "Bash(node -c src/helpers/serviceCity.js)",
+      "Bash(node -c src/controllers/slot.controller.js)",
+      "Bash(node -c src/controllers/vendor/vendorAuth.js)",
+      "Bash(node -e \"const s=require\\('./src/helpers/serviceCity'\\); console.log\\('canon\\(Pimpri-Chinchwad\\):', s.canonicalizeCity\\('Pimpri-Chinchwad'\\)\\); console.log\\('canon\\(pune\\):', s.canonicalizeCity\\('pune'\\)\\); console.log\\('regex\\(Pune\\):', s.buildCityMatchRegex\\('Pune'\\)\\); console.log\\('regex matches Pimpri-Chinchwad:', s.buildCityMatchRegex\\('Pune'\\).test\\('Pimpri-Chinchwad'\\)\\); console.log\\('regex matches Pune City:', s.buildCityMatchRegex\\('Pune'\\).test\\('Pune City'\\)\\);\")",
+      "Bash(Get-ChildItem \"d:\\\\projects-kiruthika\\\\Homjee\\\\Homjee_Backend-main\" -Recurse -Depth 2)",
+      "Bash(Select-Object FullName)"
     ],
     "additionalDirectories": [
       "d:\\projects-kiruthika\\Homjee\\HomjeeVendor-main\\src\\screens\\Menu"

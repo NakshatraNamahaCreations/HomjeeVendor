@@ -607,7 +607,10 @@ const LeadDescriptionScreen = () => {
               <Text style={styles.descriptionText}>
                 <Ionicons name="location" color="red" size={17} />{' '}
                 {enableUI && leadDataContext?.address.houseFlatNumber + ','}
-                {leadDataContext?.address.streetArea}
+                {leadDataContext?.address.streetArea}{' '}
+                {leadDataContext?.address.landMark ? (
+                  <Text>Landmark: {leadDataContext?.address.landMark}</Text>
+                ) : null}
               </Text>
             </View>
 
