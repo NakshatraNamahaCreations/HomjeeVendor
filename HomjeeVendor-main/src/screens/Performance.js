@@ -226,7 +226,7 @@ const Performance = () => {
   const responseValue =
     isHousePainting
       ? performanceData?.surveyRate || 0
-      : performanceData?.responseRate || 0;
+      : performanceData?.onTimeStartedRate || 0;
 
   const responseColor = getKpiColor(
     responseValue,
@@ -349,7 +349,7 @@ const Performance = () => {
                 <Text style={[styles.percentText, { color: responseColor }]}>
                   {isHousePainting
                     ? `${performanceData?.surveyRate ?? 0}%`
-                    : `${performanceData?.responseRate ?? 0}%`}
+                    : `${performanceData?.onTimeStartedRate ?? 0}%`}
                 </Text>
               )}
             </AnimatedCircularProgress>
@@ -359,7 +359,7 @@ const Performance = () => {
               <Text style={styles.cardFooterText}>
                 {isHousePainting
                   ? `Survey (${performanceData?.surveyLeads ?? 0})`
-                  : `Response (${performanceData?.respondedLeads ?? 0})`}
+                  : `On-Time (${performanceData?.onTimeStartedLeads ?? 0}/${performanceData?.startedLeads ?? 0})`}
               </Text>
             </View>
           </View>

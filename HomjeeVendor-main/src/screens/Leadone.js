@@ -53,10 +53,14 @@ const Leadone = () => {
 
   // console.log('nearByBookings', nearByBookings);
 
-  const isLeadVisible = useMemo(() => {
-    if (isPerformanceLow == null) return false; // unknown yet
-    // hide only in Case 1
-    return !(coins < 100 && isPerformanceLow === true);
+  // Whether the perf/coin gate should fire for ORGANIC leads. Admin-invited
+  // leads always pass regardless — when admin specifically notifies a
+  // vendor, they must see that lead even if they wouldn't qualify for
+  // organic discovery. They still can't accept without coins; that's a
+  // separate gate enforced at the respond endpoint.
+  const shouldGateOrganic = useMemo(() => {
+    if (isPerformanceLow == null) return false; // unknown yet → don't gate
+    return coins < 100 && isPerformanceLow === true;
   }, [coins, isPerformanceLow]);
 
   const fetchNearbyBookings = useCallback(
@@ -69,20 +73,22 @@ const Leadone = () => {
           setNearByBookigs([]);
           return;
         }
-        // Apply business rule for leads visibility
-        const shouldHideLeads = coins < 100 && isPerformanceLow === true;
-        if (shouldHideLeads) {
-          setNearByBookigs([]);
-          return;
-        }
 
         const response = await getRequest(
           `${VENDOR_SERVICE_TYPE}${lat}/${long}?vendorId=${vendorId}`,
           signal ? { signal } : undefined,
         );
-        const bookings = Array.isArray(response?.bookings)
+        let bookings = Array.isArray(response?.bookings)
           ? response.bookings
           : [];
+
+        // Apply organic gate per-lead so admin-invited leads survive.
+        // Backend marks each booking with `notifiedByAdmin` based on
+        // whether this vendor is in the booking's invitedVendors list.
+        if (shouldGateOrganic) {
+          bookings = bookings.filter(b => b?.notifiedByAdmin === true);
+        }
+
         // The BE gate may return { allowed: false, vendorStatus } when the
         // vendor isn't Live (low coins / team unavailable / archived).
         // Bookings will already be []; capture the status here so the UI
@@ -97,7 +103,7 @@ const Leadone = () => {
         if (!refreshing) setLoading(false);
       }
     },
-    [lat, long, refreshing, isPerfReady, isPerformanceLow, coins], // ✅ add
+    [lat, long, refreshing, isPerfReady, shouldGateOrganic, vendorId, VENDOR_SERVICE_TYPE],
   );
 
   const updateVendor = useCallback(async () => {
@@ -117,23 +123,20 @@ const Leadone = () => {
   }, [vendorId]);
 
   useEffect(() => {
-    if (!isPerfReady || !isLeadVisible) return;
+    if (!isPerfReady) return;
+    // Always fetch — admin-invited leads must reach the vendor even when
+    // the organic gate would fire. fetchNearbyBookings applies the
+    // per-lead organic filter internally.
     const controller = new AbortController();
     fetchNearbyBookings(controller.signal).finally(() => setLoading(false));
     return () => controller.abort();
-  }, [vendorId, lat, long, isPerfReady, fetchNearbyBookings, isLeadVisible]);
+  }, [vendorId, lat, long, isPerfReady, fetchNearbyBookings]);
 
   useEffect(() => {
     if (!isPerfReady) {
       setNearByBookigs([]);
-      return;
     }
-
-    const shouldHideLeads = coins < 100 && isPerformanceLow === true;
-    if (shouldHideLeads || !isLeadVisible) {
-      setNearByBookigs([]);
-    }
-  }, [isPerfReady, isPerformanceLow, isLeadVisible, coins]);
+  }, [isPerfReady]);
 
   const { refresh: refreshPerformance } = usePerformance();
 

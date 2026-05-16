@@ -54,7 +54,11 @@ export const filterLeads = (tab, leadsList, selectedStatus, searchText) => {
     if (tab === 'All Leads') {
       tabMatch = true;
     } else if (tab === 'Today') {
-      tabMatch = dateMoment.isSame(today, 'day') && isFutureSlotToday(lead);
+      // Show ALL today's leads (including past-time ones). Backend already
+      // filters past-time leads for organic discovery; the ones that reach
+      // the app are either still upcoming or admin-invited for rescheduling,
+      // and the vendor needs to see both.
+      tabMatch = dateMoment.isSame(today, 'day');
     } else if (tab === 'Tomorrow') {
       tabMatch = dateMoment.isSame(tomorrow, 'day');
     }

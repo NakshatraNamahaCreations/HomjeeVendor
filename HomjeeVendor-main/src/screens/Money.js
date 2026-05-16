@@ -25,6 +25,23 @@ const Money = () => {
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
+  const [amountYetToPay, setAmountYetToPay] = useState(0);
+  const [ongoingLeads, setOngoingLeads] = useState(0);
+
+  const fetchAmountYetToPay = useCallback(async () => {
+    if (!vendorId) return;
+    try {
+      const response = await getRequest(
+        `${API_ENDPOINTS.GET_AMOUNT_YET_TO_PAY}?vendorId=${vendorId}`,
+      );
+      setAmountYetToPay(Number(response?.amountYetToPay || 0));
+      setOngoingLeads(Number(response?.ongoingLeads || 0));
+    } catch (err) {
+      // Don't fail the screen if the aggregate is unavailable — past
+      // payment history below remains useful on its own.
+      console.warn('fetchAmountYetToPay failed:', err?.message);
+    }
+  }, [vendorId]);
 
   const fetchPaymentRecords = useCallback(
     async (signal) => {
@@ -67,16 +84,20 @@ const Money = () => {
   useEffect(() => {
     const controller = new AbortController();
     fetchPaymentRecords(controller.signal).finally(() => setLoading(false));
+    fetchAmountYetToPay();
     return () => controller.abort(); // Cleanup the request when the component unmounts or vendorId changes
-  }, [vendorId, fetchPaymentRecords]);
+  }, [vendorId, fetchPaymentRecords, fetchAmountYetToPay]);
 
   // Pull to refresh handler
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     const controller = new AbortController();
-    await fetchPaymentRecords(controller.signal); // Fetch the latest data
+    await Promise.all([
+      fetchPaymentRecords(controller.signal),
+      fetchAmountYetToPay(),
+    ]);
     setRefreshing(false); // Stop refreshing once data is fetched
-  }, [fetchPaymentRecords]);
+  }, [fetchPaymentRecords, fetchAmountYetToPay]);
 
   console.log("paymentData Money Dash", paymentData);
 
@@ -113,6 +134,18 @@ const Money = () => {
         >
           Money Dashboard
         </Text>
+
+        <View style={styles.summaryCard}>
+          <Text style={styles.summaryLabel}>
+            Amount Yet to Be Paid (all ongoing leads)
+          </Text>
+          <Text style={styles.summaryAmount}>
+            ₹ {Number(amountYetToPay || 0).toLocaleString()}
+          </Text>
+          <Text style={styles.summarySub}>
+            Across {ongoingLeads} ongoing lead{ongoingLeads === 1 ? '' : 's'}
+          </Text>
+        </View>
 
         <FlatList
           data={paymentData}
@@ -172,6 +205,31 @@ const styles = StyleSheet.create({
   },
   emptyState: {
     marginTop: 200
+  },
+  summaryCard: {
+    backgroundColor: '#fff7e6',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#ffd591',
+  },
+  summaryLabel: {
+    fontFamily: 'Poppins-Medium',
+    fontSize: 12,
+    color: '#b26b00',
+  },
+  summaryAmount: {
+    fontFamily: 'Poppins-SemiBold',
+    fontSize: 20,
+    color: '#7a4a00',
+    marginTop: 2,
+  },
+  summarySub: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 11,
+    color: '#9c6a00',
+    marginTop: 2,
   },
 });
 

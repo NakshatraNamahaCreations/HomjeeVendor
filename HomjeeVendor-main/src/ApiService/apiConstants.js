@@ -1,4 +1,4 @@
-// export const API_BASE_URL = 'http://192.168.1.65:9000/api'; // development
+// export const API_BASE_URL = 'http://192.168.1.77:9000/api'; // development
 export const API_BASE_URL = 'https://homjee-backend-jeyp.onrender.com/api'; // production
 
 export const API_ENDPOINTS = {
@@ -92,6 +92,9 @@ export const API_ENDPOINTS = {
 
   // MONET DASHBOARD & NOTIFICATION
   GET_MONEY_DASHBOARD: '/bookings/customer-payments/money-dashboard/',
+  // Aggregate of remaining receivables across all ongoing leads for the
+  // vendor (date-independent, per client spec).
+  GET_AMOUNT_YET_TO_PAY: '/bookings/amount-yet-to-pay',
   GET_NOTIFICATION: '/notification/fetch-vendor-notifications/',
   MARK_AS_READ_NOTIFICATION: '/notification/mark-notification-read/',
 };
