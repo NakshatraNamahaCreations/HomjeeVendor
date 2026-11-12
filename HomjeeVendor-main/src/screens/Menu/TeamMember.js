@@ -13,6 +13,7 @@ import moment from 'moment';
 import { useNavigation } from '@react-navigation/native';
 import { API_BASE_URL, API_ENDPOINTS } from '../../ApiService/apiConstants';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const STATUS_COLOR = {
   Available: '#FF7F00', // orange
@@ -20,15 +21,76 @@ const STATUS_COLOR = {
   'On Leave': '#ED1F24', // red
 };
 
+// The shared vendor context is set to different shapes by different screens
+// (login -> result.data, status API -> getVendor, Calendar -> results, etc.).
+// These helpers resolve the data we need from any of those shapes so the team
+// list shows regardless of which screen last populated the context.
+const getProfile = ctx => ctx?.vendor || ctx || {};
+
+// Recursively find an array stored under any key matching /team/ (e.g. `team`,
+// `teamMembers`, `teams`) no matter how deeply it is nested in the context.
+const findTeamArray = (obj, depth = 0) => {
+  if (!obj || typeof obj !== 'object' || depth > 5) return null;
+  for (const [key, val] of Object.entries(obj)) {
+    if (Array.isArray(val) && /team/i.test(key) && val.length) return val;
+  }
+  for (const val of Object.values(obj)) {
+    if (val && typeof val === 'object') {
+      const found = findTeamArray(val, depth + 1);
+      if (found) return found;
+    }
+  }
+  return null;
+};
+
+const getTeam = ctx => {
+  if (!ctx) return [];
+  if (Array.isArray(ctx.team)) return ctx.team;
+  if (Array.isArray(ctx.vendor?.team)) return ctx.vendor.team;
+  if (Array.isArray(ctx.getVendor?.team)) return ctx.getVendor.team;
+  return findTeamArray(ctx) || [];
+};
+
+const getVendorId = ctx =>
+  ctx?._id ||
+  ctx?.vendor?._id ||
+  ctx?.vendorId ||
+  ctx?.getVendor?._id ||
+  ctx?.vendor?.vendorId;
+
 const TeamMember = () => {
   const navigation = useNavigation();
   const { vendorDataContext, setVendorDataContext } = useVendorContext();
-  console.log('vendorDataContext', vendorDataContext);
-  const vendorId = vendorDataContext._id;
-  const teamList = vendorDataContext.team || [];
 
+  // The shared context is overwritten with different (sometimes team-less) shapes
+  // by other screens, so we hydrate from AsyncStorage 'user' — the stable copy
+  // saved once at login that always holds the correct vendor _id and team.
+  const [source, setSource] = useState(vendorDataContext);
+  useEffect(() => {
+    (async () => {
+      try {
+        const raw = await AsyncStorage.getItem('user');
+        if (raw) setSource(JSON.parse(raw));
+      } catch (e) {
+        console.log('load stored user error:', e?.message);
+      }
+    })();
+  }, []);
+
+  const vendorId = getVendorId(source) || getVendorId(vendorDataContext);
+  const profile = getProfile(source);
+
+  // Keep the team list in local state so it survives the context being replaced
+  // by the status API (and so a wrong context shape can't blank it out).
+  const [teamList, setTeamList] = useState(() => getTeam(vendorDataContext));
   const [teamStatuses, setTeamStatuses] = useState({});
   const today = moment().format('YYYY-MM-DD');
+
+  // Seed the list from whichever source currently has the team.
+  useEffect(() => {
+    const t = getTeam(source);
+    if (t.length) setTeamList(t);
+  }, [source]);
 
   useEffect(() => {
     const backAction = () => {
@@ -54,6 +116,8 @@ const TeamMember = () => {
       const res = await axios.get(url);
       if (res?.data?.success) {
         setTeamStatuses(res.data.statuses || {});
+        const freshTeam = getTeam(res.data.getVendor);
+        if (freshTeam.length) setTeamList(freshTeam);
         setVendorDataContext(res.data.getVendor);
       } else {
         setTeamStatuses({});
@@ -64,9 +128,32 @@ const TeamMember = () => {
     }
   }, [vendorId]);
 
+  // Fallback: pull the team directly from the dedicated endpoint. This guarantees
+  // the list loads even if the status API's getVendor does not embed the team.
+  const fetchTeamList = useCallback(async () => {
+    if (!vendorId) return;
+    try {
+      const url = `${API_BASE_URL}${API_ENDPOINTS.GET_TEAMS_VENDOR_LINE}${vendorId}`;
+      const res = await axios.get(url);
+      const data = res?.data;
+      const team =
+        (Array.isArray(data) && data) ||
+        (Array.isArray(data?.team) && data.team) ||
+        (Array.isArray(data?.teams) && data.teams) ||
+        (Array.isArray(data?.data) && data.data) ||
+        (Array.isArray(data?.results) && data.results) ||
+        getTeam(data);
+      console.log('fetchTeamList raw:', JSON.stringify(data)?.slice(0, 500));
+      if (team.length) setTeamList(team);
+    } catch (err) {
+      console.log('fetchTeamList error:', err?.message);
+    }
+  }, [vendorId]);
+
   useEffect(() => {
     fetchTeamStatuses();
-  }, [fetchTeamStatuses]);
+    fetchTeamList();
+  }, [fetchTeamStatuses, fetchTeamList]);
 
   // compute final status per member with precedence
   const getMemberStatus = member => {
@@ -84,8 +171,6 @@ const TeamMember = () => {
       return 'Available';
     }
   };
-  console.log('teamStatuses', teamStatuses);
-  console.log('teamList', teamList);
 
   return (
     <View style={{ margin: 20 }}>
@@ -111,7 +196,7 @@ const TeamMember = () => {
             }}
           >
             <Image
-              source={{ uri: vendorDataContext?.vendor?.profileImage }}
+              source={{ uri: profile?.profileImage }}
               style={{
                 width: "100%",
                 height: "100%",
@@ -120,9 +205,9 @@ const TeamMember = () => {
             />
           </View>
         </View>
-        <Text style={styles.profileName}>{vendorDataContext.vendor?.vendorName}</Text>
+        <Text style={styles.profileName}>{profile?.vendorName}</Text>
         <Text style={styles.status}>Live</Text>
-        <Text style={styles.lastActive}>{vendorDataContext.vendor?.serviceType}</Text>
+        <Text style={styles.lastActive}>{profile?.serviceType}</Text>
 
         <Text
           style={{
@@ -135,6 +220,12 @@ const TeamMember = () => {
         >
           Team Members
         </Text>
+
+        {__DEV__ && (
+          <Text selectable style={{ fontSize: 9, color: '#B00', marginBottom: 8 }}>
+            debug → id={String(vendorId)} | team={teamList.length}
+          </Text>
+        )}
 
         {!teamList || teamList.length === 0 ? (
           <Text style={{ fontSize: 12, fontFamily: 'Poppins-Medium', textAlign: "center", marginTop: 12, color: "#888" }}>
@@ -196,7 +287,7 @@ const TeamMember = () => {
                       fontSize: 13,
                     }}
                   >
-                    {team.name}
+                    {team.name || team.teamMemberName || team.fullName}
                   </Text>
                 </View>
                 <View style={{ flex: 0.4, justifyContent: "center", alignItems: "flex-end" }}>

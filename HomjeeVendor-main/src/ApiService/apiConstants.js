@@ -10,6 +10,10 @@ export const API_ENDPOINTS = {
   // PROFILE
   GET_VENDOR_PROFILE: '/vendor/get-vendor-by-vendorId/',
 
+  // PUSH NOTIFICATIONS (#3)
+  REGISTER_DEVICE_TOKEN: '/vendor/register-device-token',
+  REMOVE_DEVICE_TOKEN: '/vendor/remove-device-token',
+
   // ARCHIVE STATUS (lightweight poll)
   ARCHIVE_STATUS: '/vendor/archive-status/',
   // TEAM

@@ -167,10 +167,21 @@ export default function AdditionalServices() {
         const fallback = directSqft > 0 ? directSqft : refSqft;
         if (mounted) setSurfaceSqftFallback(fallback);
 
-        // existing additional services for this surface
-        const list = (line?.additionalServices || []).filter(
-          s => norm(s?.surfaceType) === norm(surfaceType),
-        );
+        // existing additional services for this surface — match by the durable
+        // surfaceRef first (kind + ordinal), falling back to the legacy label
+        // string for rows saved before surfaceRef was persisted.
+        const list = (line?.additionalServices || []).filter(s => {
+          const ref = s?.surfaceRef;
+          if (
+            ref &&
+            surfaceRef &&
+            String(ref.type) === String(surfaceRef.type) &&
+            Number(ref.index) === Number(surfaceRef.index)
+          ) {
+            return true;
+          }
+          return !ref ? norm(s?.surfaceType) === norm(surfaceType) : false;
+        });
 
         if (!mounted) return;
 
@@ -240,15 +251,9 @@ export default function AdditionalServices() {
     Number(a.areaSqft || 0) === Number(b.areaSqft || 0) &&
     Number(a.unitPrice || 0) === Number(b.unitPrice || 0);
 
-  const confirmDelete = s =>
-    Alert.alert('Delete', 'Remove this additional service?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () => onDeleteExisting(s),
-      },
-    ]);
+  // Open the app's own styled confirm popup instead of the default native
+  // Alert, so it matches the rest of the app's dialogs.
+  const confirmDelete = s => setDeleteTarget(s);
 
   const onDeleteExisting = async s => {
     try {
@@ -342,6 +347,8 @@ export default function AdditionalServices() {
   const [popOption, setPopOption] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [painHead, setPaintHead] = useState('');
+  // The additional-service pending deletion (null = confirm popup hidden).
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const openModalPopup = type => {
     setPaintHead(type);
@@ -1013,6 +1020,42 @@ export default function AdditionalServices() {
           </View>
         </View>
       </Modal>
+
+      {/* Styled confirm popup for deleting an additional service (replaces
+          the default native Alert so it matches the app's other dialogs). */}
+      <Modal
+        visible={!!deleteTarget}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setDeleteTarget(null)}
+      >
+        <View style={styles.confirmOverlay}>
+          <View style={styles.confirmBox}>
+            <Text style={styles.confirmTitle}>Delete</Text>
+            <Text style={styles.confirmMessage}>
+              Remove this additional service?
+            </Text>
+            <View style={styles.confirmActions}>
+              <TouchableOpacity
+                style={[styles.confirmBtn, styles.confirmCancelBtn]}
+                onPress={() => setDeleteTarget(null)}
+              >
+                <Text style={styles.confirmCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.confirmBtn, styles.confirmDeleteBtn]}
+                onPress={() => {
+                  const s = deleteTarget;
+                  setDeleteTarget(null);
+                  if (s) onDeleteExisting(s);
+                }}
+              >
+                <Text style={styles.confirmDeleteText}>Delete</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -1151,6 +1194,60 @@ const styles = StyleSheet.create({
   },
   itemText: { fontSize: 14, fontFamily: 'Poppins-Medium', color: '#555' },
   price: { fontSize: 14, color: '#555', fontFamily: 'Poppins-Medium' },
+
+  // Delete-confirm popup (styled to match the app's other dialogs)
+  confirmOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.56)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 30,
+  },
+  confirmBox: {
+    width: '100%',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+  },
+  confirmTitle: {
+    fontSize: 17,
+    fontFamily: 'Poppins-SemiBold',
+    color: '#222',
+    marginBottom: 6,
+  },
+  confirmMessage: {
+    fontSize: 14,
+    fontFamily: 'Poppins-Medium',
+    color: '#555',
+    marginBottom: 18,
+  },
+  confirmActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  confirmBtn: {
+    paddingVertical: 8,
+    paddingHorizontal: 18,
+    borderRadius: 8,
+    marginLeft: 10,
+  },
+  confirmCancelBtn: {
+    backgroundColor: '#eee',
+  },
+  confirmCancelText: {
+    fontSize: 14,
+    fontFamily: 'Poppins-Medium',
+    color: '#333',
+  },
+  confirmDeleteBtn: {
+    backgroundColor: '#d31a1a',
+  },
+  confirmDeleteText: {
+    fontSize: 14,
+    fontFamily: 'Poppins-SemiBold',
+    color: '#fff',
+  },
 
   savedWrap: { marginBottom: 8 },
   savedHeader: {

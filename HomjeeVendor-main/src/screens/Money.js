@@ -125,11 +125,16 @@ const Money = () => {
     <View style={styles.safeArea}>
       {loading && <PageLoader />}
       <Header />
-      <View style={{ padding: 10 }}>
+      {/* #8a: flex:1 bounds this container so the FlatList below can actually
+          scroll once the list is longer than the screen (previously the list
+          overflowed off-screen and the bottom rows were unreachable). */}
+      <View style={{ padding: 10, flex: 1 }}>
         <Text
           style={{
             fontFamily: 'Poppins-SemiBold',
             marginVertical: 10,
+            color: '#111', // #1 font-colour fix: title had no colour set
+            fontSize: 16,
           }}
         >
           Money Dashboard
@@ -148,9 +153,11 @@ const Money = () => {
         </View>
 
         <FlatList
+          style={{ flex: 1 }}
           data={paymentData}
           keyExtractor={(item, index) => `${item._id}-${index}`} // Unique key for each item
           renderItem={renderItem}
+          contentContainerStyle={{ paddingBottom: 20 }}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }

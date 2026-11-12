@@ -66,17 +66,24 @@ const MiddleScreenOfMoneyDash = () => {
     fetchBookingData();
   }, [leadId]);
 
+  // Lead-status colour standard (Money & Performance Dashboard spec, p.6).
+  // Grey · Blue · Green · Yellow · Orange · Red.
   const STATUS_COLORS = {
-    'Survey Ongoing': '#FF7F00',
-    'Project Ongoing': '#FF7F00',
-    'Job Ongoing': '#FF7F00',
-    'Survey Completed': 'green',
-    'Customer Cancelled': '#ff0000',
-    'Waiting for final payment': '#ff0000',
-    'Customer Unreachable': '#ff0000',
-    'Pending Hiring': '#fabb05ff',
-    Hired: '#008e00ff',
-    'Project Completed': '#008e00ff',
+    Confirmed: '#6c757d', // Grey
+    'Project Completed': '#6c757d', // Grey
+    'Survey Completed': '#0d6efd', // Blue
+    'Job Completed': '#28a745', // Green
+    Hired: '#28a745', // Green
+    Negotiation: '#ffc107', // Yellow
+    'Survey Ongoing': '#FF7F00', // Orange
+    'Project Ongoing': '#FF7F00', // Orange
+    'Job Ongoing': '#FF7F00', // Orange
+    'Waiting for final payment': '#FF7F00', // Orange
+    'Pending Hiring': '#FF7F00', // Orange
+    'Customer Cancelled': '#dc3545', // Red
+    Cancelled: '#dc3545', // Red
+    'Admin Cancelled': '#dc3545', // Red
+    'Customer Unreachable': '#dc3545', // Red
   };
 
   const leadDataStatus = bookingDetails?.bookingDetails?.status;
@@ -207,6 +214,18 @@ const MiddleScreenOfMoneyDash = () => {
                 {lead.paidDate} at {lead.paidTime}
               </Text>
             </View>
+            {/* #7c — show the refund amount in the vendor payment summary. */}
+            {Number(bookingDetails?.bookingDetails?.refundAmount || 0) > 0 && (
+              <View style={styles.rowBetween}>
+                <Text style={styles.amountLabel}>Refund</Text>
+                <Text style={[styles.amountDue, { color: '#ED1F24' }]}>
+                  - ₹{' '}
+                  {Number(
+                    bookingDetails?.bookingDetails?.refundAmount || 0,
+                  ).toLocaleString('en-IN')}
+                </Text>
+              </View>
+            )}
           </View>
         </ScrollView>
         <TouchableOpacity

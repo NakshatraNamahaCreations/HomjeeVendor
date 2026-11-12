@@ -47,7 +47,17 @@ const RoomMeasurementScreen = () => {
   const [loading, setLoading] = useState(false);
   const [roomDefaultMode, setRoomDefaultMode] = useState(MODE.REPAINT);
   const [showAlertPopup, setShowAlertPopup] = useState(false);
+  // The alert popup is reused for different validations (no measurements,
+  // negative wall/ceiling area), so its text is dynamic.
+  const [alertTitle, setAlertTitle] = useState('No Measurements');
+  const [alertBody, setAlertBody] = useState(
+    'Enter at least one ceiling/wall with valid length and width',
+  );
   const [showConfirmPopup, setShowConfirmPopup] = useState(false);
+  // Duplicate-room warning. Rendered as the app's standard popup (see the
+  // Modal near the bottom of this screen) instead of a native Alert so it
+  // matches the rest of the UI. (#11)
+  const [showDuplicatePopup, setShowDuplicatePopup] = useState(false);
 
   const [isEditing, setIsEditing] = useState(false);
   const [etstimateData, setEstimateData] = useEstimateContext();
@@ -307,7 +317,7 @@ const RoomMeasurementScreen = () => {
 
     const dup = existingRoomNames.some(n => normKey(n) === normKey(newName));
     if (dup) {
-      Alert.alert('Duplicate room', 'A room with this name already exists.');
+      setShowDuplicatePopup(true);
       return;
     }
 
@@ -700,6 +710,20 @@ const RoomMeasurementScreen = () => {
   };
   console.log('calculateArea');
 
+  // A section's net area (gross wall/ceiling area minus all its openings) must
+  // never be negative — that means the windows/doors/cupboards add up to more
+  // than the wall itself. Mirrors the net shown in each section header. Returns
+  // true if ANY section is negative.
+  const hasNegativeSectionArea = () =>
+    (sections || []).some(section => {
+      const gross = calculateArea(section.width, section.height);
+      const openings = (section.windows || [])
+        .concat(section.doors || [])
+        .concat(section.cupboards || [])
+        .reduce((sum, o) => sum + calculateArea(o.width, o.height), 0);
+      return gross - openings < 0;
+    });
+
   const validateInput = value => {
     if (parseFloat(value) < 0) {
       return 'Negative values are not allowed.';
@@ -910,42 +934,107 @@ const RoomMeasurementScreen = () => {
     ]);
   };
 
+  // Monotonic counter stamped onto each newly added opening so it sorts to the
+  // BOTTOM of the section's opening list (after the last window/door/cupboard)
+  // instead of jumping into its type group. Base 1e9 keeps new items above the
+  // legacy grouped-order fallback in buildMergedOpenings. (#9)
+  const openingSeqRef = useRef(1);
+  const nextOpeningSeq = () => 1e9 + openingSeqRef.current++;
+
+  // Merge a section's windows/doors/cupboards into a single list ordered by the
+  // order they were added (via `seq`). Openings without a seq (loaded from a
+  // saved measurement, or defaults) fall back to the original grouped order
+  // windows → doors → cupboards — which is exactly how they come back after a
+  // reload, so the live order now matches the reloaded order. (#9)
+  const buildMergedOpenings = section => {
+    const entries = [
+      ...(section.windows || []).map((item, i) => ({ kind: 'window', item, i })),
+      ...(section.doors || []).map((item, i) => ({ kind: 'door', item, i })),
+      ...(section.cupboards || []).map((item, i) => ({
+        kind: 'cupboard',
+        item,
+        i,
+      })),
+    ];
+    const seqOf = e => {
+      if (e.item && e.item.seq != null) return e.item.seq;
+      const base = e.kind === 'window' ? 0 : e.kind === 'door' ? 1e6 : 2e6;
+      return base + e.i;
+    };
+    return entries.sort((a, b) => seqOf(a) - seqOf(b));
+  };
+
   const addWindow = sectionIndex => {
+    let newIndex = 0;
     setSections(prev =>
-      prev.map((s, i) =>
-        i === sectionIndex
-          ? { ...s, windows: [...s.windows, { width: '', height: '' }] }
-          : s,
-      ),
+      prev.map((s, i) => {
+        if (i !== sectionIndex) return s;
+        newIndex = (s.windows || []).length;
+        return {
+          ...s,
+          windows: [
+            ...s.windows,
+            { width: '', height: '', seq: nextOpeningSeq() },
+          ],
+        };
+      }),
     );
+    // Bring the cursor to the first input of the newly-added window.
+    setTimeout(() => focusNested(winLRefs, sectionIndex, newIndex), 150);
   };
 
   const addDoor = sectionIndex => {
+    let newIndex = 0;
     setSections(prev =>
-      prev.map((s, i) =>
-        i === sectionIndex
-          ? { ...s, doors: [...s.doors, { width: '', height: '' }] }
-          : s,
-      ),
+      prev.map((s, i) => {
+        if (i !== sectionIndex) return s;
+        newIndex = (s.doors || []).length;
+        return {
+          ...s,
+          doors: [
+            ...s.doors,
+            { width: '', height: '', seq: nextOpeningSeq() },
+          ],
+        };
+      }),
     );
+    setTimeout(() => focusNested(doorLRefs, sectionIndex, newIndex), 150);
   };
 
   const addCupBoard = sectionIndex => {
+    let newIndex = 0;
     setSections(prev =>
-      prev.map((s, i) =>
-        i === sectionIndex
-          ? { ...s, cupboards: [...s.cupboards, { width: '', height: '' }] }
-          : s,
-      ),
+      prev.map((s, i) => {
+        if (i !== sectionIndex) return s;
+        newIndex = (s.cupboards || []).length;
+        return {
+          ...s,
+          cupboards: [
+            ...s.cupboards,
+            { width: '', height: '', seq: nextOpeningSeq() },
+          ],
+        };
+      }),
     );
+    setTimeout(() => focusNested(cupLRefs, sectionIndex, newIndex), 150);
   };
 
   const addOtherItem = () => {
-    const count = sections.filter(s => s.type === normalizeType(type)).length;
+    const key = normalizeType(type);
+    // Canonical singular kind ('door' / 'grill') so the count matches BOTH
+    // freshly-added sections (stored plural: 'doors'/'grills') and rooms
+    // hydrated from a saved measurement (stored singular: 'door'/'grill').
+    // The old strict `s.type === normalizeType(type)` check matched neither
+    // hydrated spelling, so count was always 0 and every added grill/door
+    // restarted the numbering at 1.
+    const canon = key.includes('door') ? 'door' : 'grill';
+    const count = sections.filter(s =>
+      normalizeType(s.type).includes(canon),
+    ).length;
     setSections(prev => [
       ...prev,
       {
-        type: normalizeType(type),
+        type: key,
         width: '',
         height: '',
         mode: roomDefaultMode,
@@ -1115,6 +1204,18 @@ const RoomMeasurementScreen = () => {
     if (loading) return;
     setLoading(true);
     setShowConfirmPopup(false);
+
+    // Block saving when any wall/ceiling net area is negative (openings exceed
+    // the surface). Show a warning and keep the room un-saved so the vendor
+    // either corrects it, or backs out and discards the changes.
+    if (hasNegativeSectionArea()) {
+      setLoading(false);
+      setAlertTitle('Invalid Measurement');
+      setAlertBody('Any wall/ceiling measurement is negative');
+      setShowAlertPopup(true);
+      return;
+    }
+
     const sanitized = transformToBackendStructure(
       roomKeyToSave,
       sections,
@@ -1123,11 +1224,9 @@ const RoomMeasurementScreen = () => {
 
     if (!sanitized.rooms || Object.keys(sanitized.rooms).length === 0) {
       setLoading(false);
+      setAlertTitle('No Measurements');
+      setAlertBody('Enter at least one ceiling/wall with valid length and width');
       setShowAlertPopup(true);
-      // Alert.alert(
-      //   'No measurements',
-      //   'Enter at least one Ceiling/Wall with valid length and width.',
-      // );
       return;
     }
     try {
@@ -1321,7 +1420,7 @@ const RoomMeasurementScreen = () => {
                               styles.checkboxLabelSelected,
                           ]}
                         >
-                          Repaint
+                          Repaint with Primer
                         </Text>
                       </TouchableOpacity>
                       <TouchableOpacity
@@ -1444,7 +1543,11 @@ const RoomMeasurementScreen = () => {
                       </Text>
                     </View>
 
-                    {section.windows?.map((win, winIndex) => (
+                    {buildMergedOpenings(section).map(entry => {
+                      if (entry.kind === 'window') {
+                        const win = entry.item;
+                        const winIndex = entry.i;
+                        return (
                       <View
                         key={`window-${index}-${winIndex}`}
                         style={styles.windowSection}
@@ -1525,9 +1628,12 @@ const RoomMeasurementScreen = () => {
                           </Text>
                         </View>
                       </View>
-                    ))}
-
-                    {section.doors?.map((dr, doorIndex) => (
+                        );
+                      }
+                      if (entry.kind === 'door') {
+                        const dr = entry.item;
+                        const doorIndex = entry.i;
+                        return (
                       <View
                         key={`door-${index}-${doorIndex}`}
                         style={styles.windowSection}
@@ -1607,9 +1713,12 @@ const RoomMeasurementScreen = () => {
                           </Text>
                         </View>
                       </View>
-                    ))}
-
-                    {section.cupboards?.map((cup, cupIndex) => (
+                        );
+                      }
+                      if (entry.kind === 'cupboard') {
+                        const cup = entry.item;
+                        const cupIndex = entry.i;
+                        return (
                       <View
                         key={`cupboard-${index}-${cupIndex}`}
                         style={styles.windowSection}
@@ -1689,7 +1798,10 @@ const RoomMeasurementScreen = () => {
                           </Text>
                         </View>
                       </View>
-                    ))}
+                        );
+                      }
+                      return null;
+                    })}
                     <View style={styles.underlineRed} />
                     <View style={styles.iconRow}>
                       <TouchableOpacity
@@ -1752,7 +1864,7 @@ const RoomMeasurementScreen = () => {
                               styles.checkboxLabelSelected,
                           ]}
                         >
-                          Repaint
+                          Repaint with Primer
                         </Text>
                       </TouchableOpacity>
                       <TouchableOpacity
@@ -1875,7 +1987,11 @@ const RoomMeasurementScreen = () => {
                       </Text>
                     </View>
 
-                    {section.windows?.map((win, winIndex) => (
+                    {buildMergedOpenings(section).map(entry => {
+                      if (entry.kind === 'window') {
+                        const win = entry.item;
+                        const winIndex = entry.i;
+                        return (
                       <View
                         key={`window-${index}-${winIndex}`}
                         style={styles.windowSection}
@@ -1955,9 +2071,12 @@ const RoomMeasurementScreen = () => {
                           </Text>
                         </View>
                       </View>
-                    ))}
-
-                    {section.doors?.map((dr, doorIndex) => (
+                        );
+                      }
+                      if (entry.kind === 'door') {
+                        const dr = entry.item;
+                        const doorIndex = entry.i;
+                        return (
                       <View
                         key={`door-${index}-${doorIndex}`}
                         style={styles.windowSection}
@@ -2037,9 +2156,12 @@ const RoomMeasurementScreen = () => {
                           </Text>
                         </View>
                       </View>
-                    ))}
-
-                    {section.cupboards?.map((cup, cupIndex) => (
+                        );
+                      }
+                      if (entry.kind === 'cupboard') {
+                        const cup = entry.item;
+                        const cupIndex = entry.i;
+                        return (
                       <View
                         key={`cupboard-${index}-${cupIndex}`}
                         style={styles.windowSection}
@@ -2119,7 +2241,10 @@ const RoomMeasurementScreen = () => {
                           </Text>
                         </View>
                       </View>
-                    ))}
+                        );
+                      }
+                      return null;
+                    })}
                     <View style={styles.underlineRed} />
                     <View style={styles.iconRow}>
                       <TouchableOpacity
@@ -2253,7 +2378,7 @@ const RoomMeasurementScreen = () => {
                             styles.checkboxLabelSelected,
                         ]}
                       >
-                        Repaint
+                        Repaint with Primer
                       </Text>
                     </TouchableOpacity>
                     <TouchableOpacity
@@ -2400,11 +2525,15 @@ const RoomMeasurementScreen = () => {
                       </Text>
                       <View style={styles.inputRow}>
                         <TextInput
+                          ref={r => setNestedRef(winLRefs, index, winIndex, r)}
                           placeholder="L"
                           placeholderTextColor="gray"
                           style={styles.input}
                           keyboardType="numeric"
                           value={win.width}
+                          returnKeyType="next"
+                          enterKeyHint="next"
+                          blurOnSubmit={false}
                           onChangeText={text => {
                             try {
                               handleWindowWidthChange(index, winIndex, text);
@@ -2412,14 +2541,21 @@ const RoomMeasurementScreen = () => {
                               console.log('win w err', e);
                             }
                           }}
+                          onSubmitEditing={() =>
+                            focusNested(winWRefs, index, winIndex)
+                          }
                         />
                         <Text style={styles.multiply}>×</Text>
                         <TextInput
+                          ref={r => setNestedRef(winWRefs, index, winIndex, r)}
                           placeholder="W"
                           placeholderTextColor="gray"
                           style={styles.input}
                           keyboardType="numeric"
                           value={win.height}
+                          returnKeyType="next"
+                          enterKeyHint="next"
+                          blurOnSubmit={false}
                           onChangeText={text => {
                             try {
                               handleWindowHeightChange(index, winIndex, text);
@@ -2427,6 +2563,9 @@ const RoomMeasurementScreen = () => {
                               console.log('win h err', e);
                             }
                           }}
+                          onSubmitEditing={() =>
+                            focusAfterWindowW(index, winIndex)
+                          }
                         />
                         <Text style={styles.equalSign}>=</Text>
                         <Text style={styles.areaText}>
@@ -2447,11 +2586,15 @@ const RoomMeasurementScreen = () => {
                       </Text>
                       <View style={styles.inputRow}>
                         <TextInput
+                          ref={r => setNestedRef(doorLRefs, index, doorIndex, r)}
                           placeholder="L"
                           placeholderTextColor="gray"
                           style={styles.input}
                           keyboardType="numeric"
                           value={dr.width}
+                          returnKeyType="next"
+                          enterKeyHint="next"
+                          blurOnSubmit={false}
                           onChangeText={text => {
                             try {
                               handleDoorWidthChange(index, doorIndex, text);
@@ -2459,14 +2602,21 @@ const RoomMeasurementScreen = () => {
                               console.log('door w err', e);
                             }
                           }}
+                          onSubmitEditing={() =>
+                            focusNested(doorWRefs, index, doorIndex)
+                          }
                         />
                         <Text style={styles.multiply}>×</Text>
                         <TextInput
+                          ref={r => setNestedRef(doorWRefs, index, doorIndex, r)}
                           placeholder="W"
                           placeholderTextColor="gray"
                           style={styles.input}
                           keyboardType="numeric"
                           value={dr.height}
+                          returnKeyType="next"
+                          enterKeyHint="next"
+                          blurOnSubmit={false}
                           onChangeText={text => {
                             try {
                               handleDoorHeightChange(index, doorIndex, text);
@@ -2474,6 +2624,9 @@ const RoomMeasurementScreen = () => {
                               console.log('door h err', e);
                             }
                           }}
+                          onSubmitEditing={() =>
+                            focusAfterDoorW(index, doorIndex)
+                          }
                         />
                         <Text style={styles.equalSign}>=</Text>
                         <Text style={styles.areaText}>
@@ -2494,11 +2647,15 @@ const RoomMeasurementScreen = () => {
                       </Text>
                       <View style={styles.inputRow}>
                         <TextInput
+                          ref={r => setNestedRef(cupLRefs, index, cupIndex, r)}
                           placeholder="L"
                           placeholderTextColor="gray"
                           style={styles.input}
                           keyboardType="numeric"
                           value={cup.width}
+                          returnKeyType="next"
+                          enterKeyHint="next"
+                          blurOnSubmit={false}
                           onChangeText={text => {
                             try {
                               handleCupBoardWidthChange(index, cupIndex, text);
@@ -2506,14 +2663,21 @@ const RoomMeasurementScreen = () => {
                               console.log('cup w err', e);
                             }
                           }}
+                          onSubmitEditing={() =>
+                            focusNested(cupWRefs, index, cupIndex)
+                          }
                         />
                         <Text style={styles.multiply}>×</Text>
                         <TextInput
+                          ref={r => setNestedRef(cupWRefs, index, cupIndex, r)}
                           placeholder="W"
                           placeholderTextColor="gray"
                           style={styles.input}
                           keyboardType="numeric"
                           value={cup.height}
+                          returnKeyType="next"
+                          enterKeyHint="next"
+                          blurOnSubmit={false}
                           onChangeText={text => {
                             try {
                               handleCupBoardHeightChange(index, cupIndex, text);
@@ -2521,6 +2685,9 @@ const RoomMeasurementScreen = () => {
                               console.log('cup h err', e);
                             }
                           }}
+                          onSubmitEditing={() =>
+                            focusAfterCupboardW(index, cupIndex)
+                          }
                         />
                         <Text style={styles.equalSign}>=</Text>
                         <Text style={styles.areaText}>
@@ -2725,8 +2892,14 @@ const RoomMeasurementScreen = () => {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
-            <Text style={{ fontFamily: 'Poppins-SemiBold', fontSize: 16 }}>
-              No Measurements
+            <Text
+              style={{
+                fontFamily: 'Poppins-SemiBold',
+                fontSize: 16,
+                color: '#000',
+              }}
+            >
+              {alertTitle}
             </Text>
             <Text
               style={{
@@ -2734,14 +2907,49 @@ const RoomMeasurementScreen = () => {
                 fontSize: 14,
                 marginTop: 10,
                 marginBottom: 10,
+                color: '#444',
               }}
             >
-              Enter at least one ceiling/wall with valid length and width
+              {alertBody}
             </Text>
             <View style={styles.flexRow}>
               <TouchableOpacity
                 style={styles.cancelButton}
                 onPress={() => setShowAlertPopup(false)}
+              >
+                <Text style={styles.cancelButtonText}>Ok</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+      {/* duplicate-room popup (#11) — styled like the rest of the popups */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={showDuplicatePopup}
+        onRequestClose={() => setShowDuplicatePopup(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={{ fontFamily: 'Poppins-SemiBold', fontSize: 16 }}>
+              Duplicate room
+            </Text>
+            <Text
+              style={{
+                fontFamily: 'Poppins-Medium',
+                fontSize: 14,
+                marginTop: 10,
+                marginBottom: 10,
+                color: '#444',
+              }}
+            >
+              A room with this name already exists.
+            </Text>
+            <View style={styles.flexRow}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => setShowDuplicatePopup(false)}
               >
                 <Text style={styles.cancelButtonText}>Ok</Text>
               </TouchableOpacity>

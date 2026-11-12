@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "443585759426",
+    "project_id": "homjee-2f031",
+    "storage_bucket": "homjee-2f031.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:443585759426:android:429387a8fb904a17e7535b",
+        "android_client_info": {
+          "package_name": "com.homjeevendor"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyANNhc1zPnqAKmmCJDr7TyDiAGN9Z62gdI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

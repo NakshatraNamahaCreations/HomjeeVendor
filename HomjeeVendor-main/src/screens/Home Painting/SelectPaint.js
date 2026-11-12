@@ -185,6 +185,25 @@ const SelectPaint = () => {
     }, [leadId]),
   );
 
+  // Mark surfaces that carry a "without paint" additional service as
+  // zero-charge, so re-saving this room keeps their paint price at 0 instead
+  // of re-adding it (zeroAllBySurface was previously never populated) (#7).
+  useEffect(() => {
+    try {
+      const targetRoom = existingRoom?.name || roomName;
+      const room = (loadedAdditionalServices || []).find(
+        r => norm(r?.roomName) === norm(targetRoom),
+      );
+      const set = new Set();
+      (room?.additionalServices || []).forEach(s => {
+        if (!s?.withPaint && s?.surfaceType) set.add(norm(s.surfaceType));
+      });
+      setZeroAllBySurface(set);
+    } catch (e) {
+      console.log('zeroAllBySurface build error', e);
+    }
+  }, [loadedAdditionalServices, existingRoom, roomName]);
+
   const mergeById = (oldList, newList) => {
     const map = new Map((oldList || []).map(p => [String(p._id), p]));
     (newList || []).forEach(p => map.set(String(p._id), p));
@@ -256,14 +275,31 @@ const SelectPaint = () => {
     fetchPaintProducts();
   }, []);
 
-  const getServicesForSurface = (roomNameX, surfaceTitle) => {
+  // Match a surface's additional services by the DURABLE structured ref
+  // (kind + ordinal) first, falling back to the legacy human label string for
+  // rows saved before surfaceRef was persisted. Matching purely on the
+  // re-derived label ("Wall 1") broke when the surface list changed between
+  // save and reload — the service then went invisible and the "without paint"
+  // force-check failed, causing a false "please enable this surface" error.
+  const getServicesForSurface = (roomNameX, kind, ordinal, legacyTitle) => {
     const room = (loadedAdditionalServices || []).find(
       r => norm(r?.roomName) === norm(roomNameX),
     );
-    const list = (room?.additionalServices || []).filter(
-      s => norm(s.surfaceType) === norm(surfaceTitle),
-    );
-    return list;
+    return (room?.additionalServices || []).filter(s => {
+      const ref = s?.surfaceRef;
+      if (
+        ref &&
+        String(ref.type) === String(kind) &&
+        Number(ref.index) === Number(ordinal)
+      ) {
+        return true;
+      }
+      // Always fall back to the label string — works for rows with NO
+      // surfaceRef (current production data) and for rows whose surfaceRef
+      // didn't match. surfaceRef is the durable key; the label is the
+      // load-bearing fallback while older rows lack it.
+      return legacyTitle != null && norm(s.surfaceType) === norm(legacyTitle);
+    });
   };
 
   const fmtCalc = (qty, rate, amt) =>
@@ -403,10 +439,32 @@ const SelectPaint = () => {
       if (resLoading) return false;
       setResLoading(true);
 
+      // A surface counts as "selected" if it has paint area > 0 OR carries a
+      // "without paint" additional service (its paint charge is 0 but the
+      // surface is still legitimately checked — mirrors `checked` in
+      // renderCard). Counting only net()>0 wrongly fired "Nothing selected"
+      // when the only selected surface was a without-paint one.
+      const roomKey = existingRoom?.name || roomName;
+      const kindFor = type =>
+        type === 'ceiling' ? 'Ceiling' : type === 'wall' ? 'Wall' : 'Measurement';
+      const titleFor = (type, idx) =>
+        isPureOthersRoom
+          ? `${existingRoom?.name ?? roomName ?? 'Measurement'} ${idx + 1}`
+          : `${type.charAt(0).toUpperCase() + type.slice(1)} ${idx + 1}`;
+      const isSurfaceSelected = (type, it, idx) => {
+        if (!it.deselected && net(it) > 0) return true;
+        return getServicesForSurface(
+          roomKey,
+          kindFor(type),
+          idx + 1,
+          titleFor(type, idx),
+        ).some(s => !s.withPaint);
+      };
+
       const anyPositive =
-        ceilings.some(it => net(it) > 0) ||
-        walls.some(it => net(it) > 0) ||
-        measurements.some(it => net(it) > 0);
+        ceilings.some((it, i) => isSurfaceSelected('ceiling', it, i)) ||
+        walls.some((it, i) => isSurfaceSelected('wall', it, i)) ||
+        measurements.some((it, i) => isSurfaceSelected('measurements', it, i));
 
       if (!anyPositive) {
         setShowAlertPopup(true);
@@ -530,8 +588,13 @@ const SelectPaint = () => {
     await saveRoomPricing({ navigateBack: true });
   };
 
-  const renderAdditionalServices = (roomNameX, surfaceTitle) => {
-    const servicesForThisLine = getServicesForSurface(roomNameX, surfaceTitle);
+  const renderAdditionalServices = (roomNameX, kind, ordinal, legacyTitle) => {
+    const servicesForThisLine = getServicesForSurface(
+      roomNameX,
+      kind,
+      ordinal,
+      legacyTitle,
+    );
     if (!servicesForThisLine.length) return null;
 
     return (
@@ -561,6 +624,10 @@ const SelectPaint = () => {
       ? `${existingRoom?.name ?? roomName ?? 'Measurement'} ${idx + 1}`
       : `${type.charAt(0).toUpperCase() + type.slice(1)} ${idx + 1}`;
 
+    // Durable surface kind used to match stored additional services by ref.
+    const kind =
+      type === 'ceiling' ? 'Ceiling' : type === 'wall' ? 'Wall' : 'Measurement';
+
     const modeText = item.mode === 'FRESH' ? 'Fresh Paint' : 'Repaint with primer';
 
     const sqt = net(item);
@@ -573,10 +640,18 @@ const SelectPaint = () => {
     const rate = zeroAll ? 0 : rateDetail?.total ?? null;
     const amount = rate != null ? displaySqft * rate : null;
 
-    const checked = !item.deselected && sqt > 0;
-
-    const servicesForThisLine = getServicesForSurface(existingRoom?.name || roomName, title);
+    const servicesForThisLine = getServicesForSurface(
+      existingRoom?.name || roomName,
+      kind,
+      idx + 1,
+      title,
+    );
     const hasWithout = servicesForThisLine.some(s => !s.withPaint);
+
+    // A surface carrying a "without paint" additional service stays selected
+    // even though its paint charge is 0 — otherwise reopening the room showed
+    // it unticked and dropped the surface and its service (#7).
+    const checked = (!item.deselected && sqt > 0) || hasWithout;
 
     const baseOriginalSqft = displaySqft;
     const baseOriginalRate = rate ?? 0;
@@ -588,8 +663,6 @@ const SelectPaint = () => {
 
     // local paint presence (NEW gating)
     const localSelPaint = getSelectedPaintForType(type);
-    const kind =
-      type === 'ceiling' ? 'Ceiling' : type === 'wall' ? 'Wall' : 'Measurement';
 
     // ✅ enable after vendor selects paint (and item not deselected)
     const canAddAdditional = !!localSelPaint && checked && !resLoading;
@@ -716,7 +789,7 @@ const SelectPaint = () => {
         <View style={styles.dottedLine} />
 
         {/* show existing saved additional services list (only when present) */}
-        {renderAdditionalServices(existingRoom?.name || roomName, title)}
+        {renderAdditionalServices(existingRoom?.name || roomName, kind, idx + 1, title)}
 
         <TouchableOpacity
           onPress={handleAdditionalPress}
@@ -832,7 +905,7 @@ const SelectPaint = () => {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
-            <Text style={{ fontFamily: 'Poppins-SemiBold', fontSize: 16 }}>
+            <Text style={{ fontFamily: 'Poppins-SemiBold', fontSize: 16, color: '#000' }}>
               Nothing selected
             </Text>
             <Text
@@ -841,6 +914,7 @@ const SelectPaint = () => {
                 fontSize: 14,
                 marginTop: 10,
                 marginBottom: 10,
+                color: '#333',
               }}
             >
               Pick at least one ceiling / wall / measurement item.

@@ -9,6 +9,7 @@ import {
 import React, { useCallback, useEffect, useState } from 'react';
 import { useThemeColor } from '../Utilities/ThemeContext';
 import { useVendorContext } from '../Utilities/VendorContext';
+import { useLeadContext } from '../Utilities/LeadContext';
 import { getRequest } from '../ApiService/apiHelper';
 import { API_BASE_URL, API_ENDPOINTS } from '../ApiService/apiConstants';
 import PageLoader from '../components/PageLoader';
@@ -19,7 +20,48 @@ import { useNavigation } from '@react-navigation/native';
 const Notification = () => {
   const { deviceTheme } = useThemeColor();
   const { vendorDataContext } = useVendorContext();
+  const { setLeadDataContext } = useLeadContext();
   const navigation = useNavigation();
+
+  // Open a lead from a notification. A reminder points at an ONGOING lead, so
+  // route to the ongoing description page (LeadDescriptionScreen), or the
+  // survey/job screen (JobOngoing) for in-progress statuses — mirroring how
+  // tapping a lead in the Ongoing list behaves. NOT the new-lead respond page.
+  // (Point 24)
+  const openLead = async bookingId => {
+    if (!bookingId) return;
+    try {
+      const res = await getRequest(
+        `${API_ENDPOINTS.GET_BOOKINGS_BY_bOOKING_ID}${bookingId}`,
+      );
+      const lead = res?.booking;
+      if (lead) {
+        setLeadDataContext(lead);
+        const status = lead?.bookingDetails?.status;
+        const isSurveyStarted = lead?.bookingDetails?.isSurveyStarted;
+        const jobStatuses = [
+          'Survey Ongoing',
+          'Survey Completed',
+          'Pending Hiring',
+          'Hired',
+          'Project Ongoing',
+          'Job Ongoing',
+          'Project Completed',
+          'Waiting for final payment',
+        ];
+        if (jobStatuses.includes(status) || isSurveyStarted) {
+          navigation.navigate('JobOngoing');
+        } else {
+          navigation.navigate('LeadDescriptionScreen');
+        }
+        return;
+      }
+    } catch (e) {
+      console.log('openLead fetch failed:', e?.message);
+    }
+    // Fallback: ongoing description page.
+    navigation.navigate('LeadDescriptionScreen');
+  };
   const vendorId = vendorDataContext?._id;
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -55,7 +97,14 @@ const Notification = () => {
         //   })
         //   .sort((a, b) => b.paymentDate - a.paymentDate) || []; // Sort Date objects
 
-        setNotificationData(response.data || []);
+        // #4: new-lead alerts are delivered as push notifications only — they
+        // must NOT appear in the in-app notification history. Filter out the
+        // lead types; payment/reminder/etc. still show.
+        const HIDDEN_TYPES = ['LEAD', 'NEW_LEAD_CREATED', 'NEW_ENQUIRY_CREATED'];
+        const visible = (response.data || []).filter(
+          n => !HIDDEN_TYPES.includes(n?.notificationType),
+        );
+        setNotificationData(visible);
       } catch (err) {
         if (err.name !== 'AbortError') console.log(err);
       } finally {
@@ -107,9 +156,9 @@ const Notification = () => {
         });
         break;
       case 'REMINDER':
-        navigation.navigate('PaymentDetailed', {
-          lead: notification.metaData.bookingId,
-        });
+        // Set-reminder alerts point at a lead — open the lead details, not the
+        // payment screen.
+        openLead(notification.metaData?.bookingId);
         break;
       // case 'product_booking':
       //   navigation.navigate('Booking List', {

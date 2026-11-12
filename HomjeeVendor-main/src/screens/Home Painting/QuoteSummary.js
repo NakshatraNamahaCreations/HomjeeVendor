@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
+  KeyboardAvoidingView,
   Modal,
   Image,
   Alert,
@@ -28,6 +29,8 @@ import PageLoader from '../../components/PageLoader';
 export default function QuoteSummary() {
   const navigation = useNavigation();
   const route = useRoute();
+  // Lets us scroll the Comments box above the keyboard when it's focused.
+  const scrollRef = useRef(null);
   const { quoteId, quote: quoteFromRoute } = route.params || {};
   const [estimateData] = useEstimateContext();
   const [isLoading, setIsLoading] = useState(false);
@@ -312,18 +315,10 @@ export default function QuoteSummary() {
       }
 
       const delivery = response?.data?.delivery;
-      if (delivery?.dryRun && delivery?.pdfUrl) {
-        Alert.alert(
-          'Quote saved (PDF preview mode)',
-          'WhatsApp is disabled in dev. Tap "View PDF" to inspect the generated quote.',
-          [
-            { text: 'Skip', style: 'cancel' },
-            {
-              text: 'View PDF',
-              onPress: () => Linking.openURL(delivery.pdfUrl),
-            },
-          ],
-        );
+      if (delivery?.dryRun) {
+        // Dev PDF-preview popup suppressed (#13). Just confirm the save —
+        // no "View PDF" prompt is shown to the vendor.
+        notify('Quote saved');
       } else if (delivery?.sent) {
         notify('Quote saved & sent to customer on WhatsApp');
       } else if (delivery?.error) {
@@ -344,10 +339,18 @@ export default function QuoteSummary() {
   };
 
   return (
-    <>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
       {isLoading && <PageLoader />}
 
-      <ScrollView contentContainerStyle={styles.container}>
+      <ScrollView
+        ref={scrollRef}
+        contentContainerStyle={styles.container}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
         {/* Cost Summary */}
         <View style={styles.box}>
           <Text style={styles.header}>Cost Summary</Text>
@@ -463,6 +466,14 @@ export default function QuoteSummary() {
             placeholderTextColor="#999"
             value={comments}
             onChangeText={setComments}
+            // Scroll the Comments box up so it stays visible above the keyboard
+            // while typing.
+            onFocus={() =>
+              setTimeout(
+                () => scrollRef.current?.scrollToEnd({ animated: true }),
+                250,
+              )
+            }
           />
         </View>
 
@@ -623,7 +634,7 @@ export default function QuoteSummary() {
           </View>
         </View>
       </Modal>
-    </>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -632,6 +643,9 @@ const styles = StyleSheet.create({
     padding: 10,
     marginTop: 10,
     backgroundColor: '#F6F6F6',
+    // Extra space so the Comments box + Generate button can scroll clear of
+    // the keyboard.
+    paddingBottom: 120,
   },
   header: {
     fontFamily: 'Poppins-Bold',

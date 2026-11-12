@@ -14,6 +14,7 @@ import {
   TextInput,
   Alert,
   RefreshControl,
+  Dimensions,
 } from 'react-native';
 import { useLeadContext } from '../Utilities/LeadContext';
 import { useVendorContext } from '../Utilities/VendorContext';
@@ -35,6 +36,7 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import ResponseLoader from '../components/ResponseLoader';
 import DynamicImage from '../Utilities/DynamicImage';
+import DeepCleaningPackageDetails from '../Utilities/DeepCleaningPackageDetails';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 
 const JobOngoing = () => {
@@ -616,6 +618,18 @@ const JobOngoing = () => {
     disableAllTheHell = true;
   }
 
+  // #18 — a cancelled/locked lead (admin-approved cancellation sets
+  // hasLeadLocked) disables Directions / Contact / Update Status / Start Job.
+  const bdStatusLc = bd.status?.toLowerCase().trim();
+  if (
+    bdStatusLc === 'customer cancelled' ||
+    bdStatusLc === 'admin cancelled' ||
+    bdStatusLc === 'cancelled' ||
+    bd.hasLeadLocked === true
+  ) {
+    disableAllTheHell = true;
+  }
+
   // console.log('iconDisabled', iconDisabled);
   // ----------------------------------------------------------------
   const priceEditPending =
@@ -1006,7 +1020,7 @@ const JobOngoing = () => {
         `${API_ENDPOINTS.REQUESTING_SEND_OTP}${bookingId}`,
       );
       ToastAndroid.showWithGravity(
-        result.message || 'OTP Sent',
+        result.message || 'Booking ID Sent',
         ToastAndroid.LONG,
         ToastAndroid.CENTER,
       );
@@ -1024,9 +1038,10 @@ const JobOngoing = () => {
 
   const handleStartProject = async () => {
     setLoading(true);
-    if (joinedOtp === null) {
+    if (!joinedOtp || !joinedOtp.trim()) {
+      setLoading(false);
       return ToastAndroid.showWithGravity(
-        'OTP Is Required',
+        'Booking ID Is Required',
         ToastAndroid.LONG,
         ToastAndroid.CENTER,
       );
@@ -1613,7 +1628,14 @@ const JobOngoing = () => {
                   <View style={styles.card} key={idx}>
                     <Text style={styles.packageTitle}>
                       <Octicons name="north-star" size={14} color="#ED1F24" />{' '}
-                      {ele.serviceName}
+                      {ele.serviceName ||
+                        ele.packageName ||
+                        ele.name ||
+                        [ele.subCategory, ele.category]
+                          .filter(Boolean)
+                          .join(' - ') ||
+                        ele.service ||
+                        'Package'}
                     </Text>
                     <View style={styles.location}>
                       <Text style={styles.bulletText}>₹ {ele.price}</Text>
@@ -2302,7 +2324,12 @@ const JobOngoing = () => {
       </View>
 
       {/* edit price */}
-      <Modal transparent visible={secondModalVisible} animationType="slide">
+      <Modal
+        transparent
+        visible={secondModalVisible}
+        animationType="slide"
+        onRequestClose={() => setSecondModalVisible(false)}
+      >
         <View
           style={{
             flex: 1,
@@ -2470,7 +2497,9 @@ const JobOngoing = () => {
               source={require('../assets/icons/featured.png')}
               resizeMode="contain"
             />
-            <Text style={{ fontFamily: 'Poppins-Bold', fontSize: 16 }}>
+            <Text
+              style={{ fontFamily: 'Poppins-Bold', fontSize: 16, color: '#000' }}
+            >
               End the{' '}
               {vendorDataContext?.vendor?.serviceType === 'house-painter' ||
               vendorDataContext?.vendor?.serviceType === 'House Painting'
@@ -2483,6 +2512,7 @@ const JobOngoing = () => {
                 fontSize: 14,
                 marginTop: 10,
                 marginBottom: 10,
+                color: '#333',
               }}
             >
               Are you sure you want to end the{' '}
@@ -3274,28 +3304,74 @@ const JobOngoing = () => {
                 <AntDesign name="close" color="black" size={20} />
               </TouchableOpacity>
             </View>
-            {packageList?.length > 0 ? (
+            {leadDataContext?.service?.length > 0 ? (
               <View style={{ marginTop: 10 }}>
                 <ScrollView
-                  showsVerticalScrollIndicator={false}
+                  style={{ maxHeight: Math.round(Dimensions.get('window').height * 0.72) }}
+                  showsVerticalScrollIndicator={true}
                   showsHorizontalScrollIndicator={false}
                 >
-                  {packageList.map(item => (
-                    <View key={item._id}>
-                      <Text
-                        style={{
-                          fontFamily: 'Poppins-Medium',
-                          fontSize: 16,
-                          marginVertical: 10,
-                        }}
-                      >
-                        {item.serviceType}
-                      </Text>
-                      {item.packageImage.map((img, idx) => (
-                        <DynamicImage key={idx} uri={img} />
-                      ))}
-                    </View>
-                  ))}
+                  {/* #2 — show the package(s) the customer actually selected
+                      (name, subcategory, price × qty) with the matching
+                      "what's included" images from the catalog. */}
+                  {leadDataContext.service.map((s, i) => {
+                    const norm = v =>
+                      String(v || '')
+                        .trim()
+                        .toLowerCase();
+                    const name =
+                      s.serviceName ||
+                      s.packageName ||
+                      s.name ||
+                      [s.subCategory, s.category].filter(Boolean).join(' - ') ||
+                      s.service ||
+                      'Package';
+                    const match = (packageList || []).find(
+                      p =>
+                        norm(p?.serviceType) === norm(s?.subCategory) ||
+                        norm(p?.serviceType) === norm(s?.serviceName),
+                    );
+                    return (
+                      <View key={i} style={{ marginBottom: 16 }}>
+                        <Text
+                          style={{
+                            fontFamily: 'Poppins-SemiBold',
+                            fontSize: 16,
+                          }}
+                        >
+                          {name}
+                        </Text>
+                        {s.subCategory ? (
+                          <Text
+                            style={{
+                              fontFamily: 'Poppins-Medium',
+                              fontSize: 13,
+                              color: '#6b6b6b',
+                            }}
+                          >
+                            {s.subCategory}
+                          </Text>
+                        ) : null}
+                        <Text
+                          style={{
+                            fontFamily: 'Poppins-SemiBold',
+                            color: '#da8b16ff',
+                            marginVertical: 4,
+                          }}
+                        >
+                          ₹ {s.price} x {s.quantity}
+                        </Text>
+                        {(match?.packageImage || []).map((img, idx) => (
+                          <DynamicImage key={idx} uri={img} />
+                        ))}
+                        {/* Deep Cleaning: website pop-up content (tier
+                            includes, Classic/Premium/Ultimate table, what-we-
+                            clean images) per selected package, one after
+                            another. Nothing for mini services / non-DC. */}
+                        <DeepCleaningPackageDetails service={s} />
+                      </View>
+                    );
+                  })}
                 </ScrollView>
               </View>
             ) : (
@@ -3335,41 +3411,20 @@ const JobOngoing = () => {
             >
               <AntDesign name="close" color="black" size={20} />
             </TouchableOpacity>
-            <Text style={styles.modalTitle}>OTP</Text>
+            <Text style={styles.modalTitle}>Booking ID</Text>
             <Text style={styles.modalSubtitle}>
-              Enter OTP sent to customer's phone
+              Enter the Booking ID shared by the customer
             </Text>
 
-            <Text
-              style={{
-                fontSize: 13,
-                color: 'red',
-                fontFamily: 'Poppins-Medium',
-              }}
-            >
-              {showOTP} (development)
-            </Text>
             <View style={styles.otpInputRow}>
-              {otp.map((value, index) => (
-                <TextInput
-                  key={index}
-                  ref={el => (inputs.current[index] = el)}
-                  style={styles.otpInput}
-                  keyboardType="number-pad"
-                  maxLength={1}
-                  value={value}
-                  onChangeText={text => handleChange(text, index)}
-                  onKeyPress={({ nativeEvent }) => {
-                    if (
-                      nativeEvent.key === 'Backspace' &&
-                      !value &&
-                      index > 0
-                    ) {
-                      inputs.current[index - 1]?.focus();
-                    }
-                  }}
-                />
-              ))}
+              <TextInput
+                style={styles.bookingIdInput}
+                autoCapitalize="characters"
+                placeholder="e.g. HJ-20260812-1234"
+                placeholderTextColor="#999"
+                value={joinedOtp || ''}
+                onChangeText={text => setJoinedOTP(text)}
+              />
             </View>
             <TouchableOpacity
               style={{
@@ -3385,7 +3440,7 @@ const JobOngoing = () => {
                   borderBottomWidth: 1,
                 }}
               >
-                Re-Send OTP
+                Re-Send Booking ID
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -3875,6 +3930,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontFamily: 'Poppins-Medium',
     textAlign: 'center',
+    color: '#000',
   },
   subHeader: {
     fontSize: 14,
@@ -4007,6 +4063,18 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 18,
     fontFamily: 'Poppins-Medium',
+  },
+  bookingIdInput: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 6,
+    width: '100%',
+    height: 50,
+    textAlign: 'center',
+    fontSize: 16,
+    fontFamily: 'Poppins-Medium',
+    color: '#000',
+    paddingHorizontal: 10,
   },
 });
 export default JobOngoing;

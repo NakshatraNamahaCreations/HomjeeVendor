@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Accent colour for push notifications (Homjee red). (#3) -->
+    <color name="notification_color">#ED1F24</color>
+    <!-- Launcher adaptive-icon background — white, fills the whole tile so
+         there's no border/margin around the logo. (#1) -->
+    <color name="ic_launcher_background">#FFFFFF</color>
+</resources>

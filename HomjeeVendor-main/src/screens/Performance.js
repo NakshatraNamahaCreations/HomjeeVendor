@@ -410,40 +410,14 @@ const Performance = () => {
           </View>
         </View>
 
-        {/* GSV Semi-Circle */}
-        <View
-          style={{
-            backgroundColor: 'white',
-            margin: 10,
-            borderRadius: 10,
-          }}
-        >
-          <View style={styles.meterWrapper}>
-            <AnimatedCircularProgress
-              size={180}
-              width={35}
-              fill={70}
-              arcSweepAngle={180}
-              rotation={-90}
-              tintColor={gsvColor}
-              // tintColor="#0F6A97"
-              backgroundColor="#e2e2e2ff"
-              lineCap="line"
-            >
-              {() => (
-                <Text style={[styles.gsvValue, { color: gsvColor }]}>
-                  {' '}
-                  ₹{' '}
-                  {performanceData
-                    ? performanceData.averageGsv.toFixed(0)
-                    : '0'}
-                </Text>
-              )}
-            </AnimatedCircularProgress>
-          </View>
-          <View style={[styles.averageBox, { backgroundColor: gsvColor }]}>
-            <Text style={styles.averageText}>Average GSV</Text>
-          </View>
+        {/* #6 — Average GSV is now a plain stat tile (same style as Total
+            Leads / Strikes) instead of the semi-circle graph, which was not
+            working correctly. */}
+        <View style={[styles.totalLeadsBox, { backgroundColor: gsvColor }]}>
+          <Text style={styles.totalLeadsText}>
+            Average GSV : ₹
+            {performanceData ? performanceData.averageGsv.toFixed(0) : '0'}
+          </Text>
         </View>
         {/* Ratings & Strikes */}
         <View style={styles.ratingRow}>

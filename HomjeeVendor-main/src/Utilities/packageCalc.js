@@ -231,8 +231,14 @@ const isModeAgnosticPaint = (detail) => {
     return hasFreshInName && !hasRepaintOnly && noPuttyFresh && noPuttyRepaint;
 };
 
-const getDisplayPaintName = (detail, mode) => {
+const getDisplayPaintName = (detail, mode, sectionType) => {
     const originalName = String(detail?.paintName || "").trim();
+
+    // Doors/Grills (Others) have a single process, so never append
+    // "Repaint With Primer"/"Fresh Paint" to e.g. "Oil Enamel Painting".
+    if (String(sectionType || "").trim() === "Others") {
+        return originalName;
+    }
 
     if (isModeAgnosticPaint(detail)) {
         return originalName;
@@ -304,7 +310,7 @@ export const buildPackageProductSummary = (estimateData, pkg, puttyPrice) => {
                 const cost = sqft * unit;
                 totalCost += cost;
 
-                const rowName = getDisplayPaintName(detail, normalizedMode);
+                const rowName = getDisplayPaintName(detail, normalizedMode, sectionType);
                 const k = getBucketKey(detail, normalizedMode, sectionType, itemName);
 
                 const prev =

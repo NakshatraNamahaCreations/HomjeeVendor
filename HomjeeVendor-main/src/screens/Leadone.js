@@ -7,6 +7,7 @@ import {
   FlatList,
   RefreshControl,
   useWindowDimensions,
+  DeviceEventEmitter,
 } from 'react-native';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Header from '../components/Header';
@@ -14,7 +15,8 @@ import { useVendorContext } from '../Utilities/VendorContext';
 import { getRequest } from '../ApiService/apiHelper';
 import { API_ENDPOINTS } from '../ApiService/apiConstants';
 import moment from 'moment';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { NEW_LEAD_EVENT } from '../Utilities/notifications';
 import PageLoader from '../components/PageLoader';
 import { useThemeColor } from '../Utilities/ThemeContext';
 import { useLeadContext } from '../Utilities/LeadContext';
@@ -50,6 +52,19 @@ const Leadone = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  // True once a load has been running a while — the backend (Render free tier)
+  // can cold-start for 30-50s, so we show a reassuring message instead of a
+  // silent spinner that looks frozen. (app issue #2)
+  const [slowLoading, setSlowLoading] = useState(false);
+
+  useEffect(() => {
+    if (!loading) {
+      setSlowLoading(false);
+      return;
+    }
+    const t = setTimeout(() => setSlowLoading(true), 6000);
+    return () => clearTimeout(t);
+  }, [loading]);
 
   // console.log('nearByBookings', nearByBookings);
 
@@ -137,6 +152,25 @@ const Leadone = () => {
       setNearByBookigs([]);
     }
   }, [isPerfReady]);
+
+  // Auto-refresh the list whenever the New Leads tab is focused (so tapping
+  // the tab always shows the latest leads).
+  useFocusEffect(
+    useCallback(() => {
+      if (!isPerfReady) return;
+      const controller = new AbortController();
+      fetchNearbyBookings(controller.signal);
+      return () => controller.abort();
+    }, [isPerfReady, fetchNearbyBookings]),
+  );
+
+  // Auto-refresh the instant a new-lead push arrives while the app is open.
+  useEffect(() => {
+    const sub = DeviceEventEmitter.addListener(NEW_LEAD_EVENT, () => {
+      fetchNearbyBookings();
+    });
+    return () => sub.remove();
+  }, [fetchNearbyBookings]);
 
   const { refresh: refreshPerformance } = usePerformance();
 
@@ -259,6 +293,13 @@ const Leadone = () => {
   return (
     <View style={styles.safeArea}>
       {loading && <PageLoader />}
+      {loading && slowLoading && (
+        <View style={styles.slowLoadingBanner} pointerEvents="none">
+          <Text style={styles.slowLoadingText}>
+            Waking up the server… this can take up to a minute the first time.
+          </Text>
+        </View>
+      )}
       <Header />
       <View style={{ padding: 15 }}>
         <Text style={styles.title}>Discover today’s new leads!</Text>
@@ -321,6 +362,23 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     // backgroundColor: '#F6F6F6',
+  },
+  slowLoadingBanner: {
+    position: 'absolute',
+    bottom: 90,
+    left: 24,
+    right: 24,
+    zIndex: 1000,
+    backgroundColor: 'rgba(0,0,0,0.78)',
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+  },
+  slowLoadingText: {
+    color: '#fff',
+    fontSize: 12.5,
+    fontFamily: 'Poppins-Medium',
+    textAlign: 'center',
   },
   // discoverleads: {
   //   margin: 10,

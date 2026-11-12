@@ -595,6 +595,30 @@ const SelectRoom = () => {
     }
   };
 
+  // A paint whose price does NOT depend on the process (Fresh vs Repaint) must
+  // render as ONE combined row, not split per process. True when the paint is
+  // flagged special, OR its name already carries "Fresh Paint" (and isn't a
+  // "Repaint Only" variant) with no putty applied either way. Mirrors
+  // isModeAgnosticPaint in Utilities/packageCalc.js so the room summary and the
+  // package calc agree.
+  const isModeAgnosticPaint = paint => {
+    try {
+      if (!paint) return false;
+      if (paint.isSpecial) return true;
+      const nm = String(paint.name || '')
+        .trim()
+        .toLowerCase();
+      if (!nm) return false;
+      const hasFreshInName = nm.includes('fresh paint');
+      const hasRepaintOnly = nm.includes('repaint only');
+      const noPutty = !paint.includePuttyOnFresh && !paint.includePuttyOnRepaint;
+      return hasFreshInName && !hasRepaintOnly && noPutty;
+    } catch (e) {
+      console.log('isModeAgnosticPaint error', e);
+      return false;
+    }
+  };
+
   const specialBadge = (
     <Text style={{ color: '#ED1F24', fontWeight: '700' }}>S </Text>
   );
@@ -602,7 +626,10 @@ const SelectRoom = () => {
   const composePaintLabel = (room, paint, mode) => {
     if (!paint) return '—';
     const special = isSpecialPaint(paint);
-    if (isOthersTab(room) || special) {
+    // Mode-agnostic paints (incl. flagged special) show just their name — no
+    // "Fresh Paint / Repaint With Primer" suffix (which also avoids the
+    // doubled "…Fresh Paint Fresh Paint").
+    if (isOthersTab(room) || isModeAgnosticPaint(paint)) {
       return (
         <Text>
           {special ? specialBadge : null}
@@ -632,14 +659,14 @@ const SelectRoom = () => {
     const paint = getPaintFromLine(line, kindKey);
     if (!paint) return [];
 
-    const special = isSpecialPaint(paint);
     const inOthersTab = isOthersTab(room);
 
-    // "Others" or "Special paint" → single combined row
-    if (inOthersTab || special) {
+    // "Others" or a mode-agnostic paint (special / price independent of the
+    // Fresh-vs-Repaint process) → single combined row across all processes.
+    if (inOthersTab || isModeAgnosticPaint(paint)) {
       return [
         {
-          paintText: paint?.name ?? '—',
+          paintText: composePaintLabel(room, paint, all[0]?.mode),
           countText: `${base} (${all.length})`,
           sqft: sumSqftLn(all),
           amount: sumMoney(all),
@@ -959,7 +986,13 @@ const SelectRoom = () => {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
-            <Text style={{ fontFamily: 'Poppins-SemiBold', fontSize: 16 }}>
+            <Text
+              style={{
+                fontFamily: 'Poppins-SemiBold',
+                fontSize: 16,
+                color: '#1A1A1A',
+              }}
+            >
               Discard changes?
             </Text>
             <Text
@@ -968,6 +1001,7 @@ const SelectRoom = () => {
                 fontSize: 14,
                 marginTop: 10,
                 marginBottom: 10,
+                color: '#444',
               }}
             >
               Are you sure you want to exit without saving the changes?

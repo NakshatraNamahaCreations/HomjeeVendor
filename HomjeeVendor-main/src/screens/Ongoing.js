@@ -53,6 +53,18 @@ const OngoingLeadsScreen = () => {
   const [loading, setLoading] = useState(false);
   const [navigationLoader, setNavigationLoader] = useState(false);
   const [showSearchBar, setShowSearchBar] = useState(false);
+  // Show a reassuring message when a load runs long — the backend (Render free
+  // tier) can cold-start for 30-50s, so a bare spinner looks frozen.
+  const [slowLoading, setSlowLoading] = useState(false);
+
+  useEffect(() => {
+    if (!loading) {
+      setSlowLoading(false);
+      return;
+    }
+    const t = setTimeout(() => setSlowLoading(true), 6000);
+    return () => clearTimeout(t);
+  }, [loading]);
 
   const displayedLeads = filterLeads(
     activeTab,
@@ -211,67 +223,35 @@ const OngoingLeadsScreen = () => {
       return lead.bookingDetails?.status;
     }
   };
-  const backgroundColorStatus = lead => {
-    if (lead.bookingDetails?.status === 'Confirmed') {
-      return '';
-    } else if (
-      lead.bookingDetails?.status === 'Survey Ongoing' ||
-      lead.bookingDetails?.status === 'Project Ongoing' ||
-      lead.bookingDetails?.status === 'Job Ongoing'
-    ) {
-      return '#ffe1c3';
-    } else if (lead.bookingDetails?.status === 'Survey Completed') {
-      return '#ecffef';
-    } else if (
-      lead.bookingDetails?.status === 'Customer Cancelled' ||
-      lead.bookingDetails?.status === 'Rescheduled' ||
-      lead.bookingDetails?.status === 'Admin Cancelled' ||
-      lead.bookingDetails?.status === 'Waiting for final payment' ||
-      lead.bookingDetails?.status === 'Customer Unreachable' ||
-      lead.bookingDetails?.status === 'Customer Denied' ||
-      lead.bookingDetails?.status === 'Negotiation'
-    ) {
-      return '#ffecec';
-    } else if (lead.bookingDetails?.status === 'Pending Hiring') {
-      return '#fabd0533';
-    } else if (
-      lead.bookingDetails?.status === 'Hired' ||
-      lead.bookingDetails?.status === 'Project Completed'
-    ) {
-      return 'rgba(0, 142, 0, 0.14)';
-    }
+  // Lead-status colour standard (Money & Performance Dashboard spec, p.6).
+  // Grey · Blue · Green · Yellow · Orange · Red — each a soft tint behind
+  // the saturated text, matching this card's existing pastel look.
+  // 'Confirmed' is intentionally absent: showStatus() hides its badge.
+  const STATUS_STYLE = {
+    'Survey Completed': { text: '#0d6efd', bg: '#e7f1ff' }, // Blue
+    'Job Completed': { text: '#28a745', bg: '#ecffef' }, // Green
+    Hired: { text: '#28a745', bg: '#ecffef' }, // Green
+    'Project Completed': { text: '#6c757d', bg: '#eceef0' }, // Grey
+    Negotiation: { text: '#e0a800', bg: '#fff8e1' }, // Yellow
+    'Survey Ongoing': { text: '#FF7F00', bg: '#ffe1c3' }, // Orange
+    'Project Ongoing': { text: '#FF7F00', bg: '#ffe1c3' }, // Orange
+    'Job Ongoing': { text: '#FF7F00', bg: '#ffe1c3' }, // Orange
+    'Waiting for final payment': { text: '#FF7F00', bg: '#ffe1c3' }, // Orange
+    'Pending Hiring': { text: '#FF7F00', bg: '#ffe1c3' }, // Orange
+    'Customer Cancelled': { text: '#dc3545', bg: '#ffecec' }, // Red
+    Cancelled: { text: '#dc3545', bg: '#ffecec' }, // Red
+    'Admin Cancelled': { text: '#dc3545', bg: '#ffecec' }, // Red
+    'Customer Unreachable': { text: '#dc3545', bg: '#ffecec' }, // Red
+    // Not in spec — kept close to prior (cancellation-like) behaviour.
+    Rescheduled: { text: '#dc3545', bg: '#ffecec' },
+    'Customer Denied': { text: '#dc3545', bg: '#ffecec' },
   };
 
-  const textColorStatus = lead => {
-    if (lead.bookingDetails?.status === 'Confirmed') {
-      return '';
-    } else if (
-      lead.bookingDetails?.status === 'Survey Ongoing' ||
-      lead.bookingDetails?.status === 'Project Ongoing' ||
-      lead.bookingDetails?.status === 'Job Ongoing'
-    ) {
-      return '#FF7F00';
-    } else if (lead.bookingDetails?.status === 'Survey Completed') {
-      return 'green';
-    } else if (
-      lead.bookingDetails?.status === 'Customer Cancelled' ||
-      lead.bookingDetails?.status === 'Rescheduled' ||
-      lead.bookingDetails?.status === 'Admin Cancelled' ||
-      lead.bookingDetails?.status === 'Waiting for final payment' ||
-      lead.bookingDetails?.status === 'Customer Unreachable' ||
-      lead.bookingDetails?.status === 'Customer Denied' ||
-      lead.bookingDetails?.status === 'Negotiation'
-    ) {
-      return '#ff0000';
-    } else if (lead.bookingDetails?.status === 'Pending Hiring') {
-      return '#ebb103ff';
-    } else if (
-      lead.bookingDetails?.status === 'Hired' ||
-      lead.bookingDetails?.status === 'Project Completed'
-    ) {
-      return 'green';
-    }
-  };
+  const backgroundColorStatus = lead =>
+    STATUS_STYLE[lead.bookingDetails?.status]?.bg || '';
+
+  const textColorStatus = lead =>
+    STATUS_STYLE[lead.bookingDetails?.status]?.text || '';
 
   const LeadItem = React.memo(({ lead }) => {
     const enableUI = IsEnabled3HoursBeforeSlot(
@@ -333,6 +313,13 @@ const OngoingLeadsScreen = () => {
     <GestureDetector gesture={swipeGesture}>
       <View style={{ flex: 1 }}>
         {(loading || navigationLoader) && <PageLoader />}
+        {loading && slowLoading && (
+          <View style={styles.slowLoadingBanner} pointerEvents="none">
+            <Text style={styles.slowLoadingText}>
+              Waking up the server… this can take up to a minute the first time.
+            </Text>
+          </View>
+        )}
         <Header />
 
         <View style={styles.container}>
@@ -441,7 +428,12 @@ const OngoingLeadsScreen = () => {
                   <Text style={styles.popupClose}>×</Text>
                 </TouchableOpacity>
               </View>
-              {vendorDataContext.vendor?.serviceType === 'deep cleaning' ? (
+              {/* serviceType is stored as 'Deep Cleaning'; the old lowercase
+                  compare never matched, so DC vendors saw the house-painting
+                  status options here. Compare case-insensitively. */}
+              {vendorDataContext.vendor?.serviceType
+                ?.toLowerCase()
+                .includes('deep clean') ? (
                 <>
                   {/* <Text style={styles.sectionHeading}>Deep Cleaning</Text> */}
                   <View style={styles.popupOptions}>
@@ -534,6 +526,23 @@ const OngoingLeadsScreen = () => {
 
 const styles = StyleSheet.create({
   container: { padding: 15 },
+  slowLoadingBanner: {
+    position: 'absolute',
+    bottom: 90,
+    left: 24,
+    right: 24,
+    zIndex: 1000,
+    backgroundColor: 'rgba(0,0,0,0.78)',
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+  },
+  slowLoadingText: {
+    color: '#fff',
+    fontSize: 12.5,
+    fontFamily: 'Poppins-Medium',
+    textAlign: 'center',
+  },
   titleRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',

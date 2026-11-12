@@ -392,6 +392,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins-SemiBold',
     marginBottom: 6,
     textAlign: 'center',
+    color: '#111', // #1 font-colour fix: title had no colour (invisible on white)
   },
   modalMessage: {
     textAlign: 'center',

@@ -304,6 +304,7 @@ const styles = StyleSheet.create({
     margin: 20,
     fontSize: 16,
     fontFamily: 'Poppins-Bold',
+    color: '#000',
   },
   packageCard: {
     backgroundColor: 'white',

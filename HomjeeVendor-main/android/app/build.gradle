@@ -1,6 +1,10 @@
 apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
+// Firebase Cloud Messaging — reads android/app/google-services.json (#3).
+// Required for Firebase to auto-initialize; without it you get
+// "No Firebase App '[DEFAULT]' has been created".
+apply plugin: "com.google.gms.google-services"
 
 /**
  * This is the configuration block to customize your React Native Android app.
@@ -77,7 +81,7 @@ def enableShrinkResourcesInReleaseBuilds = true
  * an Android App Bundle (AAB) — Play Store does device-specific splits for
  * you — but harmless to leave on.
  */
-def enableSeparateBuildPerCPUArchitecture = true
+def enableSeparateBuildPerCPUArchitecture = false
 
 /**
  * The preferred build flavor of JavaScriptCore (JSC)
@@ -181,6 +185,15 @@ project.ext.vectoricons = [
         'Entypo.ttf',
         'Feather.ttf',
         'FontAwesome.ttf',
+        // FontAwesome5 / FontAwesome6 are imported in src (e.g. the "coins"
+        // glyph on the Respond button). Without these TTFs the glyphs render
+        // as empty tofu boxes. (#6)
+        'FontAwesome5_Solid.ttf',
+        'FontAwesome5_Brands.ttf',
+        'FontAwesome5_Regular.ttf',
+        'FontAwesome6_Solid.ttf',
+        'FontAwesome6_Brands.ttf',
+        'FontAwesome6_Regular.ttf',
         'Fontisto.ttf',
         'Ionicons.ttf',
         'MaterialIcons.ttf',

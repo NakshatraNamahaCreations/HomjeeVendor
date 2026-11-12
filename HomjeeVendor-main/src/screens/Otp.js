@@ -24,6 +24,7 @@ import ResponseLoader from '../components/ResponseLoader';
 import { useVendorContext } from '../Utilities/VendorContext';
 import { useThemeColor } from '../Utilities/ThemeContext';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { registerFcmToken } from '../Utilities/notifications';
 
 const OTP = () => {
   const { deviceTheme } = useThemeColor();
@@ -91,6 +92,8 @@ const OTP = () => {
       if (result.data) {
         await AsyncStorage.setItem('user', JSON.stringify(result.data));
         setVendorDataContext(result.data);
+        // Register this device for new-lead push notifications (#3).
+        registerFcmToken(result.data?._id || result.data?.vendor?._id);
         navigation.dispatch(
           CommonActions.reset({
             index: 0,
@@ -176,16 +179,7 @@ const OTP = () => {
           <Text style={styles.subtitle}>
             Enter OTP received on your Phone Number
           </Text>
-          <Text
-            style={{
-              fontSize: 14,
-              color: 'red',
-              fontFamily: 'Poppins-Regular',
-              textAlign: 'center',
-            }}
-          >
-            {otpValue}
-          </Text>
+          
 
           {/* OTP Inputs */}
           <View style={styles.otpBoxContainer}>

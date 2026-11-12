@@ -12,6 +12,7 @@ import {
   ToastAndroid,
   Linking,
   ActivityIndicator,
+  Dimensions,
 } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import { API_BASE_URL, API_ENDPOINTS } from '../ApiService/apiConstants';
@@ -26,9 +27,12 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Feather from 'react-native-vector-icons/Feather';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import DynamicImage from '../Utilities/DynamicImage';
+import DeepCleaningPackageDetails from '../Utilities/DeepCleaningPackageDetails';
 import IsEnabled3HoursBeforeSlot from '../Utilities/IsEnabled3HoursBeforeSlot';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+import Octicons from 'react-native-vector-icons/Octicons';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const LeadDescriptionScreen = () => {
   // const route = useRoute();
@@ -36,6 +40,23 @@ const LeadDescriptionScreen = () => {
   const { deviceTheme } = useThemeColor();
   const { vendorDataContext } = useVendorContext();
   // const { lead } = route.params;
+
+  // The shared context's `_id` can become the wrong nested vendor sub-document id
+  // (rejected by the team APIs as "Vendor not found"), so use the stable vendor id
+  // saved once at login in AsyncStorage 'user'.
+  const [storedVendorId, setStoredVendorId] = useState(null);
+  useEffect(() => {
+    (async () => {
+      try {
+        const raw = await AsyncStorage.getItem('user');
+        const u = raw ? JSON.parse(raw) : null;
+        if (u?._id) setStoredVendorId(u._id);
+      } catch (e) {
+        console.log('load stored vendorId error:', e?.message);
+      }
+    })();
+  }, []);
+  const vendorId = storedVendorId || vendorDataContext?._id;
 
   const { leadDataContext, setLeadDataContext } = useLeadContext();
   const leadId = leadDataContext._id;
@@ -52,6 +73,8 @@ const LeadDescriptionScreen = () => {
   const [isReduce, setIsReduce] = useState(false);
   const [teamModalVisible, setTeamModalVisible] = useState(false);
   const [otpModalVisible, setOtpModalVisible] = useState(false);
+  // #11: message shown when the vendor already has an active survey/job.
+  const [blockPopupMsg, setBlockPopupMsg] = useState(null);
 
   const inputs = useRef([]);
   const [otp, setOtp] = useState(['', '', '', '']);
@@ -82,10 +105,25 @@ const LeadDescriptionScreen = () => {
   const today = new Date().toISOString().split('T')[0];
   const [selectedRescheduleDate, setSelectedRescheduleDate] = useState(today);
 
-  const enableUI = IsEnabled3HoursBeforeSlot(
-    leadDataContext.selectedSlot?.slotDate,
-    leadDataContext.selectedSlot?.slotTime,
-  );
+  // #18 — once a booking is cancelled (and especially after admin approves the
+  // cancellation, which sets hasLeadLocked), disable Directions / Contact /
+  // Update Status / Start Survey for this lead.
+  const bdStatusLc = String(
+    leadDataContext?.bookingDetails?.status || '',
+  )
+    .toLowerCase()
+    .trim();
+  const isCancelledLocked =
+    bdStatusLc === 'customer cancelled' ||
+    bdStatusLc === 'admin cancelled' ||
+    bdStatusLc === 'cancelled' ||
+    leadDataContext?.bookingDetails?.hasLeadLocked === true;
+
+  const enableUI =
+    IsEnabled3HoursBeforeSlot(
+      leadDataContext.selectedSlot?.slotDate,
+      leadDataContext.selectedSlot?.slotTime,
+    ) && !isCancelledLocked;
 
   const toggleMember = memberId => {
     setSelectedMembers(prev => {
@@ -223,7 +261,7 @@ const LeadDescriptionScreen = () => {
       const end = moment().add(30, 'days').format('YYYY-MM-DD');
 
       const res = await axios.get(
-        `${API_BASE_URL}${API_ENDPOINTS.CHECK_AVAILABILITY_RANGE}${vendorDataContext?._id}/availability-range`,
+        `${API_BASE_URL}${API_ENDPOINTS.CHECK_AVAILABILITY_RANGE}${vendorId}/availability-range`,
         {
           params: {
             startDate: start,
@@ -318,9 +356,49 @@ const LeadDescriptionScreen = () => {
     setTeamModalVisible(true);
   };
 
-  const handleOpenOtp = () => {
+  // Ask the backend to generate the OTP and WhatsApp it to the customer, then
+  // open the OTP modal. Shared by the House Painting (survey start) and Deep
+  // Cleaning (after team selection) flows — both previously opened the modal
+  // without ever requesting an OTP, so the customer received nothing.
+  const requestCustomerOtpAndOpen = async () => {
+    setLoading(true);
+    try {
+      const result = await postRequest(
+        `${API_ENDPOINTS.REQUESTING_SEND_OTP}${leadId}`,
+        { vendorId },
+      );
+      ToastAndroid.showWithGravity(
+        result?.message || 'Booking ID sent to customer',
+        ToastAndroid.LONG,
+        ToastAndroid.CENTER,
+      );
+      setOtpModalVisible(true);
+    } catch (err) {
+      // postRequest throws the response BODY directly (not an axios error),
+      // so read the message/code straight off err.
+      if (err?.code === 'ACTIVE_JOB_IN_PROGRESS') {
+        // #11: already has an active survey/job — show a popup, and DON'T open
+        // the Booking ID step (no Booking ID is sent to the customer).
+        setBlockPopupMsg(
+          err?.message ||
+            'An active survey/job is currently in progress. Please complete or close the ongoing one before initiating a new one.',
+        );
+      } else {
+        ToastAndroid.showWithGravity(
+          err?.message || 'Failed to send Booking ID to customer',
+          ToastAndroid.LONG,
+          ToastAndroid.CENTER,
+        );
+      }
+      console.log('request OTP failed:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOpenOtp = async () => {
     setModalVisible(false);
-    setOtpModalVisible(true);
+    await requestCustomerOtpAndOpen();
   };
 
   const openDialPad = phoneNumber => {
@@ -364,9 +442,10 @@ const LeadDescriptionScreen = () => {
 
   const handleConfirmJob = async () => {
     setLoading(true);
-    if (joinedOtp === null) {
+    const last4 = String(joinedOtp || '').replace(/[^0-9]/g, '');
+    if (last4.length !== 4) {
       ToastAndroid.showWithGravity(
-        'OTP Is Required',
+        'Enter the last 4 digits of the Booking ID',
         ToastAndroid.LONG,
         ToastAndroid.CENTER,
       );
@@ -400,7 +479,7 @@ const LeadDescriptionScreen = () => {
         startDate, // ← now used in backend
         daysRequired: days, // ← aligned name
         assignedProfessional: {
-          professionalId: vendorDataContext._id,
+          professionalId: vendorId,
           name: vendorDataContext.vendor?.vendorName,
           phone: vendorDataContext.vendor?.mobileNumber,
           profile: vendorDataContext.vendor?.profileImage,
@@ -440,7 +519,7 @@ const LeadDescriptionScreen = () => {
       const formData = {
         bookingId: leadDataContext._id,
         status: status,
-        vendorId: vendorDataContext._id,
+        vendorId: vendorId,
         // reasonForCancelled: cancelReason,
       };
 
@@ -481,16 +560,16 @@ const LeadDescriptionScreen = () => {
   };
 
   useEffect(() => {
-    if (!vendorDataContext?._id || !leadId || !selectedRescheduleDate) return;
+    if (!vendorId || !leadId || !selectedRescheduleDate) return;
 
     fetchAvailableSlots();
-  }, [vendorDataContext?._id, leadId, selectedRescheduleDate]);
+  }, [vendorId, leadId, selectedRescheduleDate]);
 
   const fetchAvailableSlots = async () => {
     setIsSlotLoaded(true);
     try {
       const res = await axios.post(
-        `${API_BASE_URL}${API_ENDPOINTS.FETCH_RESCHEDULE_BOOKING}${vendorDataContext?._id}`,
+        `${API_BASE_URL}${API_ENDPOINTS.FETCH_RESCHEDULE_BOOKING}${vendorId}`,
         {
           bookingId: leadId,
           targetDate: selectedRescheduleDate,
@@ -530,7 +609,7 @@ const LeadDescriptionScreen = () => {
     try {
       const formData = {
         bookingId: leadDataContext._id,
-        vendorId: vendorDataContext._id,
+        vendorId: vendorId,
         slotDate: selectedRescheduleDate,
         slotTime: selectedSlot,
       };
@@ -663,7 +742,15 @@ const LeadDescriptionScreen = () => {
             </View>
           </View>
 
-          {vendorDataContext?.vendor?.serviceType === 'deep cleaning' && (
+          {/* Show the booked package for Deep Cleaning so the vendor can
+              prepare before visiting. Gate on the booking's own service
+              category (case-insensitive) — the previous check compared the
+              vendor's serviceType to 'deep cleaning' (lowercase/space), but it
+              is stored as 'Deep Cleaning', so this block never rendered. This
+              matches how JobOngoing decides the same thing. */}
+          {leadDataContext?.service?.[0]?.category
+            ?.toLowerCase()
+            .includes('deep clean') && (
             <View
               style={{
                 marginBottom: enableUI ? 0 : 100,
@@ -678,7 +765,20 @@ const LeadDescriptionScreen = () => {
               </View>
               {leadDataContext?.service?.map((ele, idx) => (
                 <View key={idx} style={styles.card}>
-                  <Text style={styles.packageTitle}>{ele.serviceName}</Text>
+                  {/* #2 — show the package name before start exactly like the
+                      ongoing/after-start screen (star icon + name); fall back
+                      to subcategory/category when serviceName isn't populated. */}
+                  <Text style={styles.packageTitle}>
+                    <Octicons name="north-star" size={14} color="#ED1F24" />{' '}
+                    {ele.serviceName ||
+                      ele.packageName ||
+                      ele.name ||
+                      [ele.subCategory, ele.category]
+                        .filter(Boolean)
+                        .join(' - ') ||
+                      ele.service ||
+                      'Package'}
+                  </Text>
                   <View style={styles.location}>
                     <Text style={styles.bulletText}>₹ {ele.price}</Text>
                     <Text
@@ -912,7 +1012,8 @@ const LeadDescriptionScreen = () => {
               disabled={!canContinue}
               onPress={() => {
                 setTeamModalVisible(false);
-                setOtpModalVisible(true);
+                // DC: request + WhatsApp the OTP to the customer, then open modal.
+                requestCustomerOtpAndOpen();
               }}
             >
               <Text style={styles.continueBtnText}>Continue</Text>
@@ -936,45 +1037,23 @@ const LeadDescriptionScreen = () => {
             >
               <AntDesign name="close" color="black" size={20} />
             </TouchableOpacity>
-            <Text style={styles.modalTitle}>OTP</Text>
+            <Text style={styles.modalTitle}>Booking ID</Text>
             <Text style={styles.modalSubtitle}>
-              Enter OTP sent to customer's phone
+              Enter the last 4 digits of the Booking ID shared by the customer
             </Text>
-            {/* developement */}
-            <Text
-              style={{
-                fontSize: 13,
-                color: 'red',
-                fontFamily: 'Poppins-Medium',
-              }}
-            >
-              {leadDataContext.bookingDetails?.otp} (development)
-            </Text>
+
             <View style={styles.otpInputRow}>
-              {otp.map((value, index) => (
-                <TextInput
-                  key={index}
-                  ref={el => (inputs.current[index] = el)} // <-- correct ref usage
-                  style={styles.otpInput}
-                  keyboardType="number-pad"
-                  maxLength={1}
-                  value={value}
-                  onChangeText={text => handleChange(text, index)}
-                  onKeyPress={({ nativeEvent }) => {
-                    if (
-                      nativeEvent.key === 'Backspace' &&
-                      !value &&
-                      index > 0
-                    ) {
-                      const newOtp = [...otp];
-                      newOtp[index - 1] = '';
-                      setOtp(newOtp);
-                      setJoinedOTP(newOtp.join(''));
-                      inputs.current[index - 1]?.focus();
-                    }
-                  }}
-                />
-              ))}
+              <TextInput
+                style={styles.bookingIdInput}
+                keyboardType="number-pad"
+                maxLength={4}
+                placeholder="e.g. 1234"
+                placeholderTextColor="#999"
+                value={joinedOtp || ''}
+                onChangeText={text =>
+                  setJoinedOTP(text.replace(/[^0-9]/g, '').slice(0, 4))
+                }
+              />
             </View>
             {/* <TouchableOpacity>
                 <Text style={styles.resendText}>Resend OTP</Text>
@@ -991,6 +1070,27 @@ const LeadDescriptionScreen = () => {
               // }}
             >
               <Text style={styles.confirmButtonText}>Submit</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* #11: active-survey/job block popup */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={!!blockPopupMsg}
+        onRequestClose={() => setBlockPopupMsg(null)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.otpModal}>
+            <Text style={styles.modalTitle}>Cannot start yet</Text>
+            <Text style={styles.modalSubtitle}>{blockPopupMsg}</Text>
+            <TouchableOpacity
+              style={styles.confirmButton}
+              onPress={() => setBlockPopupMsg(null)}
+            >
+              <Text style={styles.confirmButtonText}>OK</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -1419,25 +1519,75 @@ const LeadDescriptionScreen = () => {
                 <AntDesign name="close" color="black" size={20} />
               </TouchableOpacity>
             </View>
-            {packageList?.length > 0 ? (
+            {leadDataContext?.service?.length > 0 ? (
               <View style={{ marginTop: 10 }}>
-                <ScrollView>
-                  {packageList.map(item => (
-                    <View key={item._id}>
-                      <Text
-                        style={{
-                          fontFamily: 'Poppins-Medium',
-                          fontSize: 16,
-                          marginVertical: 10,
-                        }}
-                      >
-                        {item.serviceType}
-                      </Text>
-                      {item.packageImage.map((img, idx) => (
-                        <DynamicImage key={idx} uri={img} />
-                      ))}
-                    </View>
-                  ))}
+                <ScrollView
+                  style={{ maxHeight: Math.round(Dimensions.get('window').height * 0.72) }}
+                  showsVerticalScrollIndicator={true}
+                >
+                  {/* #2 — show the package(s) the customer actually selected
+                      (name, subcategory, price × qty) with the matching
+                      "what's included" images from the catalog. */}
+                  {leadDataContext.service.map((s, i) => {
+                    const norm = v =>
+                      String(v || '')
+                        .trim()
+                        .toLowerCase();
+                    const name =
+                      s.serviceName ||
+                      s.packageName ||
+                      s.name ||
+                      [s.subCategory, s.category].filter(Boolean).join(' - ') ||
+                      s.service ||
+                      'Package';
+                    const match = (packageList || []).find(
+                      p =>
+                        norm(p?.serviceType) === norm(s?.subCategory) ||
+                        norm(p?.serviceType) === norm(s?.serviceName),
+                    );
+                    return (
+                      <View key={i} style={{ marginBottom: 16 }}>
+                        <Text
+                          style={{
+                            fontFamily: 'Poppins-SemiBold',
+                            fontSize: 16,
+                          }}
+                        >
+                          {name}
+                        </Text>
+                        {s.subCategory ? (
+                          <Text
+                            style={{
+                              fontFamily: 'Poppins-Medium',
+                              fontSize: 13,
+                              color: '#6b6b6b',
+                            }}
+                          >
+                            {s.subCategory}
+                          </Text>
+                        ) : null}
+                        <Text
+                          style={{
+                            fontFamily: 'Poppins-SemiBold',
+                            color: '#da8b16ff',
+                            marginVertical: 4,
+                          }}
+                        >
+                          ₹ {s.price} x {s.quantity}
+                        </Text>
+                        {(match?.packageImage || []).map((img, idx) => (
+                          <DynamicImage key={idx} uri={img} />
+                        ))}
+                        {/* Deep Cleaning: show the website pop-up content
+                            (tier includes, Classic/Premium/Ultimate table,
+                            and what-we-clean images) for the selected package.
+                            Renders nothing for mini services / non-DC leads.
+                            When multiple packages are selected this repeats
+                            per package, one after another. */}
+                        <DeepCleaningPackageDetails service={s} />
+                      </View>
+                    );
+                  })}
                 </ScrollView>
               </View>
             ) : (
@@ -1752,6 +1902,18 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontFamily: 'Poppins-Medium',
     color: '#000',
+  },
+  bookingIdInput: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 6,
+    width: '100%',
+    height: 50,
+    textAlign: 'center',
+    fontSize: 16,
+    fontFamily: 'Poppins-Medium',
+    color: '#000',
+    paddingHorizontal: 10,
   },
   resendText: {
     color: '#ED1F24',

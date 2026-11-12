@@ -509,7 +509,7 @@ const SurveyCompleted = () => {
     'Mark Hiring',
     'Customer Unreachable',
     'Customer Denied',
-    'Customer Negotiation going on',
+    'Negotiations Going On',
   ];
 
   const days = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
@@ -720,14 +720,15 @@ const SurveyCompleted = () => {
         transparent={true}
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Pick One</Text>
-              <TouchableOpacity onPress={() => setModalVisible(false)}>
-                <Text style={styles.closeButton}>×</Text>
-              </TouchableOpacity>
-            </View>
+        {/* Tap outside to dismiss (replaces the removed header close button). */}
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setModalVisible(false)}>
+          <TouchableOpacity
+            style={styles.modalContent}
+            activeOpacity={1}
+            onPress={() => {}}>
             <ScrollView style={styles.modalScroll}>
               {options.map(option => (
                 <TouchableOpacity
@@ -746,8 +747,8 @@ const SurveyCompleted = () => {
                 </TouchableOpacity>
               ))}
             </ScrollView>
-          </View>
-        </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
       </Modal>
 
       {/* Confirmation Modal for Mark Hiring */}

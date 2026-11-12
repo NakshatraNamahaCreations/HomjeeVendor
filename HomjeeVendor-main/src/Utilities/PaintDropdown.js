@@ -250,7 +250,15 @@ import {
   Modal,
   ScrollView,
   StyleSheet,
+  Dimensions,
 } from 'react-native';
+
+// #3 — a DEFINITE (numeric) max height so the paint list always scrolls to the
+// very last option (e.g. Oil Enamel Painting). Relying on flex inside a
+// percentage maxHeight doesn't reliably give the ScrollView a bounded height
+// in RN, so the last item got clipped and was unreachable.
+const SCREEN_HEIGHT = Dimensions.get('window').height;
+const LIST_MAX_HEIGHT = Math.round(SCREEN_HEIGHT * 0.7);
 
 export default function PaintDropdownModal({
   value,
@@ -356,9 +364,14 @@ export default function PaintDropdownModal({
             </View>
 
             <ScrollView
-              showsVerticalScrollIndicator={false}
+              showsVerticalScrollIndicator={true}
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingBottom: 12 }}
+              bounces={true}
+              // #3 — a definite numeric maxHeight guarantees the list scrolls;
+              // the extra bottom padding keeps the last paint option
+              // (e.g. Oil Enamel Painting / Exterior Apex) fully reachable.
+              style={{ maxHeight: LIST_MAX_HEIGHT }}
+              contentContainerStyle={{ paddingBottom: 16 }}
             >
               {uniqueOptions.map((item, index) => (
                 <TouchableOpacity

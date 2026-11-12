@@ -10,19 +10,74 @@ import {
   Pressable,
 } from 'react-native';
 import { useLeadContext } from '../../Utilities/LeadContext';
+import { useVendorContext } from '../../Utilities/VendorContext';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { getRequest } from '../../ApiService/apiHelper';
 import { API_ENDPOINTS } from '../../ApiService/apiConstants';
 
 export default function QuotesView() {
   const { leadDataContext } = useLeadContext();
+  const { vendorDataContext } = useVendorContext();
+  const vendorCity = vendorDataContext?.vendor?.city;
   const route = useRoute();
   const leadId = leadDataContext._id;
   const { quoteId } = route.params;
   const [quotes, setQuotes] = useState({});
   const [measurementData, setMeasurementData] = useState({});
+  const [paintOptions, setPaintOptions] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigation = useNavigation();
+
+  // Fetch the paint catalog so "Paint Details" can show the real description
+  // of each paint selected in this quote (instead of hardcoded text).
+  const fetchPaintProducts = async () => {
+    try {
+      const resp = await getRequest(
+        `${API_ENDPOINTS.GET_PAINT}${vendorCity ? `?city=${encodeURIComponent(vendorCity)}` : ''}`,
+      );
+      const fresh = resp?.paints || resp?.data?.paints || [];
+      setPaintOptions(Array.isArray(fresh) ? fresh : []);
+    } catch (e) {
+      console.log('Error fetching paints for Paint Details:', e);
+      setPaintOptions([]);
+    }
+  };
+
+  useEffect(() => {
+    fetchPaintProducts();
+  }, [vendorCity]);
+
+  // Descriptions of the paints actually selected in this quote.
+  const paintDetails = useMemo(() => {
+    try {
+      const descByName = new Map();
+      (paintOptions || []).forEach(p => {
+        const nm = String(p?.name || p?.paintName || '').trim().toLowerCase();
+        const desc = String(p?.description || '').trim();
+        if (nm && desc && !descByName.has(nm)) descByName.set(nm, desc);
+      });
+      const lines = Array.isArray(quotes?.lines) ? quotes.lines : [];
+      const seen = new Set();
+      const out = [];
+      for (const ln of lines) {
+        for (const b of Array.isArray(ln?.breakdown) ? ln.breakdown : []) {
+          const nm = String(b?.paintName || '').trim();
+          const sqft = Number(b?.sqft ?? 0);
+          const price = Number(b?.price ?? 0);
+          if (!nm || (sqft <= 0 && price <= 0)) continue;
+          const key = nm.toLowerCase();
+          if (seen.has(key)) continue;
+          seen.add(key);
+          const desc = descByName.get(key);
+          if (desc) out.push(desc);
+        }
+      }
+      return out;
+    } catch (e) {
+      console.log('paintDetails build error', e);
+      return [];
+    }
+  }, [quotes, paintOptions]);
 
   useEffect(() => {
     const backAction = () => {
@@ -174,13 +229,33 @@ export default function QuotesView() {
   const modeLabel = mode => {
     try {
       const m = String(mode || '').toUpperCase();
-      if (m === 'REPAINT') return 'Repaint With Primer';
+      // Client-approved process names: WHITEWASH -> "Repaint Only",
+      // REPAINT -> "Repaint with Primer", FRESH -> "Fresh Paint".
+      if (m === 'REPAINT') return 'Repaint with Primer';
       if (m === 'FRESH') return 'Fresh Paint';
-      if (m === 'WHITEWASH') return 'Whitewash';
+      if (m === 'WHITEWASH') return 'Repaint Only';
       return m || '—';
     } catch (e) {
       return '—';
     }
+  };
+
+  // A paint whose price is independent of the Fresh/Repaint process (name
+  // already carries "Fresh Paint", not a "Repaint Only" variant) is shown as
+  // ONE combined row with no process label. Normal paints keep their process
+  // label ("Repaint With Primer" / "Fresh Paint"). Mirrors the app summary +
+  // quote PDF grouping.
+  const isModeAgnosticPaintName = paintName => {
+    const nm = String(paintName || '')
+      .trim()
+      .toLowerCase();
+    if (!nm) return false;
+    // A special "Repaint Only" paint (e.g. "Tractor Uno Repaint Only") carries
+    // its process in the name and has a single process — collapse it into one
+    // row with NO extra process label, so it never shows "Repaint with Primer"
+    // or "Fresh Paint".
+    if (nm.includes('repaint only')) return true;
+    return nm.includes('fresh paint');
   };
 
   const getCountFromMeasurement = (measurementData, roomName, type, mode) => {
@@ -190,24 +265,23 @@ export default function QuotesView() {
 
       const m = String(mode || '').toUpperCase();
       const t = String(type || '').toLowerCase();
+      // Empty mode = count every process (mode-agnostic combined row).
+      const matchMode = x => !m || String(x?.mode || '').toUpperCase() === m;
 
       if (t.includes('ceiling')) {
         const arr = Array.isArray(room?.ceilings) ? room.ceilings : [];
-        return arr.filter(x => String(x?.mode || '').toUpperCase() === m)
-          .length;
+        return arr.filter(matchMode).length;
       }
 
       if (t.includes('wall')) {
         const arr = Array.isArray(room?.walls) ? room.walls : [];
-        return arr.filter(x => String(x?.mode || '').toUpperCase() === m)
-          .length;
+        return arr.filter(matchMode).length;
       }
 
       // for Doors/Grills etc
       if (t.includes('measurement')) {
         const arr = Array.isArray(room?.measurements) ? room.measurements : [];
-        return arr.filter(x => String(x?.mode || '').toUpperCase() === m)
-          .length;
+        return arr.filter(matchMode).length;
       }
 
       return 0;
@@ -242,14 +316,21 @@ export default function QuotesView() {
           const sqft = Number(b?.sqft ?? 0);
           const price = Number(b?.price ?? 0);
 
-          // optional: hide zero sqft rows (your Entrance Passage ceiling had 0)
-          // if (sqft <= 0) continue;
+          // Hide deselected surfaces (0 area and 0 cost) — e.g. an unticked
+          // ceiling. A genuine "without paint" surface keeps its area
+          // (sqft > 0) and is kept.
+          if (sqft <= 0 && price <= 0) continue;
 
           const paintName = b?.paintName || 'Paint';
           const type = b?.type || '';
-          const mode = b?.mode || '';
+          // Mode-agnostic paints (price independent of Fresh/Repaint) combine
+          // into ONE row with no process suffix. (Point 21)
+          const agnostic = isModeAgnosticPaintName(paintName);
+          const mode = agnostic ? '' : b?.mode || '';
 
-          const key = `${paintName}__${type}__${mode}`;
+          const key = agnostic
+            ? `${paintName}__${type}`
+            : `${paintName}__${type}__${mode}`;
           const prev = map.get(key);
 
           if (!prev) {
@@ -305,18 +386,34 @@ export default function QuotesView() {
         }));
 
         const paintSubtotal = Number(ln?.subtotal ?? 0);
-        const additionalTotal = Number(ln?.additionalTotal ?? 0);
+        // Trust the itemised additional services (which include "Without Paint"
+        // ones) rather than only ln.additionalTotal — some backend paths leave
+        // additionalTotal short/zero, which made a without-paint-only room fail
+        // the subtotal>0 gate below and vanish from the app quote even though it
+        // shows correctly in the customer quote (#7).
+        const additionalItemsTotal = additionalItems.reduce(
+          (s, it) => s + Number(it.total || 0),
+          0,
+        );
+        const additionalTotal = Math.max(
+          Number(ln?.additionalTotal ?? 0),
+          additionalItemsTotal,
+        );
 
         const roomRow = {
           roomName,
           subtotal: paintSubtotal + additionalTotal,
           paintRows,
           additionalItems,
-          additionalTotal: Number(ln?.additionalTotal ?? 0),
+          additionalTotal,
         };
 
-        if (!bySection[sectionType]) bySection[sectionType] = [];
-        bySection[sectionType].push(roomRow);
+        // #23: skip rooms with zero cost (no paint type chosen) — they
+        // shouldn't appear in the Room-wise Painting Cost list.
+        if (Number(roomRow.subtotal) > 0) {
+          if (!bySection[sectionType]) bySection[sectionType] = [];
+          bySection[sectionType].push(roomRow);
+        }
       }
 
       return bySection;
@@ -336,20 +433,42 @@ export default function QuotesView() {
       for (const ln of lines) {
         const bd = Array.isArray(ln?.breakdown) ? ln.breakdown : [];
         for (const b of bd) {
-          const key = `${b?.paintName || 'Paint'}__${b?.type || ''}`;
-          const prev = paintMap.get(key);
+          const paintName = b?.paintName || 'Paint';
+          const type = b?.type || '';
+          // Normal paints split by process (so "Repaint With Primer" / "Fresh
+          // Paint" shows). Mode-agnostic paints stay combined with no process.
+          const agnostic = isModeAgnosticPaintName(paintName);
+          const mode = agnostic ? '' : b?.mode || '';
+          const key = agnostic
+            ? `${paintName}__${type}`
+            : `${paintName}__${type}__${mode}`;
           const sqft = Number(b?.sqft ?? 0);
           const price = Number(b?.price ?? 0);
+
+          // Skip deselected surfaces (0 area and 0 cost) so an unticked
+          // ceiling doesn't linger as a ₹0 row in Service-wise Cost. A genuine
+          // "without paint" surface keeps its area (sqft > 0) and is kept.
+          if (sqft <= 0 && price <= 0) continue;
+
+          const prev = paintMap.get(key);
 
           if (!prev) {
             paintMap.set(key, {
               kind: 'paint',
-              title: b?.paintName || 'Paint',
-              // sub: `${b?.type || ''} (${Math.round(sqft)} sqft)`,
-              sub: `${b?.type || ''}`,
+              title: paintName,
+              // Process label shown in red next to the paint name (empty for
+              // mode-agnostic paints and for Doors/Grills measurements).
+              process:
+                agnostic ||
+                String(type || '')
+                  .toLowerCase()
+                  .includes('measurement')
+                  ? ''
+                  : modeLabel(mode),
+              sub: `${type} (${Math.round(sqft)} sqft)`,
               sqft,
               amount: price,
-              type: b?.type || '',
+              type,
             });
           } else {
             prev.sqft += sqft;
@@ -366,23 +485,33 @@ export default function QuotesView() {
         for (const a of add) {
           const title = a?.serviceType || 'Additional Service';
           const name = a?.customName?.trim() ? a.customName : a?.materialName;
-          const key = `${title}__${name}__${a?.surfaceType || ''}`;
+          const surfaceType = a?.surfaceType || '';
+          const key = `${title}__${name}__${surfaceType}`;
 
           const prev = addMap.get(key);
           const area = Number(a?.areaSqft ?? 0);
           const total = Number(a?.total ?? 0);
 
+          // Same service across multiple rooms merges into one row — sum BOTH
+          // cost and area, and rebuild the label from the running area total
+          // (it used to show only the first room's area).
+          const mkSub = areaSum =>
+            `${name || ''}${surfaceType ? ` • ${surfaceType}` : ''} (${Math.round(
+              areaSum,
+            )} sqft)`;
+
           if (!prev) {
             addMap.set(key, {
               kind: 'additional',
               title: `${title}`,
-              sub: `${name || ''}${
-                a?.surfaceType ? ` • ${a.surfaceType}` : ''
-              } (${Math.round(area)} sqft)`,
+              area,
+              sub: mkSub(area),
               amount: total,
             });
           } else {
+            prev.area += area;
             prev.amount += total;
+            prev.sub = mkSub(prev.area);
             addMap.set(key, prev);
           }
         }
@@ -448,8 +577,9 @@ export default function QuotesView() {
       </Text>
 
       <Text style={styles.subText}>
-        Here is a quote for your painting work based on accurate measurements.
-        If you need any clarifications, reply to us.
+        Here is a quote for your painting work by a Homjee painting expert,
+        based on accurate measurements of your space. In case you need any
+        clarifications please feel free to contact us.
       </Text>
 
       {quotes?.sentToCustomerAt ? (
@@ -530,6 +660,14 @@ export default function QuotesView() {
         </View>
       </View>
 
+      {/* Comment written on the quotation (#12) */}
+      {quotes?.comments ? (
+        <View style={styles.commentBox}>
+          <Text style={styles.commentLabel}>Note</Text>
+          <Text style={styles.commentText}>{quotes.comments}</Text>
+        </View>
+      ) : null}
+
       <Text style={styles.scrollHint}>
         *Scroll down to see detailed price breakup
       </Text>
@@ -604,7 +742,7 @@ export default function QuotesView() {
           }
         />
         <WhyChip
-          title="6 months service warranty"
+          title="1 year service warranty"
           icon={
             <Image
               source={{
@@ -626,7 +764,10 @@ export default function QuotesView() {
         {serviceWise.map((it, idx) => (
           <View key={`${it.kind}-${it.title}-${idx}`} style={styles.tableRow}>
             <View style={{ flex: 1, paddingRight: 10 }}>
-              <Text style={styles.tableRowTitle}>{safeText(it.title)}</Text>
+              <Text style={styles.tableRowTitle}>
+                {safeText(it.title)}
+                {it.process ? ` ${safeText(it.process)}` : ''}
+              </Text>
               <Text style={styles.tableRowSub}>{safeText(it.sub)}</Text>
             </View>
             <Text style={styles.tableRowAmt}>{rupee(it.amount)}</Text>
@@ -634,9 +775,17 @@ export default function QuotesView() {
         ))}
 
         <View style={styles.tableLine} />
-        <MiniTotal label="Original Cost" value={rupee(totals.subtotal)} />
-        <MiniTotal label="Discount" value={rupee(totals.discountAmount)} />
-        <MiniTotal label="Final Cost" value={rupee(totals.grandTotal)} bold />
+        {/* Only show Original Cost + Discount when a discount is actually
+            applied; otherwise just show the single total. */}
+        {Number(totals.discountAmount) > 0 ? (
+          <>
+            <MiniTotal label="Original Cost" value={rupee(totals.subtotal)} />
+            <MiniTotal label="Discount" value={rupee(totals.discountAmount)} />
+            <MiniTotal label="Final Cost" value={rupee(totals.grandTotal)} bold />
+          </>
+        ) : (
+          <MiniTotal label="Total Cost" value={rupee(totals.grandTotal)} bold />
+        )}
 
         <Text style={styles.note}>
           *All measurements are taken by laser device.
@@ -651,16 +800,16 @@ export default function QuotesView() {
         </View>
         <View style={styles.processBox}>
           <ProcessCol
-            title="Whitewash Process"
+            title="Repaint Only Process"
             items={[
               'Packaging & masking',
               'Sanding',
-              '2 coats of putty',
+              '2 coats of paint',
               'Basic cleanup',
             ]}
           />
           <ProcessCol
-            title="Repaint Process"
+            title="Repaint with Primer Process"
             items={[
               'Packaging & masking',
               'Sanding',
@@ -674,6 +823,7 @@ export default function QuotesView() {
             title="Fresh Paint Process"
             items={[
               'Packaging & masking',
+              'Sanding',
               'Damage repair',
               '2 coats of putty',
               'Hand sanding',
@@ -685,17 +835,19 @@ export default function QuotesView() {
         </View>
       </View>
 
-      {/* Paint Details */}
-      <View style={[styles.tableBox, { marginTop: 10 }]}>
-        <View style={styles.tableHeader}>
-          <Text style={styles.tableHeaderText}>Paint Details</Text>
+      {/* Paint Details — descriptions of the paints selected in this quote */}
+      {paintDetails.length > 0 && (
+        <View style={[styles.tableBox, { marginTop: 10 }]}>
+          <View style={styles.tableHeader}>
+            <Text style={styles.tableHeaderText}>Paint Details</Text>
+          </View>
+          <BlockBox>
+            {paintDetails.map((desc, i) => (
+              <Bullet key={i} text={desc} />
+            ))}
+          </BlockBox>
         </View>
-        <BlockBox>
-          <Bullet text="Tractor Emulsion is a basic emulsion with smooth finish." />
-          <Bullet text="Royale Luxury is a premium washable finish for interior walls." />
-          <Bullet text="Oil enamel is durable and glossy for wood and metal surfaces." />
-        </BlockBox>
-      </View>
+      )}
       {/* Scope of Work */}
       <SectionTitle title="Scope of Work T&C" />
       <BlockBox>
@@ -704,25 +856,47 @@ export default function QuotesView() {
         <Bullet text="In case of any dispute, scope of work mentioned in the quote will be followed." />
       </BlockBox>
 
-      {/* Payment T&C */}
+      {/* Payment T&C (Para 2 — client-provided content) */}
       <SectionTitle title="Payment T&C" />
       <BlockBox>
-        <Bullet text="40% advance to be paid before work starts." />
-        <Bullet text="40% to be paid after 50% completion." />
-        <Bullet text="20% to be paid at the end after final day of work." />
-        <Bullet text="We do not accept cash. Payments should be made online only." />
+        <Text style={styles.para}>
+          To ensure a smooth workflow, payments are structured into three
+          milestones and are processed exclusively through Razorpay:
+        </Text>
+        <Bullet text="40% Advance Payment: Required to secure your booking and initiate the project." />
+        <Bullet text="40% Mid-Project Payment: Due upon completion and approval of 50% of the project scope." />
+        <Bullet text="20% Final Payment: Due on the final day of work, prior to or at the time of final handover." />
+        <Text style={styles.para}>Important Note on Payment Methods:</Text>
+        <Text style={styles.para}>
+          For tracking and security purposes, we do not accept cash, cheques, or
+          direct bank transfers. Please make all payments via the secure Razorpay
+          link sent to you on WhatsApp.
+        </Text>
       </BlockBox>
 
-      {/* Warranty */}
+      {/* Warranty T&C (Para 3 — client-provided content) */}
       <SectionTitle title="Warranty T&C" />
       <BlockBox>
         <Text style={styles.para}>
-          Warranty is applicable as per conditions defined below. The warranty
-          starts from the date of completion of the painting project.
+          For all the painting related services booked on Homjee, a warranty of 1
+          year will be applicable as per the conditions defined below:
         </Text>
-        <Bullet text="Warranty claim can be raised for paint peeling or major issues." />
-        <Bullet text="Damage due to seepage, damp walls or external factors is not covered." />
-        <Bullet text="Any misuse or changes by third party voids warranty." />
+        <Bullet text="This warranty shall commence from the date of completion of the painting project." />
+        <Bullet text="In case of a gap / break in the painting work on the same project, the decision on commencement date shall be at the discretion of Homjee." />
+        <Bullet text="All warranty claims during the aforementioned period shall be subject to site inspection & assessment by authorized Homjee Representatives." />
+        <Bullet text="If any claims arise during the warranty period, the period of warranty will not start afresh after the settlement of the claim." />
+        <Bullet text="Liability shall be limited to repainting the affected areas only." />
+        <Bullet text="Warranty is applicable only to homes painted as per the recommended procedure and covers issues related to film integrity (flaking, chalking, peel-off in the absence of moisture) and shade fading." />
+        <Bullet text="This warranty is not applicable on services where painting was done with distempers, or painting is done in Repaint Only Process." />
+        <Bullet text="Undulations, unevenness, or waviness of walls cannot be rectified in the painting process as it is a plaster issue. These imperfections will be less visible in matt finish paint and more visible in high sheen and glossy paints." />
+        <Bullet text="Project timelines are indicative and can change basis various factors within or outside Homjee and customer's control." />
+        <Text style={styles.para}>
+          Warranty will not be applicable under the following situations:
+        </Text>
+        <Bullet text="Color shade not liked by customers post initial inspection despite confirmation & procurement of material." />
+        <Bullet text="Any issue of flaking of paint due to unresolved water seepage issues in the walls." />
+        <Bullet text="Any cracks & seepage in walls caused by factors outside the work done by Homjee." />
+        <Bullet text="Any damage caused by any other third party vendor or the client himself once Homjee has already executed work in any section of the home." />
       </BlockBox>
 
       {/* Footer contact */}
@@ -730,17 +904,16 @@ export default function QuotesView() {
         <Text style={styles.footerText}>In case you need any assistance,</Text>
         <View style={{ flexDirection: 'row' }}>
           <Text style={styles.footerText}>Please free to contact us on</Text>
-          <Pressable onPress={() => openCall(header.vendorPhone)}>
-            <Text style={styles.linkText}>
-              {' '}
-              +91 {safeText(header.vendorPhone, '—')}
-            </Text>
+          <Pressable onPress={() => openCall('9595951304')}>
+            {/* Customer-facing quote shows the Homjee support line, not the
+                individual vendor's personal number (+91 9595951304). */}
+            <Text style={styles.linkText}> +91 9595951304</Text>
           </Pressable>
         </View>
 
         <Text style={styles.footerText}>
           or write to us on{' '}
-          <Text style={styles.linkText}>info@homjee.com </Text>
+          <Text style={styles.linkText}>hello@homjee.com </Text>
         </Text>
         {/* {header.vendorPhone ? (
           <TouchableOpacity
@@ -888,7 +1061,15 @@ function CostTable({ title, rooms, rupee, modeLabel }) {
                 <View style={{ flex: 1, paddingRight: 10 }}>
                   {/* ✅ Title: "Oil Luster Fresh Paint" / "Tractor Emulsion Repaint With Primer" */}
                   <Text style={styles.roomPaint}>
-                    {safeText(p.paintName)} {modeLabel(p.mode)}
+                    {safeText(p.paintName)}
+                    {/* Doors/Grills (Measurement) have a single process, so
+                        don't append "Repaint with Primer"/etc. there. */}
+                    {p.mode &&
+                    !String(p.type || '')
+                      .toLowerCase()
+                      .includes('measurement')
+                      ? ` ${modeLabel(p.mode)}`
+                      : ''}
                   </Text>
 
                   {/* ✅ Sub: "4 Wall (355sqft)" */}
@@ -1083,6 +1264,27 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 9,
     color: '#6B7280',
+    fontFamily: 'Poppins-Regular',
+  },
+
+  commentBox: {
+    marginTop: 12,
+    marginHorizontal: 4,
+    padding: 12,
+    backgroundColor: '#F3F6FB',
+    borderRadius: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: '#2B6CB0',
+  },
+  commentLabel: {
+    fontSize: 11,
+    color: '#2B6CB0',
+    fontFamily: 'Poppins-SemiBold',
+    marginBottom: 2,
+  },
+  commentText: {
+    fontSize: 12,
+    color: '#374151',
     fontFamily: 'Poppins-Regular',
   },
 

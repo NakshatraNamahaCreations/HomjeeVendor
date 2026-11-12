@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Adaptive launcher icon (Android 8+). (#1)
+     - Background: solid white, fills the whole tile so there's no border/margin.
+     - Foreground: the existing logo, enlarged via a NEGATIVE inset so it fills
+       more of the icon (Google/Gmail size). The source ic_launcher_foreground
+       has a lot of transparent padding, hence the scale-up. Tune the inset
+       (more negative = bigger logo) if you want it larger/smaller. -->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/ic_launcher_background" />
+    <foreground>
+        <inset
+            android:drawable="@mipmap/ic_launcher_foreground"
+            android:inset="-25%" />
+    </foreground>
+</adaptive-icon>

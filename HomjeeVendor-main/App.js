@@ -10,6 +10,7 @@ import { MeasurementProvider } from './src/Utilities/MeasurementContext';
 import { EstimateProvider } from './src/Utilities/EstimateContext';
 import { RoomNameProvider } from './src/Utilities/RoomContext';
 import { PerformanceProvider } from './src/Utilities/PerformanceContext';
+import { setupNotificationListeners } from './src/Utilities/notifications';
 
 function App() {
   const [isConnected, setIsConnected] = useState(true);
@@ -20,6 +21,13 @@ function App() {
     });
 
     return () => unsubscribe();
+  }, []);
+
+  // Push notifications (#3): create the sound channel + foreground/token
+  // listeners once on app start. Token registration happens after login.
+  useEffect(() => {
+    const unsub = setupNotificationListeners();
+    return () => unsub && unsub();
   }, []);
 
   return (
