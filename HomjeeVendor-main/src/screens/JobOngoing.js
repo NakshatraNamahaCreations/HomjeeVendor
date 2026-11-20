@@ -689,9 +689,11 @@ const JobOngoing = () => {
   ].includes(status);
 
   const started = !!leadDataContext?.bookingDetails?.startProject;
+  // #2 — once a House Painting project is cancelled the Start Project button must
+  // NOT appear. 'Customer Cancelled' was previously treated as a state that shows
+  // (and even enables) Start Project, which let a vendor start a cancelled job.
   const showStartProjectBtn =
     status === 'Pending Hiring' ||
-    status === 'Customer Cancelled' ||
     (status === 'Hired' && started) ||
     (status === 'Customer Unreachable' && firstPaid);
 
@@ -2265,7 +2267,6 @@ const JobOngoing = () => {
               {
                 backgroundColor:
                   (status === 'Hired' && started) ||
-                  status === 'Customer Cancelled' ||
                   (status === 'Customer Unreachable' && firstPaid)
                     ? '#119b11ff'
                     : 'rgba(200, 220, 200, 1)',
@@ -2274,7 +2275,6 @@ const JobOngoing = () => {
             disabled={
               !(
                 (status === 'Hired' && started) ||
-                status === 'Customer Cancelled' ||
                 (status === 'Customer Unreachable' && firstPaid)
               )
             }
@@ -2419,10 +2419,10 @@ const JobOngoing = () => {
                 justifyContent: 'space-between',
               }}
             >
-              <Text style={{ fontFamily: 'Poppins-SemiBold', marginTop: 10 }}>
+              <Text style={{ fontFamily: 'Poppins-SemiBold', marginTop: 10, color: '#111' }}>
                 Total Amount
               </Text>
-              <Text style={{ fontFamily: 'Poppins-SemiBold', marginTop: 10 }}>
+              <Text style={{ fontFamily: 'Poppins-SemiBold', marginTop: 10, color: '#111' }}>
                 ₹ {leadDataContext?.bookingDetails?.bookingAmount}
                 {/* calculatedPrice */}
               </Text>
@@ -2434,10 +2434,10 @@ const JobOngoing = () => {
                 justifyContent: 'space-between',
               }}
             >
-              <Text style={{ fontFamily: 'Poppins-SemiBold', marginTop: 10 }}>
+              <Text style={{ fontFamily: 'Poppins-SemiBold', marginTop: 10, color: '#111' }}>
                 Amount Paid
               </Text>
-              <Text style={{ fontFamily: 'Poppins-SemiBold', marginTop: 10 }}>
+              <Text style={{ fontFamily: 'Poppins-SemiBold', marginTop: 10, color: '#111' }}>
                 ₹ {leadDataContext?.bookingDetails.paidAmount}
                 {/* {calculatedPrice} */}
               </Text>
@@ -2448,11 +2448,11 @@ const JobOngoing = () => {
                 justifyContent: 'space-between',
               }}
             >
-              <Text style={{ fontFamily: 'Poppins-SemiBold', marginTop: 10 }}>
+              <Text style={{ fontFamily: 'Poppins-SemiBold', marginTop: 10, color: '#111' }}>
                 {/* modal */}
                 Amount yet to Pay
               </Text>
-              <Text style={{ fontFamily: 'Poppins-SemiBold', marginTop: 10 }}>
+              <Text style={{ fontFamily: 'Poppins-SemiBold', marginTop: 10, color: '#111' }}>
                 ₹ {calculatedPrice}
                 {/* {leadDataContext?.bookingDetails?.paidAmount === 0
                   ? leadDataContext?.bookingDetails?.bookingAmount
@@ -2561,7 +2561,9 @@ const JobOngoing = () => {
               source={require('../assets/icons/featured.png')}
               resizeMode="contain"
             />
-            <Text style={{ fontFamily: 'Poppins-Bold', fontSize: 16 }}>
+            <Text
+              style={{ fontFamily: 'Poppins-Bold', fontSize: 16, color: '#000' }}
+            >
               Start the project!
             </Text>
             <Text
@@ -2570,6 +2572,7 @@ const JobOngoing = () => {
                 fontSize: 14,
                 marginTop: 10,
                 marginBottom: 10,
+                color: '#333',
               }}
             >
               Are you sure you want to start the project?
@@ -3466,7 +3469,9 @@ const JobOngoing = () => {
               source={require('../assets/icons/featured.png')}
               resizeMode="contain"
             />
-            <Text style={{ fontFamily: 'Poppins-Bold', fontSize: 16 }}>
+            <Text
+              style={{ fontFamily: 'Poppins-Bold', fontSize: 16, color: '#000' }}
+            >
               End the Project!
             </Text>
             <Text
@@ -3475,6 +3480,7 @@ const JobOngoing = () => {
                 fontSize: 14,
                 marginTop: 10,
                 marginBottom: 10,
+                color: '#333',
               }}
             >
               Are you sure you want to end the project?
@@ -3508,7 +3514,9 @@ const JobOngoing = () => {
               source={require('../assets/icons/featured.png')}
               resizeMode="contain"
             />
-            <Text style={{ fontFamily: 'Poppins-Bold', fontSize: 16 }}>
+            <Text
+              style={{ fontFamily: 'Poppins-Bold', fontSize: 16, color: '#000' }}
+            >
               Request Next Payment
             </Text>
             <Text
@@ -3517,6 +3525,7 @@ const JobOngoing = () => {
                 fontSize: 14,
                 marginTop: 10,
                 marginBottom: 10,
+                color: '#333',
               }}
             >
               Are you sure you want to request Next Payment?
