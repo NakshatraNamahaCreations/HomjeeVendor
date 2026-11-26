@@ -2415,6 +2415,7 @@ const JobOngoing = () => {
             <TextInput
               style={styles.inputBox}
               placeholder="Enter amount"
+              placeholderTextColor="#9a9a9a"
               value={amount?.toString() ?? ''}
               onChangeText={text => {
                 const numeric = Number(text.replace(/[^0-9]/g, ''));
