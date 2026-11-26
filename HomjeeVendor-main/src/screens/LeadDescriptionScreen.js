@@ -1551,6 +1551,9 @@ const LeadDescriptionScreen = () => {
                           style={{
                             fontFamily: 'Poppins-SemiBold',
                             fontSize: 16,
+                            // #5 — colour the package name so it is visible in
+                            // the View Details pop-up (was invisible/no colour).
+                            color: '#111',
                           }}
                         >
                           {name}
@@ -1706,6 +1709,9 @@ const styles = StyleSheet.create({
   packageTitle: {
     fontFamily: 'Poppins-Medium',
     fontSize: 14,
+    // #5 — was invisible (no colour), so the package name ("1 BHK Cleaning -
+    // Classic") never showed before starting the job. Match JobOngoing.
+    color: 'black',
     // marginBottom: 6,
   },
   bulletText: {
