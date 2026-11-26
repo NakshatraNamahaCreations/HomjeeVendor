@@ -689,6 +689,14 @@ const JobOngoing = () => {
   ].includes(status);
 
   const started = !!leadDataContext?.bookingDetails?.startProject;
+  // #2 — once the project/lead is cancelled, NO bottom action button (Start
+  // Project, Request Next Payment, End Project, End Survey, etc.) should show.
+  const isLeadCancelled = [
+    'Customer Cancelled',
+    'Admin Cancelled',
+    'Cancelled',
+    'Cancelled Rescheduled',
+  ].includes(status);
   // #2 — once a House Painting project is cancelled the Start Project button must
   // NOT appear. 'Customer Cancelled' was previously treated as a state that shows
   // (and even enables) Start Project, which let a vendor start a cancelled job.
@@ -2202,7 +2210,8 @@ const JobOngoing = () => {
             )} */}
           </View>
         </ScrollView>
-        {showEndSurvey && !custUnReach ? (
+        {/* #2 — hide every bottom action button when the lead is cancelled. */}
+        {isLeadCancelled ? null : showEndSurvey && !custUnReach ? (
           // END SURVEY - House Painter (always allowed)
           <TouchableOpacity
             style={[styles.endBtn, { backgroundColor: '#ED1F24' }]}
@@ -3618,6 +3627,9 @@ const styles = StyleSheet.create({
     marginTop: 10,
     paddingLeft: 10,
     fontFamily: 'Poppins-Medium',
+    // #1 — typed text in the Edit Scope amount/comment inputs was invisible
+    // (no colour → default light colour). Make it dark.
+    color: '#111',
   },
   rescheduleModal: {
     backgroundColor: '#fff',
