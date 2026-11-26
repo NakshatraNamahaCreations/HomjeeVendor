@@ -151,8 +151,16 @@ const Notification = () => {
     switch (notification.notificationType) {
 
       case 'PAYMENT':
+        // #12: open the SAME payment-detail screen the Money dashboard uses.
+        // The detail screen (MiddleScreenOfMoneyDash) reads lead.leadId /
+        // lead.amount / lead.paidDate etc., so it needs the FULL payment object
+        // — passing only metaData.bookingId (a string) made every field
+        // undefined, the booking fetch hit /...undefined and the screen errored
+        // / rendered blank ("Payment received error"). metaData already carries
+        // leadId, amount, paymentType, paidDate, paidTime, customerName, so pass
+        // the whole object and it behaves exactly like tapping a Money row.
         navigation.navigate('PaymentDetailed', {
-          lead: notification.metaData.bookingId,
+          lead: notification.metaData || {},
         });
         break;
       case 'REMINDER':

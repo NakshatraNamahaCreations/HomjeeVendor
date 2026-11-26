@@ -31,6 +31,12 @@ import { API_BASE_URL, API_ENDPOINTS } from '../ApiService/apiConstants';
 // keeps its old settings otherwise. Bump this if you change LEAD_SOUND again.
 export const LEAD_CHANNEL_ID = 'lead-alerts-v4';
 
+// #12: separate, non-urgent channel for payment-received pushes. Must match the
+// backend's android.notification.channelId ("payment-alerts-v1"). Default
+// importance + default sound (NOT the looping lead alarm) — a payment alert
+// should notify quietly, not sound like a new lead.
+export const PAYMENT_CHANNEL_ID = 'payment-alerts-v1';
+
 // Emitted when a new-lead push arrives while the app is open, so the New Leads
 // screen can auto-refresh its list.
 export const NEW_LEAD_EVENT = 'NEW_LEAD_PUSH';
@@ -41,6 +47,7 @@ export const NEW_LEAD_EVENT = 'NEW_LEAD_PUSH';
 const LEAD_SOUND = 'lead_alert';
 
 let channelCreated = false;
+let paymentChannelCreated = false;
 
 // Create the high-importance channel ONCE. Channel settings (sound, vibration,
 // importance) are locked in by Android at creation time — changing them later
@@ -60,6 +67,24 @@ export async function ensureLeadChannel() {
     channelCreated = true;
   } catch (e) {
     console.log('[notif] ensureLeadChannel error:', e?.message);
+  }
+}
+
+// #12: non-urgent channel for payment-received pushes. Default importance +
+// default sound (no looping lead alarm). Created once.
+export async function ensurePaymentChannel() {
+  if (Platform.OS !== 'android' || paymentChannelCreated) return;
+  try {
+    await notifee.createChannel({
+      id: PAYMENT_CHANNEL_ID,
+      name: 'Payment Alerts',
+      importance: AndroidImportance.DEFAULT, // notifies, no heads-up alarm
+      visibility: AndroidVisibility.PUBLIC,
+      vibration: true,
+    });
+    paymentChannelCreated = true;
+  } catch (e) {
+    console.log('[notif] ensurePaymentChannel error:', e?.message);
   }
 }
 
@@ -110,6 +135,36 @@ export async function displayLeadNotification(remoteMessage) {
     });
   } catch (e) {
     console.log('[notif] displayLeadNotification error:', e?.message);
+  }
+}
+
+// #12: display a payment notification locally for FOREGROUND messages, on the
+// quiet payment channel — NOT the looping lead alarm.
+export async function displayPaymentNotification(remoteMessage) {
+  try {
+    await ensurePaymentChannel();
+    const title =
+      remoteMessage?.notification?.title ||
+      remoteMessage?.data?.title ||
+      'Payment Received 💰';
+    const body =
+      remoteMessage?.notification?.body ||
+      remoteMessage?.data?.body ||
+      'A payment has been received.';
+
+    await notifee.displayNotification({
+      title,
+      body,
+      data: remoteMessage?.data || {},
+      android: {
+        channelId: PAYMENT_CHANNEL_ID,
+        smallIcon: 'ic_launcher',
+        importance: AndroidImportance.DEFAULT,
+        pressAction: { id: 'default' },
+      },
+    });
+  } catch (e) {
+    console.log('[notif] displayPaymentNotification error:', e?.message);
   }
 }
 
@@ -173,10 +228,17 @@ export function setupNotificationListeners() {
   let unsubRefresh = () => {};
   try {
     ensureLeadChannel();
+    ensurePaymentChannel();
 
-    // Foreground messages: FCM won't auto-display, so we do it (plays sound),
-    // and tell the New Leads screen to refresh its list.
+    // Foreground messages: FCM won't auto-display, so we do it ourselves.
+    // #12: route by type — payment pushes use the quiet payment channel and do
+    // NOT emit the new-lead refresh event; everything else keeps the lead flow.
     unsubMessage = messaging().onMessage(async remoteMessage => {
+      const type = remoteMessage?.data?.type;
+      if (type === 'PAYMENT') {
+        await displayPaymentNotification(remoteMessage);
+        return;
+      }
       await displayLeadNotification(remoteMessage);
       DeviceEventEmitter.emit(NEW_LEAD_EVENT, remoteMessage?.data || {});
     });
